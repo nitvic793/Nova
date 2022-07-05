@@ -1,3 +1,5 @@
+#ifndef NV_STRING_HASH
+#define NV_STRING_HASH
 #pragma once
 
 #include <string_view>
@@ -82,15 +84,31 @@ namespace nv
         return crc ^ 0xffffffff;
     }
 
+    // Credits: https://gist.github.com/Lee-R/3839813
+    constexpr StringID FNV1A_32(char const* s, size_t count)
+    {
+        return count ? (FNV1A_32(s, count - 1) ^ s[count - 1]) * 16777619u : 2166136261u;
+    }
+
+    constexpr StringID FNV1A_32(std::string_view str)
+    {
+        return FNV1A_32(str.data(), str.size());
+    }
+
     constexpr StringID ID(const char* str)
     {
-        return CRC32(str);
+        return FNV1A_32(str);
+    }
+
+    constexpr StringID operator"" _hash(char const* s, size_t count)
+    {
+        return FNV1A_32(s, count);
     }
 
     //https://stackoverflow.com/questions/81870/is-it-possible-to-print-a-variables-type-in-standard-c/58331141#58331141
 
     template <typename T>
-    constexpr auto TypeName() noexcept 
+    constexpr auto TypeName() noexcept
     {
         std::string_view name, prefix, suffix;
 #ifdef __clang__
@@ -110,4 +128,12 @@ namespace nv
         name.remove_suffix(suffix.size());
         return name.data();
     }
+
+    template <typename T>
+    constexpr auto TypeNameID() noexcept
+    {
+        return ID(TypeName<T>());
+    }
+
 }
+#endif // !NV_STRING_HASH

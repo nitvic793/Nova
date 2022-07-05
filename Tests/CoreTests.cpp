@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <Lib/StringHash.h>
 
 class CoreTests : public ::testing::Test
 {
@@ -132,4 +133,11 @@ TEST_F(CoreTests, PoolSpanTest)
     EXPECT_FLOAT_EQ(comPool.GetAsDerived(h1)->mMuliplier, 4.f);
     EXPECT_FLOAT_EQ(comPool.GetAsDerived(h2)->mMuliplier, 8.f);
 
+}
+
+TEST_F(CoreTests, StringHashTest)
+{
+    using namespace nv;
+    constexpr nv::StringID check = "GET"_hash;
+    static_assert(check == 2531704439, "bad hash value");
 }

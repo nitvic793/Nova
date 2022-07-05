@@ -149,6 +149,7 @@
     <ClInclude Include="Context.h" />
     <ClInclude Include="Engine\System.h" />
     <ClInclude Include="Lib\Map.h" />
+    <ClInclude Include="Lib\ScopedPtr.h" />
     <ClInclude Include="Lib\StringHash.h" />
     <ClInclude Include="NovaCore.h" />
     <ClInclude Include="framework.h" />

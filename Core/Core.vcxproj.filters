@@ -54,6 +54,9 @@
     <ClInclude Include="Lib\StringHash.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Lib\ScopedPtr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
