@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="nv::Span&lt;*&gt;">
+    <Intrinsic Name="mSize"
+               Expression="mSize" />
+
+    <DisplayString>{{ size={ mSize} }}</DisplayString>
+    <Expand>
+      <Item Name="[size]" ExcludeView="simple">mSize</Item>
+      <ArrayItems>
+        <Size>mSize</Size>
+        <ValuePointer>mData</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+  <Type Name="nv::Vector&lt;*&gt;">
+    <Intrinsic Name="size"
+               Expression="mCurrentIndex + 1" />
+    <Intrinsic Name="capacity"
+               Expression="mCapacity" />
+    <DisplayString>{{ size={ size() } }}</DisplayString>
+    <Expand>
+      <Item Name="[capacity]" ExcludeView="simple">mCapacity</Item>
+      <Item Name="[allocator]" ExcludeView="simple">allocator</Item>
+      <ArrayItems>
+        <Size>size()</Size>
+        <ValuePointer>mBuffer</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+</AutoVisualizer>
