@@ -7,7 +7,7 @@
 
 #include <DirectXMath.h>
 
-namespace nv
+namespace nv::math
 {
     using float2    = DirectX::XMFLOAT2;
     using float3    = DirectX::XMFLOAT3;
@@ -15,6 +15,9 @@ namespace nv
     using float3x3  = DirectX::XMFLOAT3X3;
     using float4x3  = DirectX::XMFLOAT4X3;
     using float4x4  = DirectX::XMFLOAT4X4;
+
+    using Vector = DirectX::XMVECTOR;
+    using Matrix = DirectX::XMMATRIX;
 }
 
 #endif // NV_USE_DIRECTXMATH

@@ -8,7 +8,7 @@
 #include <fmt/color.h>
 #include <fmt/os.h>
 
-namespace nv
+namespace nv::log
 {
     template<typename ...Params>
     constexpr void Log(FILE* f, const char* format, Params&& ...args)

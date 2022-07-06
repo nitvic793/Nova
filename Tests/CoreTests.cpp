@@ -15,7 +15,7 @@ public:
 
     static void SetUpTestSuite()
     {
-        nv::InitContext();
+        nv::InitContext(nullptr);
     }
 
     static void TearDownTestSuite() 

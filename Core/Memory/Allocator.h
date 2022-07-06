@@ -37,6 +37,7 @@ namespace nv
         {
             assert(mAllocator);
             mBuffer = (Byte*)allocator->Allocate(capacity);
+            assert(mBuffer);
             mCurrent = mBuffer;
         }
 

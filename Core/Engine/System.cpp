@@ -30,4 +30,12 @@ namespace nv
         }
     }
 
+    void SystemManager::ReloadSystems()
+    {
+        for (auto& system : mSystems)
+        {
+            system.second->OnReload();
+        }
+    }
+
 }

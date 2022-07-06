@@ -16,6 +16,7 @@ namespace nv
         virtual void Init() {}
         virtual void Update(float deltaTime, float totalTime) {}
         virtual void Destroy() {};
+        virtual void OnReload() {};
 
         virtual ~ISystem() {}
     private:
@@ -59,6 +60,7 @@ namespace nv
         void InitSystems();
         void UpdateSystems(float deltaTime, float totalTime);
         void DestroySystems();
+        void ReloadSystems();
 
         ~SystemManager() 
         { 
@@ -68,7 +70,7 @@ namespace nv
         static SystemManager* gPtr;
 
     private:
-        HashMap<StringID, ScopedPtr<ISystem>> mSystems;
+        OrderedMap<StringID, ScopedPtr<ISystem>> mSystems;
         IAllocator* mAllocator;
     };
 

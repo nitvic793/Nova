@@ -6,5 +6,6 @@
 #define NV_USE_DIRECTXMATH 1
 
 #include <Math/Types.h>
+#include <Math/Ops.h>
 
 #endif // !NV_MATH_MATH

@@ -11,16 +11,18 @@ namespace nv
     Context gContext;
     Context* Context::gPtr = &gContext;
 
-    void InitContext(Context* pContext)
+    void InitContext(Instance* pInstance, Context* pContext)
     {
         InitMemoryTracker();
         pContext->mpMemTracker = GetMemoryTracker();
+        pContext->mpInstance = pInstance;
         pContext->mpSystemManager = &gSystemManager;
     }
 
     void DestroyContext(Context* pContext)
     {
         DestroyMemoryTracker(pContext->mpMemTracker);
+        pContext->mpInstance = nullptr;
     }
 
     void ApplyContext(Context* pContext)
