@@ -6,7 +6,11 @@
 #define NV_ENABLE_MEM_TRACKING 1
 
 #include <cstdint>
-#include <unordered_map>
+
+#if NV_ENABLE_MEM_TRACKING
+#include <Lib/Map.h>
+#include <Lib/StringHash.h>
+#endif
 
 namespace nv
 {
@@ -22,6 +26,7 @@ namespace nv
         {}
 
         void TrackAlloc(void* ptr, size_t size);
+        void TrackAllocTagged(void* ptr, size_t size, TagType tag);
         void TrackSysAlloc(void* ptr, size_t size);
         void TrackFree(void* ptr);
         void TrackSysFree(void* ptr);
@@ -33,6 +38,11 @@ namespace nv
     private:
         uint64_t mBytesAllocated;
         uint64_t mBytesSystemAllocated;
+#if NV_ENABLE_MEM_TRACKING
+        HashMap<PtrType,        size_t>     mPtrSizeMap;
+        HashMap<PtrType,        size_t>     mSysPtrSizeMap;
+        HashMap<PtrType,  nv::StringID>     mTagSizeMap;
+#endif
     };
 
     void            InitMemoryTracker();

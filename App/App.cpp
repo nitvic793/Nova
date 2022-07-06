@@ -9,11 +9,6 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 
-class Test : nv::ISystem
-{
-
-};
-
 int main()
 {
     // Enabled memory leak detection

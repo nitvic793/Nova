@@ -13,7 +13,7 @@ namespace nv
 			ptr = p;
 		}
 
-		ScopedPtr(ScopedPtr&& p) :
+		ScopedPtr(ScopedPtr&& p) noexcept :
 			ptr(p.ptr)
 		{
 			p.ptr = nullptr;
@@ -50,6 +50,7 @@ namespace nv
 				ptr = nullptr;
 			}
 		}
+
 	private:
 		T* ptr = nullptr;
 	};

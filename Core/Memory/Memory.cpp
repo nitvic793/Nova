@@ -74,6 +74,16 @@ namespace nv
     {
 #if NV_ENABLE_MEM_TRACKING
         mBytesAllocated += size;
+        mPtrSizeMap[(PtrType)ptr] = size;
+#endif
+    }
+
+    void MemTracker::TrackAllocTagged(void* ptr, size_t size, TagType tag)
+    {
+#if NV_ENABLE_MEM_TRACKING
+        const auto id = nv::ID(tag);
+        mTagSizeMap[(PtrType)ptr] = id;
+        TrackAlloc(ptr, size);
 #endif
     }
 
@@ -81,18 +91,21 @@ namespace nv
     {
 #if NV_ENABLE_MEM_TRACKING
         mBytesSystemAllocated += size;
+        //mSysPtrSizeMap[(PtrType)ptr] = size;
 #endif
     }
 
     void MemTracker::TrackFree(void* ptr)
     {
 #if NV_ENABLE_MEM_TRACKING
+        mPtrSizeMap.erase((PtrType)ptr);
 #endif
     }
 
     void MemTracker::TrackSysFree(void* ptr)
     {
 #if NV_ENABLE_MEM_TRACKING
+        //mSysPtrSizeMap.erase((PtrType)ptr);
 #endif
     }
 }

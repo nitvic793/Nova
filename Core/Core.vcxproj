@@ -152,6 +152,8 @@
     <ClInclude Include="Lib\Map.h" />
     <ClInclude Include="Lib\ScopedPtr.h" />
     <ClInclude Include="Lib\StringHash.h" />
+    <ClInclude Include="Math\Math.h" />
+    <ClInclude Include="Math\Types.h" />
     <ClInclude Include="NovaCore.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Lib\Assert.h" />
@@ -164,6 +166,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Context.cpp" />
+    <ClCompile Include="Engine\System.cpp" />
     <ClCompile Include="Memory\Allocator.cpp" />
     <ClCompile Include="Memory\Memory.cpp" />
     <ClCompile Include="pch.cpp">

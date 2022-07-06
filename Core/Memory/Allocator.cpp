@@ -22,5 +22,13 @@ namespace nv
             nv::MemTracker::gPtr->TrackSysFree(ptr);
         free(ptr);
     }
+
+    void* ArenaAllocator::Allocate(size_t size)
+    {
+        assert((mCurrent - mBuffer) + size <= mCapacity);
+        auto buffer = mCurrent;
+        mCurrent += size;
+        return buffer;
+    }
 }
 

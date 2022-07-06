@@ -16,7 +16,6 @@ namespace nv
         virtual void Init() {}
         virtual void Update(float deltaTime, float totalTime) {}
         virtual void Destroy() {};
-        virtual const char* GetName() { return ""; }
 
         virtual ~ISystem() {}
     private:
@@ -50,15 +49,30 @@ namespace nv
             mSystems.erase(id);
         }
 
+        template<typename TSystem>
+        constexpr void RemoveSystem()
+        {
+            constexpr StringID id = TypeNameID<TSystem>();
+            mSystems.erase(id);
+        }
+
+        void InitSystems();
+        void UpdateSystems(float deltaTime, float totalTime);
+        void DestroySystems();
+
         ~SystemManager() 
         { 
-            //mAllocator->Reset(); 
+            mAllocator->Reset(); 
         };
+
+        static SystemManager* gPtr;
 
     private:
         HashMap<StringID, ScopedPtr<ISystem>> mSystems;
         IAllocator* mAllocator;
     };
+
+    extern SystemManager gSystemManager;
 
     template<typename TSystem, typename ...Args>
     inline ISystem* SystemManager::CreateSystem(Args&& ...args)

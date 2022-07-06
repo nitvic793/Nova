@@ -4,10 +4,12 @@ namespace nv
 {
     class MemTracker;
     class SystemAllocator;
+    class SystemManager;
 
     struct Context
     {
         MemTracker*         mpMemTracker;
+        SystemManager*      mpSystemManager;
         static Context*     gPtr;
     };
 
@@ -16,9 +18,5 @@ namespace nv
     void InitContext(Context* pContext = Context::gPtr);
     void DestroyContext(Context* pContext = Context::gPtr);
 
-    constexpr void ApplyContext(Context* pContext) 
-    { 
-        Context::gPtr = pContext; 
-        gContext = *pContext; 
-    }
+    void ApplyContext(Context* pContext);
 }
