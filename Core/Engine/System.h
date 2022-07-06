@@ -41,9 +41,17 @@ namespace nv
             return static_cast<TSystem*>(mSystems.at(id).Get());
         }
 
-        constexpr ISystem* GetSystem(StringID id) const { return mSystems.at(id).Get(); }
+        ISystem* GetSystem(StringID id) const { return mSystems.at(id).Get(); }
 
-        ~SystemManager() { mAllocator->Reset(); };
+        void RemoveSystem(StringID id)
+        {
+            mSystems.erase(id);
+        }
+
+        ~SystemManager() 
+        { 
+            //mAllocator->Reset(); 
+        };
 
     private:
         HashMap<StringID, ScopedPtr<ISystem>> mSystems;

@@ -22,6 +22,11 @@ namespace nv
 		size_t		mSize;
 
 	public:
+		static constexpr Span<T> Create(std::initializer_list<T> items)
+		{
+			return { items.begin(), items.size() };
+		}
+
 		constexpr T* begin() const
 		{
 			return mData;

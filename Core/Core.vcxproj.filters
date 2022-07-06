@@ -57,6 +57,9 @@
     <ClInclude Include="Lib\ScopedPtr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -74,5 +77,8 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Natvis\Lib.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
