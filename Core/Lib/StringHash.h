@@ -130,7 +130,7 @@ namespace nv
     }
 
     template <typename T>
-    constexpr auto TypeNameID() noexcept
+    constexpr nv::StringID TypeNameID() noexcept
     {
         return ID(TypeName<T>());
     }

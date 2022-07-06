@@ -28,7 +28,9 @@ namespace nv
         using SystemPtr = ScopedPtr<ISystem, true>;
 
     public:
-        SystemManager(IAllocator* allocator = SystemAllocator::gPtr)
+        SystemManager(IAllocator* allocator = SystemAllocator::gPtr) :
+            mSystems(),
+            mAllocator(allocator)
         {}
 
         template<typename TSystem, typename ...Args>
@@ -37,7 +39,7 @@ namespace nv
         template<typename TSystem>
         constexpr TSystem* GetSystem() const
         {
-            const StringID id = ID(TSystem);
+            constexpr StringID id = TypeNameID<TSystem>();
             return static_cast<TSystem*>(mSystems.at(id).Get());
         }
 
@@ -63,7 +65,8 @@ namespace nv
     {
         TSystem* buffer = (TSystem*)mAllocator->Allocate(sizeof(TSystem));
         new (buffer) TSystem(std::forward<Args>(args)...);
-        mSystems.insert(ID(TSystem), ScopedPtr<ISystem>(buffer));
+        constexpr StringID typeId = nv::TypeNameID<TSystem>();
+        mSystems[typeId] = ScopedPtr<ISystem>((ISystem*)buffer);
         return (ISystem*)buffer;
     }
 }

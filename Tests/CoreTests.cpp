@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <Lib/StringHash.h>
+#include <Engine/System.h>
 
 class CoreTests : public ::testing::Test
 {
@@ -140,4 +141,29 @@ TEST_F(CoreTests, StringHashTest)
     using namespace nv;
     constexpr nv::StringID check = "GET"_hash;
     static_assert(check == 2531704439, "bad hash value");
+}
+
+TEST_F(CoreTests, SystemManagerCreate)
+{
+    using namespace nv;
+    class TestSystem : public ISystem
+    {
+    public:
+        float mSpeed = 0.f;
+    };
+
+    SystemManager sysMan;
+
+    auto testSystem = (TestSystem*)sysMan.CreateSystem<TestSystem>();
+    EXPECT_FLOAT_EQ(testSystem->mSpeed, 0.f);
+
+    testSystem->mSpeed = 1.f;
+
+    auto testSystemRef = sysMan.GetSystem<TestSystem>();
+    EXPECT_FLOAT_EQ(testSystemRef->mSpeed, 1.f);
+
+    testSystemRef->mSpeed = 2.f;
+
+    auto testSystemRef2 = (TestSystem*)sysMan.GetSystem(TypeNameID<TestSystem>());
+    EXPECT_FLOAT_EQ(testSystemRef->mSpeed, 2.f);
 }
