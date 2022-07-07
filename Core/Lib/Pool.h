@@ -5,7 +5,9 @@
 
 namespace nv
 {
-    template<typename T, typename TDerived = T, uint32_t InitPoolCount = 16>
+    constexpr uint32_t kPoolInitDefaultSize = 4;
+
+    template<typename T, typename TDerived = T, uint32_t InitPoolCount = kPoolInitDefaultSize>
     class Pool
     {
     public:

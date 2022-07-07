@@ -150,6 +150,7 @@
     <ClInclude Include="Engine\Instance.h" />
     <ClInclude Include="Engine\Log.h" />
     <ClInclude Include="Engine\System.h" />
+    <ClInclude Include="Engine\EntityComponent.h" />
     <ClInclude Include="Lib\Map.h" />
     <ClInclude Include="Lib\ScopedPtr.h" />
     <ClInclude Include="Lib\StringHash.h" />
