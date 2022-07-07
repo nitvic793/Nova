@@ -5,7 +5,7 @@
 
 #include <Engine/System.h>
 
-namespace nv
+namespace nv::graphics
 {
     class RenderSystem : public ISystem
     {

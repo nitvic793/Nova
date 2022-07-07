@@ -11,7 +11,6 @@ namespace nv
     class Pool
     {
     public:
-        static constexpr size_t     kStrideSize = sizeof(TDerived);
         static constexpr uint32_t   kDefaultPoolCount = InitPoolCount;
 
     public:

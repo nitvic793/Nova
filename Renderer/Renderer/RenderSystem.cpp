@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "RenderSystem.h"
 
-namespace nv
+namespace nv::graphics
 {
     void RenderSystem::Init()
     {
