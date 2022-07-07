@@ -9,7 +9,7 @@
 
 // This code uses the DirectXMath library in abstracted form. 
 // Ideally DirectXMath would be replaced with custom definitions, 
-// but in interest of time and brevity, we use it as-is. 
+// but in interest of time and brevity, we use it as-is for now. 
 
 namespace nv::math
 {

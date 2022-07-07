@@ -18,8 +18,7 @@ int main()
     if(instance.Init())
         instance.Run();
 
-    instance.Destroy();
-
     auto size = nv::GetSystemAllocatedBytes();
+    instance.Destroy();
     return 0;
 }

@@ -22,6 +22,7 @@ namespace nv
     void DestroyContext(Context* pContext)
     {
         DestroyMemoryTracker(pContext->mpMemTracker);
+        MemTracker::gPtr = nullptr;
         pContext->mpInstance = nullptr;
     }
 

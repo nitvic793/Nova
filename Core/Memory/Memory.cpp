@@ -9,13 +9,13 @@
 /// Operator new and delete overrides to enable memory allocation tracking.
 /////////////////////////////////////////////////////////////////
 
-void* operator new(size_t size)
+void* operator new(size_t size, bool track = false)
 {
     void* ptr = nv::SystemAllocator::gPtr->Allocate(size);
     return ptr;
 }
 
-void* operator new[](size_t size)
+void* operator new[](size_t size, bool track = false)
 {
     void* ptr = nv::SystemAllocator::gPtr->Allocate(size);
     return ptr;
@@ -90,22 +90,41 @@ namespace nv
     void MemTracker::TrackSysAlloc(void* ptr, size_t size)
     {
 #if NV_ENABLE_MEM_TRACKING
-        mBytesSystemAllocated += size;
-        //mSysPtrSizeMap[(PtrType)ptr] = size;
+        if (mbEnableTracking)
+        {
+            SetEnableTracking(false);
+            mBytesSystemAllocated += size;
+            mSysPtrSizeMap[(PtrType)ptr] = size;
+            SetEnableTracking(true);
+        }
 #endif
     }
 
     void MemTracker::TrackFree(void* ptr)
     {
 #if NV_ENABLE_MEM_TRACKING
+        const size_t size = mPtrSizeMap.at((PtrType)ptr);
         mPtrSizeMap.erase((PtrType)ptr);
+        mBytesAllocated -= size;
 #endif
     }
 
     void MemTracker::TrackSysFree(void* ptr)
     {
 #if NV_ENABLE_MEM_TRACKING
-        //mSysPtrSizeMap.erase((PtrType)ptr);
+        if (mbEnableTracking)
+        {
+            SetEnableTracking(false);
+            auto it = mSysPtrSizeMap.find((PtrType)ptr);
+            if (it != mSysPtrSizeMap.end())
+            {
+                const size_t size = it->second;
+                mSysPtrSizeMap.erase((PtrType)ptr);
+                mBytesSystemAllocated -= size;
+            }
+
+            SetEnableTracking(true);
+        }
 #endif
     }
 }

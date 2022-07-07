@@ -22,7 +22,8 @@ namespace nv
     public:
         MemTracker() :
             mBytesAllocated(0),
-            mBytesSystemAllocated(0)
+            mBytesSystemAllocated(0),
+            mbEnableTracking(true)
         {}
 
         void TrackAlloc(void* ptr, size_t size);
@@ -30,6 +31,7 @@ namespace nv
         void TrackSysAlloc(void* ptr, size_t size);
         void TrackFree(void* ptr);
         void TrackSysFree(void* ptr);
+        void SetEnableTracking(bool bEnabled) { mbEnableTracking = bEnabled; }
 
         constexpr uint64_t GetCurrentAllocatedBytes() { return mBytesAllocated; }
         constexpr uint64_t GetSystemAllocatedBytes() { return mBytesSystemAllocated; }
@@ -39,6 +41,7 @@ namespace nv
         uint64_t mBytesAllocated;
         uint64_t mBytesSystemAllocated;
 #if NV_ENABLE_MEM_TRACKING
+        bool mbEnableTracking;
         HashMap<PtrType,        size_t>     mPtrSizeMap;
         HashMap<PtrType,        size_t>     mSysPtrSizeMap;
         HashMap<PtrType,  nv::StringID>     mTagSizeMap;
