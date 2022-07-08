@@ -9,6 +9,14 @@ namespace nv::graphics
 
     class Shader
     {
+    public:
+        enum Type
+        {
+            VERTEX,
+            PIXEL,
+            COMPUTE
+        };
 
+    protected:
     };
 }
