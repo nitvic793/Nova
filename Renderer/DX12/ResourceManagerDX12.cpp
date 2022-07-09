@@ -5,6 +5,7 @@
 #include <DX12/ShaderDX12.h>
 #include <DX12/GPUResourceDX12.h>
 #include <DX12/PipelineStateDX12.h>
+#include <DX12/TextureDX12.h>
 #include <d3d12.h>
 
 namespace nv::graphics
@@ -22,6 +23,11 @@ namespace nv::graphics
     Handle<PipelineState> ResourceManagerDX12::CreatePipelineState(const PipelineState& desc)
     {
         return Handle<PipelineState>();
+    }
+
+    Handle<Texture> ResourceManagerDX12::CreateTexture(const PipelineState& desc)
+    {
+        return Handle<Texture>();
     }
 
     ID3D12Resource* ResourceManagerDX12::GetResource(Handle<GPUResource> handle)

@@ -10,7 +10,7 @@ namespace nv::graphics
     class IRenderer
     {
     public:
-
+        virtual void Draw() {}
     private:
 
     };

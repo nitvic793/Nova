@@ -27,7 +27,7 @@
     <ClInclude Include="Renderer\RenderSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DX12\Renderer.h">
+    <ClInclude Include="DX12\RendererDX12.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\Renderer.h">
@@ -64,6 +64,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DX12\PipelineStateDX12.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12\TextureDX12.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

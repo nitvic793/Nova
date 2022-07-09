@@ -18,6 +18,7 @@ namespace nv::graphics
         virtual Handle<Shader> CreateShader(const ShaderDesc& desc) override;
         virtual Handle<GPUResource> CreateResource(const GPUResourceDesc& desc) override;
         virtual Handle<PipelineState> CreatePipelineState(const PipelineState& desc) override;
+        virtual Handle<Texture> CreateTexture(const PipelineState& desc) override;
 
     public:
         // DX12 specific functions
