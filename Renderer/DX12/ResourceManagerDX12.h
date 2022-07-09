@@ -10,6 +10,7 @@ namespace nv::graphics
     class ShaderDX12;
     class GPUResourceDX12;
     class PipelineStateDX12;
+    class TextureDX12;
 
     class ResourceManagerDX12 : public ResourceManager
     {
@@ -18,7 +19,7 @@ namespace nv::graphics
         virtual Handle<Shader> CreateShader(const ShaderDesc& desc) override;
         virtual Handle<GPUResource> CreateResource(const GPUResourceDesc& desc) override;
         virtual Handle<PipelineState> CreatePipelineState(const PipelineState& desc) override;
-        virtual Handle<Texture> CreateTexture(const PipelineState& desc) override;
+        virtual Handle<Texture> CreateTexture(const TextureDesc& desc) override;
 
     public:
         // DX12 specific functions
@@ -28,5 +29,6 @@ namespace nv::graphics
         Pool<GPUResource, GPUResourceDX12> mGpuResources;
         Pool<Shader, ShaderDX12> mShaders;
         Pool<PipelineState, PipelineStateDX12> mPipelineStates;
+        Pool<Texture, TextureDX12>  mTextures;
     };
 }

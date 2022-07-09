@@ -25,7 +25,7 @@ namespace nv::graphics
         return Handle<PipelineState>();
     }
 
-    Handle<Texture> ResourceManagerDX12::CreateTexture(const PipelineState& desc)
+    Handle<Texture> ResourceManagerDX12::CreateTexture(const TextureDesc& desc)
     {
         return Handle<Texture>();
     }
