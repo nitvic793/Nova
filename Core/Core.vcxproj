@@ -137,6 +137,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Shared\External\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>
