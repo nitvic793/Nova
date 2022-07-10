@@ -7,7 +7,10 @@ namespace nv::graphics
     class RendererDX12 : public IRenderer
     {
     public:
-
+        // Inherited via IRenderer
+        virtual void Init(Window& window) override;
+        virtual void Destroy() override;
     private:
+
     };
 }

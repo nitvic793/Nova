@@ -24,6 +24,8 @@ namespace nv
         static SystemAllocator* gPtr;
     };
 
+    extern SystemAllocator gSysAllocator;
+
     class ArenaAllocator : public IAllocator
     {
     public:
@@ -42,7 +44,7 @@ namespace nv
         }
 
         void*   Allocate(size_t size) override;
-        void    Free(void* ptr) override { } // Do nothing
+        virtual void    Free(void* ptr) override { } // Do nothing
 
         ~ArenaAllocator() 
         {
@@ -55,12 +57,39 @@ namespace nv
             }
         }
 
-    private:
+    protected:
         Byte*           mBuffer;
         Byte*           mCurrent;
         size_t          mCapacity;
         IAllocator*     mAllocator;
     };
 
-    extern SystemAllocator gSysAllocator;
+    class LinearAllocator : public ArenaAllocator {};
+
+    class StackAllocator : public ArenaAllocator
+    {
+    public:
+        virtual void Free(void* ptr) override
+        {
+            mCurrent = (Byte*)ptr;
+        }
+    };
+
+    template<typename T>
+    constexpr T* Alloc(IAllocator* alloc = SystemAllocator::gPtr) 
+    { 
+        auto buffer = alloc->Allocate(sizeof(T)); 
+        new (buffer) T();
+        return (T*)buffer;
+    }
+
+    template<typename T>
+    constexpr void Free(T* ptr, IAllocator* alloc = SystemAllocator::gPtr)
+    {
+        if (ptr)
+        {
+            ptr->~T();
+            alloc->Free(ptr);
+        }
+    }
 }

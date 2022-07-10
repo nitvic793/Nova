@@ -11,5 +11,9 @@
 #define NV_RENDERER_DX12 1
 #endif  
 
+#ifndef NV_RENDERER_ENABLE_DEBUG_LAYER
+#define NV_RENDERER_ENABLE_DEBUG_LAYER 1
+#endif  
+
 
 #endif // !NV_NOVACONFIG

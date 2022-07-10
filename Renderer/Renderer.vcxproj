@@ -148,6 +148,7 @@
   <ItemGroup>
     <ClInclude Include="DX12\ConstantBuffer.h" />
     <ClInclude Include="DX12\d3dx12.h" />
+    <ClInclude Include="DX12\DeviceDX12.h" />
     <ClInclude Include="DX12\DirectXIncludes.h" />
     <ClInclude Include="DX12\GPUResourceDX12.h" />
     <ClInclude Include="DX12\MeshDX12.h" />
@@ -156,6 +157,7 @@
     <ClInclude Include="DX12\ResourceManagerDX12.h" />
     <ClInclude Include="DX12\ShaderDX12.h" />
     <ClInclude Include="DX12\TextureDX12.h" />
+    <ClInclude Include="DX12\WindowDX12.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Renderer\Device.h" />
@@ -167,16 +169,20 @@
     <ClInclude Include="Renderer\ResourceManager.h" />
     <ClInclude Include="Renderer\Shader.h" />
     <ClInclude Include="Renderer\Texture.h" />
+    <ClInclude Include="Renderer\Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DX12\DeviceDX12.cpp" />
+    <ClCompile Include="DX12\RendererDX12.cpp" />
     <ClCompile Include="DX12\ResourceManagerDX12.cpp" />
+    <ClCompile Include="DX12\WindowDX12.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Renderer\Renderer.cpp" />
     <ClCompile Include="Renderer\RenderSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -191,6 +197,7 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\directxtk12_desktop_2019.2022.5.10.1\build\native\directxtk12_desktop_2019.targets" Condition="Exists('..\packages\directxtk12_desktop_2019.2022.5.10.1\build\native\directxtk12_desktop_2019.targets')" />
     <Import Project="..\packages\Microsoft.Direct3D.D3D12.1.602.4\build\native\Microsoft.Direct3D.D3D12.targets" Condition="Exists('..\packages\Microsoft.Direct3D.D3D12.1.602.4\build\native\Microsoft.Direct3D.D3D12.targets')" />
+    <Import Project="..\packages\fmt.7.0.1\build\fmt.targets" Condition="Exists('..\packages\fmt.7.0.1\build\fmt.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -199,5 +206,6 @@
     <Error Condition="!Exists('..\packages\directxtk12_desktop_2019.2022.5.10.1\build\native\directxtk12_desktop_2019.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtk12_desktop_2019.2022.5.10.1\build\native\directxtk12_desktop_2019.targets'))" />
     <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.602.4\build\native\Microsoft.Direct3D.D3D12.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.602.4\build\native\Microsoft.Direct3D.D3D12.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.602.4\build\native\Microsoft.Direct3D.D3D12.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.602.4\build\native\Microsoft.Direct3D.D3D12.targets'))" />
+    <Error Condition="!Exists('..\packages\fmt.7.0.1\build\fmt.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\fmt.7.0.1\build\fmt.targets'))" />
   </Target>
 </Project>
