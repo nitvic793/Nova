@@ -18,7 +18,7 @@ namespace nv::graphics
         virtual void Destroy() = 0;
         virtual ~IRenderer() {}
     protected:
-        ScopedPtr<Device> mDevice;
+        ScopedPtr<Device, true> mDevice;
     };
 
     extern IRenderer* gRenderer;

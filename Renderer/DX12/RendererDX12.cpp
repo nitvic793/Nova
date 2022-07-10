@@ -10,7 +10,7 @@ namespace nv::graphics
 {
     void RendererDX12::Init(Window& window)
     {
-        mDevice = ScopedPtr<Device>((Device*)Alloc<DeviceDX12>());
+        mDevice = ScopedPtr<Device, true>((Device*)Alloc<DeviceDX12>());
         mDevice->Init(window);
     }
 
