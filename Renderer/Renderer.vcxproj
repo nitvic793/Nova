@@ -150,6 +150,7 @@
     <ClInclude Include="DX12\d3dx12.h" />
     <ClInclude Include="DX12\DirectXIncludes.h" />
     <ClInclude Include="DX12\GPUResourceDX12.h" />
+    <ClInclude Include="DX12\MeshDX12.h" />
     <ClInclude Include="DX12\PipelineStateDX12.h" />
     <ClInclude Include="DX12\RendererDX12.h" />
     <ClInclude Include="DX12\ResourceManagerDX12.h" />
@@ -159,6 +160,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Renderer\Device.h" />
     <ClInclude Include="Renderer\GPUResource.h" />
+    <ClInclude Include="Renderer\Mesh.h" />
     <ClInclude Include="Renderer\PipelineState.h" />
     <ClInclude Include="Renderer\Renderer.h" />
     <ClInclude Include="Renderer\RenderSystem.h" />

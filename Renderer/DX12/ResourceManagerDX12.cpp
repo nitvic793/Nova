@@ -6,6 +6,7 @@
 #include <DX12/GPUResourceDX12.h>
 #include <DX12/PipelineStateDX12.h>
 #include <DX12/TextureDX12.h>
+#include <DX12/MeshDX12.h>
 #include <d3d12.h>
 
 namespace nv::graphics
@@ -30,8 +31,33 @@ namespace nv::graphics
         return Handle<Texture>();
     }
 
-    ID3D12Resource* ResourceManagerDX12::GetResource(Handle<GPUResource> handle)
+    Handle<Mesh> ResourceManagerDX12::CreateMesh(const TextureDesc& desc)
     {
-        return nullptr;
+        return Handle<Mesh>();
+    }
+
+    Texture* ResourceManagerDX12::GetTexture(Handle<Texture> handle)
+    {
+        return mTextures.Get(handle);
+    }
+
+    GPUResource* ResourceManagerDX12::GetGPUResource(Handle<GPUResource> handle)
+    {
+        return mGpuResources.Get(handle);
+    }
+    
+    PipelineState* ResourceManagerDX12::GetPipelineState(Handle<PipelineState> handle)
+    {
+        return mPipelineStates.Get(handle);
+    }
+
+    Shader* ResourceManagerDX12::GetShader(Handle<Shader> handle)
+    {
+        return mShaders.Get(handle);
+    }
+
+    Mesh* ResourceManagerDX12::GetMesh(Handle<Mesh> handle)
+    {
+        return mMeshes.Get(handle);
     }
 }

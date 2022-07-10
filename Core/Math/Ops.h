@@ -73,12 +73,26 @@ DEFINE_OP_SINGLE_MATRIX_FROM_FLOAT(RotationRollPitchYaw)
 DEFINE_OP_SINGLE_MATRIX_FROM_FLOAT(Scaling)
 DEFINE_OP_SINGLE_MATRIX_FROM_FLOAT(Translation)
 
-    auto Mul(auto lhs, auto rhs) noexcept
-    {
+inline Matrix MatrixInverse(Matrix matrix, Vector* pDeterminant = nullptr) noexcept
+{
     using namespace DirectX;
-    //return DirectX::XMMatrixLookToLH(eye, dir, up);
-    
-    }
+    return XMMatrixInverse(pDeterminant, matrix);
+}
+
+inline Matrix MatrixPerspectiveFovLH(float fovAngleY, float aspectRatio, float nearZ, float farZ) noexcept
+{
+    return DirectX::XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, nearZ, farZ);
+}
+
+inline Matrix MatrixAffineTransformation(Vector scaling, Vector rotationOrigin, Vector rotationQuaternion, Vector translation) noexcept
+{
+    return DirectX::XMMatrixAffineTransformation(scaling, rotationOrigin, rotationQuaternion, translation);
+}
+
+inline Matrix MatrixLookToLH(Vector eyePos, Vector eyeDir, Vector upDir) noexcept
+{
+    return DirectX::XMMatrixLookToLH(eyePos, eyeDir, upDir);
+}
 
 // TODO: Matrix View and Projection functions + Utilities
 
