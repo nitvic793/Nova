@@ -57,6 +57,8 @@ namespace nv::graphics
 			IID_PPV_ARGS(mDevice.ReleaseAndGetAddressOf())
 		);
 
+		adapter->Release();
+
 		if (!SUCCEEDED(hr)) return false;
 
 		// Disable error for copy descriptor 
@@ -89,6 +91,11 @@ namespace nv::graphics
 		return true;
     }
 
+	void DeviceDX12::Present()
+	{
+		mSwapChain->Present(1, 0);
+	}
+
 	bool DeviceDX12::InitSwapChain(Window& window, DXGI_FORMAT format)
 	{
 		auto win = (WindowDX12*)&window;
@@ -103,7 +110,7 @@ namespace nv::graphics
 		swapChainDesc.BufferCount = kFrameBufferCount;
 		swapChainDesc.BufferDesc = backBufferDesc;
 		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; 
 		swapChainDesc.OutputWindow = win->GetWindowHandle();
 		swapChainDesc.SampleDesc = sampleDesc;
 		swapChainDesc.Windowed = !window.IsFullScreen();

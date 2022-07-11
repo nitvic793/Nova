@@ -18,7 +18,7 @@ namespace nv::graphics
     {
     public:
         bool Init(Window& window) override;
-
+        void Present(); //Temp
     private:
         bool InitSwapChain(Window& window, DXGI_FORMAT format);
 
@@ -30,5 +30,7 @@ namespace nv::graphics
         ComPtr<ID3D12Device>        mDevice;
         ComPtr<IDXGISwapChain4>     mSwapChain;
         ComPtr<ID3D12CommandQueue>  mCommandQueue;
+
+        friend class RendererDX12;
     };
 }

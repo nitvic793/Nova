@@ -16,6 +16,15 @@ namespace nv::graphics
 
     void RendererDX12::Destroy()
     {
+    }
+
+    void RendererDX12::Present()
+    {
+        auto device = (DeviceDX12*)mDevice.Get();
+        device->Present();
+    }
+    void ReportLeaksDX12()
+    {
 #ifdef _DEBUG
         IDXGIDebug1* pDebug = nullptr;
         if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDebug))))

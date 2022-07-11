@@ -15,6 +15,7 @@ namespace nv::graphics
     public:
         virtual void Init(Window& window) = 0;
         virtual void Draw() {}
+        virtual void Present() {}
         virtual void Destroy() = 0;
         virtual ~IRenderer() {}
     protected:

@@ -33,5 +33,8 @@ namespace nv::graphics
         gRenderer->Destroy();
         Free(gRenderer);
         Free(gWindow);
+#if NV_PLATFORM_WINDOWS && NV_RENDERER_DX12 && _DEBUG
+        ReportLeaksDX12();
+#endif
     }
 }

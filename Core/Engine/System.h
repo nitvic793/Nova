@@ -70,7 +70,7 @@ namespace nv
         static SystemManager* gPtr;
 
     private:
-        OrderedMap<StringID, ScopedPtr<ISystem>> mSystems;
+        OrderedMap<StringID, ScopedPtr<ISystem, true>> mSystems;
         IAllocator* mAllocator;
     };
 
@@ -82,7 +82,7 @@ namespace nv
         TSystem* buffer = (TSystem*)mAllocator->Allocate(sizeof(TSystem));
         new (buffer) TSystem(std::forward<Args>(args)...);
         constexpr StringID typeId = nv::TypeNameID<TSystem>();
-        mSystems[typeId] = ScopedPtr<ISystem>((ISystem*)buffer);
+        mSystems[typeId] = ScopedPtr<ISystem, true>((ISystem*)buffer);
         return (ISystem*)buffer;
     }
 }
