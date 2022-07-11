@@ -18,7 +18,7 @@ namespace nv::graphics
     void InitGraphics()
     {
 #if NV_PLATFORM_WINDOWS && NV_RENDERER_DX12
-        gWindow = Alloc<WindowDX12>();
+        gWindow = Alloc<WindowDX12>(SystemAllocator::gPtr, (HWND)NULL);
         gWindow->Init(1920, 1080);
 
         gRenderer = Alloc<RendererDX12>();

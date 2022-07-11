@@ -18,6 +18,12 @@ namespace nv::graphics
     class WindowDX12 : public Window
     {
     public:
+        WindowDX12(HWND hwnd) :
+            mHwnd(hwnd) {}
+
+        WindowDX12() :
+            mHwnd(NULL) {}
+
         constexpr HWND GetWindowHandle() const { return mHwnd; }
 
         // Inherited via Window
@@ -26,6 +32,7 @@ namespace nv::graphics
 
         LRESULT CALLBACK WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
         void OnResize() {}
+
     private:
         HWND mHwnd;
     };

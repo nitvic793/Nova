@@ -23,6 +23,7 @@ namespace nv::graphics
         auto device = (DeviceDX12*)mDevice.Get();
         device->Present();
     }
+
     void ReportLeaksDX12()
     {
 #ifdef _DEBUG

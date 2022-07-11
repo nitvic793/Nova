@@ -51,18 +51,21 @@ namespace nv::graphics
         int centeredX = (desktopRect.right / 2) - (clientRect.right / 2);
         int centeredY = (desktopRect.bottom / 2) - (clientRect.bottom / 2);
 
-        mHwnd = CreateWindow(
-            wndClass.lpszClassName,
-            windowTitle,
-            WS_OVERLAPPEDWINDOW,
-            centeredX,
-            centeredY,
-            clientRect.right - clientRect.left,	// Calculated width
-            clientRect.bottom - clientRect.top,	// Calculated height
-            0,			// No parent window
-            0,			// No menu
-            hInstance,	// The app's handle
-            0);	  // used with multiple windows, NULL
+        if (!mHwnd)
+        {
+            mHwnd = CreateWindow(
+                wndClass.lpszClassName,
+                windowTitle,
+                WS_OVERLAPPEDWINDOW,
+                centeredX,
+                centeredY,
+                clientRect.right - clientRect.left,	// Calculated width
+                clientRect.bottom - clientRect.top,	// Calculated height
+                0,			// No parent window
+                0,			// No menu
+                hInstance,	// The app's handle
+                0);	  // used with multiple windows, NULL
+        }
 
         if (fullscreen)
         {

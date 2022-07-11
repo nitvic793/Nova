@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Lib/Assert.h>
+#include <Lib/Util.h>
 
 namespace nv
 {
@@ -75,11 +76,11 @@ namespace nv
         }
     };
 
-    template<typename T>
-    constexpr T* Alloc(IAllocator* alloc = SystemAllocator::gPtr) 
+    template<typename T, typename ...Args>
+    constexpr T* Alloc(IAllocator* alloc = SystemAllocator::gPtr, Args&&... args) 
     { 
         auto buffer = alloc->Allocate(sizeof(T)); 
-        new (buffer) T();
+        new (buffer) T(Forward<Args>(args)...);
         return (T*)buffer;
     }
 

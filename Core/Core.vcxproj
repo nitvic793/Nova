@@ -148,6 +148,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Lib\Util.h" />
     <ClInclude Include="NovaConfig.h" />
     <ClInclude Include="Context.h" />
     <ClInclude Include="Engine\Instance.h" />
