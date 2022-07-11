@@ -79,14 +79,15 @@ namespace nv::graphics
     Window::ExecResult WindowDX12::ProcessMessages()
     {
         MSG msg = {};
-        if (msg.message == WM_QUIT)
-            return kNvQuit;
 
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+
+        if (msg.message == WM_QUIT)
+            return kNvQuit;
 
         return kNvNone;
     }
@@ -147,6 +148,8 @@ namespace nv::graphics
             Mouse::ProcessMessage(msg, wParam, lParam);
             break;
         }
+
+        return DefWindowProc(hWnd, msg, wParam, lParam);
     }
 }
 
