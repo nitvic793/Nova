@@ -9,6 +9,7 @@ namespace nv::graphics
     class GPUResource;
     class Device;
     class Window;
+    class DescriptorHeap;
 
     class IRenderer
     {
@@ -24,6 +25,6 @@ namespace nv::graphics
 
     extern IRenderer* gRenderer;
 
-    void InitGraphics();
+    void InitGraphics(void* context = nullptr);
     void DestroyGraphics();
 }

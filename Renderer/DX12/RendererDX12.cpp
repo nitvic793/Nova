@@ -3,6 +3,8 @@
 #include <DX12/DeviceDX12.h>
 #include <DX12/DirectXIncludes.h>
 #include <DX12/WindowDX12.h>
+#include <Renderer/DescriptorHeap.h>
+#include <DX12/DescriptorHeapDX12.h>
 
 #include <dxgidebug.h>
 
@@ -10,6 +12,7 @@ namespace nv::graphics
 {
     void RendererDX12::Init(Window& window)
     {
+        mDescriptorHeapPool.Init();
         mDevice = ScopedPtr<Device, true>((Device*)Alloc<DeviceDX12>());
         mDevice->Init(window);
     }

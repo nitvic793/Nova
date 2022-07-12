@@ -28,4 +28,18 @@
       </ArrayItems>
     </Expand>
   </Type>
+    <Type Name="nv::Pool&lt;*&gt;">
+        <Intrinsic Name="size"
+                   Expression="mSize" />
+        <Intrinsic Name="capacity"
+                   Expression="mCapacity" />
+        <DisplayString>{{ size={ size() } }}</DisplayString>
+        <Expand>
+            <Item Name="[capacity]" ExcludeView="simple">mCapacity</Item>
+            <ArrayItems>
+                <Size>size()</Size>
+                <ValuePointer>mBuffer</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
 </AutoVisualizer>

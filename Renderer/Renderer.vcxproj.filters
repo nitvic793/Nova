@@ -87,6 +87,15 @@
     <ClInclude Include="DX12\WindowDX12.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DX12\DescriptorHeapDX12.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\SwapChain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\DescriptorHeap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer\Renderer.cpp">
