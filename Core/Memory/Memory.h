@@ -44,7 +44,7 @@ namespace nv
         bool mbEnableTracking;
         HashMap<PtrType,        size_t>     mPtrSizeMap;
         HashMap<PtrType,        size_t>     mSysPtrSizeMap;
-        HashMap<PtrType,  nv::StringID>     mTagSizeMap;
+        HashMap<PtrType,       TagType>     mTagSizeMap;
 #endif
     };
 

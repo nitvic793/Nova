@@ -81,8 +81,7 @@ namespace nv
     void MemTracker::TrackAllocTagged(void* ptr, size_t size, TagType tag)
     {
 #if NV_ENABLE_MEM_TRACKING
-        const auto id = nv::ID(tag);
-        mTagSizeMap[(PtrType)ptr] = id;
+        mTagSizeMap[(PtrType)ptr] = tag;
         TrackAlloc(ptr, size);
 #endif
     }

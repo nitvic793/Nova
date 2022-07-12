@@ -76,6 +76,9 @@ namespace nv
         }
     };
 
+    void* AllocTagged(IAllocator* alloc, size_t size) {};
+    void    Free(void* ptr, IAllocator* alloc = SystemAllocator::gPtr) {};
+
     template<typename T, typename ...Args>
     constexpr T* Alloc(IAllocator* alloc = SystemAllocator::gPtr, Args&&... args) 
     { 

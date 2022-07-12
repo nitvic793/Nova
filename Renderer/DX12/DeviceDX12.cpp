@@ -14,8 +14,6 @@ namespace nv::graphics
 		D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface));
 		debugInterface->EnableDebugLayer();
 #endif
-        auto win = (WindowDX12*)&window;
-        auto hwnd = win->GetWindowHandle();
         auto hr = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(mDxgiFactory.ReleaseAndGetAddressOf()));
 
         if (!SUCCEEDED(hr)) return false;
