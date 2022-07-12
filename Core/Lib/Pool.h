@@ -29,6 +29,19 @@ namespace nv
             mBuffer = (T*)SystemAllocator::gPtr->Allocate(sizeof(TDerived) * kDefaultPoolCount);
         }
 
+        void Destroy()
+        {
+            for (auto i = 0u; i < mSize; ++i)
+            {
+                if (!mFreeIndices.Exists(i))
+                {
+                    GetIndex(i)->~T();
+                }
+            }
+
+            Clear();
+        }
+
         ~Pool() 
         {
             if (mBuffer)
@@ -59,6 +72,12 @@ namespace nv
             new (data) TDerived(std::forward<Args>(args)...); // Placement construct
             handle.mGeneration = mGenerations[handle.mIndex];
             return handle;
+        }
+
+        T* CreateInstance(Handle<T>& outHandle)
+        {
+            outHandle = Create();
+            return GetIndex(outHandle);
         }
 
         constexpr T* Get(Handle<T> handle) const

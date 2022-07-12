@@ -8,7 +8,7 @@ namespace nv::graphics
     class TextureDX12 : public Texture
     {
     public:
-
-    private:
+        // Inherited via Texture
+        virtual void Create(const TextureDesc& desc) override;
     };
 }

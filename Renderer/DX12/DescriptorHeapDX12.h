@@ -69,6 +69,7 @@ namespace nv::graphics
 			return mHeapDesc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		}
 
+		~DescriptorHeapDX12() { }
 	private:
 		D3D12_DESCRIPTOR_HEAP_DESC mHeapDesc;
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mpDescriptorHeap;

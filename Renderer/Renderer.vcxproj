@@ -178,6 +178,7 @@
     <ClCompile Include="DX12\DeviceDX12.cpp" />
     <ClCompile Include="DX12\RendererDX12.cpp" />
     <ClCompile Include="DX12\ResourceManagerDX12.cpp" />
+    <ClCompile Include="DX12\TextureDX12.cpp" />
     <ClCompile Include="DX12\WindowDX12.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

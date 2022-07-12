@@ -12,19 +12,37 @@ namespace nv::graphics
 {
     void RendererDX12::Init(Window& window)
     {
+        constexpr uint32_t kDefaultDescriptorCount = 32;
+
         mDescriptorHeapPool.Init();
         mDevice = ScopedPtr<Device, true>((Device*)Alloc<DeviceDX12>());
         mDevice->Init(window);
+
+        auto dxDevice = (DeviceDX12*)mDevice.Get();
+
+        auto rtvDescriptorPool = (DescriptorHeapDX12*)mDescriptorHeapPool.CreateInstance(mRtvHeap);
+        rtvDescriptorPool->Create(dxDevice->mDevice.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, kDefaultDescriptorCount);
+
+        auto dsvDescriptorPool = (DescriptorHeapDX12*)mDescriptorHeapPool.CreateInstance(mDsvHeap);
+        dsvDescriptorPool->Create(dxDevice->mDevice.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, kDefaultDescriptorCount);
+
+        auto gpuDescriptorPool = (DescriptorHeapDX12*)mDescriptorHeapPool.CreateInstance(mGpuHeap);
+        gpuDescriptorPool->Create(dxDevice->mDevice.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultDescriptorCount);
     }
 
     void RendererDX12::Destroy()
     {
+        mDescriptorHeapPool.Destroy();
     }
 
     void RendererDX12::Present()
     {
         auto device = (DeviceDX12*)mDevice.Get();
         device->Present();
+    }
+
+    RendererDX12::~RendererDX12()
+    {
     }
 
     void ReportLeaksDX12()

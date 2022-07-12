@@ -17,6 +17,7 @@ namespace nv::graphics
     IRenderer* gRenderer = nullptr;
     Window* gWindow = nullptr;
     ResourceManager* gResourceManager = nullptr;
+    ResourceManager* ResourceManager::gPtr = nullptr;
 
     void InitGraphics(void* context)
     {
@@ -28,6 +29,7 @@ namespace nv::graphics
         gRenderer->Init(*gWindow);
 
         gResourceManager = Alloc<ResourceManagerDX12>();
+        ResourceManager::gPtr = gResourceManager;
 
         gSystemManager.CreateSystem<RenderSystem>();
 #endif
@@ -39,6 +41,7 @@ namespace nv::graphics
         Free(gResourceManager);
         Free(gRenderer);
         Free(gWindow);
+
 #if NV_PLATFORM_WINDOWS && NV_RENDERER_DX12 && _DEBUG
         ReportLeaksDX12();
 #endif
