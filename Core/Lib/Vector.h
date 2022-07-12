@@ -27,6 +27,13 @@ namespace nv
 			return { items.begin(), items.size() };
 		}
 
+		constexpr Span<T> Slice(size_t start, size_t end) const
+		{
+			assert(start >= 0 && start < Size());
+			assert(end < Size() && end >= start);
+			return { mData + start, end - start + 1 };
+		}
+
 		constexpr T* begin() const
 		{
 			return mData;

@@ -11,18 +11,43 @@ namespace nv
     class Pool
     {
     public:
-        static constexpr uint32_t   kDefaultPoolCount = InitPoolCount;
+        static constexpr uint32_t kDefaultPoolCount = InitPoolCount;
 
     public:
         Pool() :
-            mData(kDefaultPoolCount),
+            mBuffer(nullptr),
+            mSize(0),
+            mCapacity(kDefaultPoolCount),
             mFreeIndices(kDefaultPoolCount),
             mGenerations(kDefaultPoolCount)
         {
             mGenerations.SetSize(kDefaultPoolCount);
         }
 
-        ~Pool() {}
+        void Init()
+        {
+            mBuffer = (T*)SystemAllocator::gPtr->Allocate(sizeof(TDerived) * kDefaultPoolCount);
+        }
+
+        void Destroy()
+        {
+            for (auto i = 0u; i < mSize; ++i)
+            {
+                if (!mFreeIndices.Exists(i))
+                {
+                    GetIndex(i)->~T();
+                }
+            }
+
+            Clear();
+        }
+
+        ~Pool() 
+        {
+            if (mBuffer)
+                SystemAllocator::gPtr->Free(mBuffer);
+            mBuffer = nullptr;
+        }
 
     public:
         template<typename ...Args>
@@ -32,33 +57,41 @@ namespace nv
             T* data = nullptr;
             if (mFreeIndices.Size() == 0)
             {
-                data = &mData.Emplace();
-                handle.mIndex = (uint32_t)mData.Size() - 1;
+                GrowIfNeeded();
+                data = GetIndex(mSize);
+                handle.mIndex = mSize;
                 mGenerations[handle.mIndex] = 1;
+                mSize++;
             }
             else
             {
                 handle.mIndex = mFreeIndices.Pop();
-                data = &mData[handle.mIndex];
+                data = GetIndex(handle);
             }
 
-            new (data) TDerived(std::forward<Args>(args)...); //Placement construct
+            new (data) TDerived(std::forward<Args>(args)...); // Placement construct
             handle.mGeneration = mGenerations[handle.mIndex];
             return handle;
+        }
+
+        T* CreateInstance(Handle<T>& outHandle)
+        {
+            outHandle = Create();
+            return GetIndex(outHandle);
         }
 
         constexpr T* Get(Handle<T> handle) const
         {
             if (!IsValid(handle))
                 return nullptr;
-            return &mData[handle.mIndex];
+            return GetIndex(handle);
         }
 
         constexpr TDerived* GetAsDerived(Handle<T> handle) const
         {
             if (!IsValid(handle))
                 return nullptr;
-            return &mData[handle.mIndex];
+            return (TDerived*)GetIndex(handle);
         }
 
         constexpr bool IsValid(Handle<T> handle) const
@@ -72,29 +105,13 @@ namespace nv
             {
                 mGenerations[handle.mIndex]++;
                 mFreeIndices.Push(handle.mIndex);
-                mData[handle.mIndex].~TDerived();
+                GetIndex(handle)->~T();
             }
         }
 
         Handle<T> Insert(const TDerived& data)
         {
             return Create(data);
-
-            //Handle<T> handle;
-            //if (mFreeIndices.Size() == 0)
-            //{
-            //    mData.Push(data);
-            //    handle.mIndex = (uint32_t)mData.Size() - 1;
-            //    mGenerations[handle.mIndex] = 1;
-            //}
-            //else
-            //{
-            //    handle.mIndex = mFreeIndices.Pop();
-            //    mData[handle.mIndex] = std::move(data);
-            //}
-
-            //handle.mGeneration = mGenerations[handle.mIndex];
-            //return handle;
         }
 
         Handle<T> Insert(TDerived&& data)
@@ -104,23 +121,50 @@ namespace nv
 
         constexpr Span<TDerived> Slice(size_t start, size_t end) const
         {
-            return mData.Slice(start, end);
+            return Span().Slice(start, end);
         }
 
         constexpr Span<TDerived> Span() const
         {
-            return mData.Span();
+            return ::nv::Span<TDerived>{ (TDerived*)mBuffer, mSize };
         }
 
         constexpr void Clear()
         {
-            mData.Clear();
             mFreeIndices.Clear();
             mGenerations.Clear();
+            mSize = 0;
         }
 
     private:
-        nv::Vector<TDerived>    mData;
+        void GrowIfNeeded()
+        {
+            if (mSize + 1 >= mCapacity)
+            {
+                auto oldCapacity = mCapacity;
+                mCapacity *= 2;
+                void* pBuffer = SystemAllocator::gPtr->Allocate(sizeof(TDerived) * mCapacity);
+                memcpy(pBuffer, mBuffer, oldCapacity * sizeof(TDerived));
+                if(mBuffer)
+                    SystemAllocator::gPtr->Free(mBuffer);
+                mBuffer = (T*)pBuffer;
+            }
+        }
+
+        constexpr T* GetIndex(Handle<T> handle) const
+        {
+            return GetIndex(handle.mIndex);
+        }
+
+        constexpr T* GetIndex(uint32_t index) const
+        {
+            return (T*)((Byte*)mBuffer + index * sizeof(TDerived));
+        }
+
+    private:
+        T*                      mBuffer;
+        uint32_t                mSize;
+        uint32_t                mCapacity;
         nv::Vector<uint32_t>    mFreeIndices;
         nv::Vector<uint32_t>    mGenerations;
     };

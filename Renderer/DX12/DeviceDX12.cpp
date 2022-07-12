@@ -94,6 +94,10 @@ namespace nv::graphics
 		mSwapChain->Present(1, 0);
 	}
 
+	DeviceDX12::~DeviceDX12()
+	{
+	}
+
 	bool DeviceDX12::InitSwapChain(Window& window, DXGI_FORMAT format)
 	{
 		auto win = (WindowDX12*)&window;

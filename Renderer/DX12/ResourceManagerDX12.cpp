@@ -11,6 +11,15 @@
 
 namespace nv::graphics
 {
+    ResourceManagerDX12::ResourceManagerDX12()
+    {
+        mGpuResources.Init();
+        mMeshes.Init();
+        mPipelineStates.Init();
+        mShaders.Init();
+        mTextures.Init();
+    }
+
     Handle<Shader> ResourceManagerDX12::CreateShader(const ShaderDesc& desc)
     {
         return Handle<Shader>();

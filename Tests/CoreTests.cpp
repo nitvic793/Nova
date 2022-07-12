@@ -78,6 +78,8 @@ TEST_F(CoreTests, PoolTest)
     Handle<IBase> handle;
     handle.mIndex = 1;
     Pool<IBase, Child> pool;
+    pool.Init();
+
     Child test;
     test.Test(100);
     handle = pool.Create(1);
@@ -117,6 +119,7 @@ TEST_F(CoreTests, PoolSpanTest)
     using namespace nv;
 
     Pool<IComponent, TestComponent> comPool;
+    comPool.Init();
     auto h1 = comPool.Insert({ .mSpeed = 1.5f, .mMuliplier = 1.f });
     auto h2 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
     auto comSpan = comPool.Span();

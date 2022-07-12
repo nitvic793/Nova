@@ -16,6 +16,8 @@ namespace nv::graphics
     class ResourceManagerDX12 : public ResourceManager
     {
     public:
+        ResourceManagerDX12();
+
         // Inherited via ResourceManager
         virtual Handle<Shader>          CreateShader(const ShaderDesc& desc) override;
         virtual Handle<GPUResource>     CreateResource(const GPUResourceDesc& desc) override;

@@ -19,6 +19,8 @@ namespace nv::graphics
     public:
         bool Init(Window& window) override;
         void Present(); //Temp
+        ~DeviceDX12();
+
     private:
         bool InitSwapChain(Window& window, DXGI_FORMAT format);
 

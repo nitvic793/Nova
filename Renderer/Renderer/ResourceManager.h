@@ -30,5 +30,11 @@ namespace nv::graphics
         virtual PipelineState*          GetPipelineState(Handle<PipelineState>) = 0;
         virtual Shader*                 GetShader(Handle<Shader>) = 0;
         virtual Mesh*                   GetMesh(Handle<Mesh>) = 0;
+
+        virtual ~ResourceManager() {}
+
+        static ResourceManager*         gPtr;
     };
+
+    extern ResourceManager* gResourceManager;
 }

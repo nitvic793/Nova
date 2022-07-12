@@ -148,6 +148,7 @@
   <ItemGroup>
     <ClInclude Include="DX12\ConstantBuffer.h" />
     <ClInclude Include="DX12\d3dx12.h" />
+    <ClInclude Include="DX12\DescriptorHeapDX12.h" />
     <ClInclude Include="DX12\DeviceDX12.h" />
     <ClInclude Include="DX12\DirectXIncludes.h" />
     <ClInclude Include="DX12\GPUResourceDX12.h" />
@@ -160,6 +161,7 @@
     <ClInclude Include="DX12\WindowDX12.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Renderer\DescriptorHeap.h" />
     <ClInclude Include="Renderer\Device.h" />
     <ClInclude Include="Renderer\GPUResource.h" />
     <ClInclude Include="Renderer\Mesh.h" />
@@ -168,6 +170,7 @@
     <ClInclude Include="Renderer\RenderSystem.h" />
     <ClInclude Include="Renderer\ResourceManager.h" />
     <ClInclude Include="Renderer\Shader.h" />
+    <ClInclude Include="Renderer\SwapChain.h" />
     <ClInclude Include="Renderer\Texture.h" />
     <ClInclude Include="Renderer\Window.h" />
   </ItemGroup>
@@ -175,6 +178,7 @@
     <ClCompile Include="DX12\DeviceDX12.cpp" />
     <ClCompile Include="DX12\RendererDX12.cpp" />
     <ClCompile Include="DX12\ResourceManagerDX12.cpp" />
+    <ClCompile Include="DX12\TextureDX12.cpp" />
     <ClCompile Include="DX12\WindowDX12.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
