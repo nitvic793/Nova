@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 namespace nv
 {
     template <class T>
@@ -25,6 +27,9 @@ namespace nv
     {
         return static_cast<T&&>(t);
     }
+
+    template<class T, class U>
+    concept Derived = std::is_base_of<U, T>::value;
 }
 
 #endif // !NV_UTIL

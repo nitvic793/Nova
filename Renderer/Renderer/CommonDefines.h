@@ -4,6 +4,14 @@
 
 namespace nv::graphics
 {
+    enum ContextType : uint8_t
+    {
+        CONTEXT_GFX = 0,
+        CONTEXT_COMPUTE,
+        CONTEXT_UPLOAD,
+        CONTEXT_RAYTRACING
+    };
+
     namespace tex
     {
         enum Type : uint8_t

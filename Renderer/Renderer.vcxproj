@@ -147,6 +147,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="DX12\ConstantBuffer.h" />
+    <ClInclude Include="DX12\ContextDX12.h" />
     <ClInclude Include="DX12\d3dx12.h" />
     <ClInclude Include="DX12\DescriptorHeapDX12.h" />
     <ClInclude Include="DX12\DeviceDX12.h" />

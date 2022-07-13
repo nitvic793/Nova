@@ -17,7 +17,6 @@ namespace nv::graphics
     IRenderer* gRenderer = nullptr;
     Window* gWindow = nullptr;
     ResourceManager* gResourceManager = nullptr;
-    ResourceManager* ResourceManager::gPtr = nullptr;
 
     void InitGraphics(void* context)
     {
@@ -29,7 +28,6 @@ namespace nv::graphics
         gRenderer->Init(*gWindow);
 
         gResourceManager = Alloc<ResourceManagerDX12>();
-        ResourceManager::gPtr = gResourceManager;
 
         gSystemManager.CreateSystem<RenderSystem>();
 #endif

@@ -32,8 +32,6 @@ namespace nv::graphics
         virtual Mesh*                   GetMesh(Handle<Mesh>) = 0;
 
         virtual ~ResourceManager() {}
-
-        static ResourceManager*         gPtr;
     };
 
     extern ResourceManager* gResourceManager;

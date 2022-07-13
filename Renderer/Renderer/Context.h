@@ -1,7 +1,14 @@
 #pragma once
 
+#include <Renderer/CommonDefines.h>
+
 namespace nv::graphics
 {
+    struct ContextDesc
+    {
+        ContextType mType;
+    };
+
     class CommandBuffer
     {
 
@@ -9,6 +16,9 @@ namespace nv::graphics
 
     class Context
     {
+    public:
+        virtual ~Context() {}
 
+    protected:
     };
 }
