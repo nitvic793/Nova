@@ -2,20 +2,25 @@
 
 namespace nv::graphics
 {
-    struct ShaderDesc
+    namespace shader
     {
-
-    };
-
-    class Shader
-    {
-    public:
         enum Type
         {
             VERTEX,
             PIXEL,
             COMPUTE
         };
+    }
+
+    struct ShaderDesc
+    {
+        shader::Type mType;
+    };
+
+    class Shader
+    {
+    public:
+
 
     protected:
     };

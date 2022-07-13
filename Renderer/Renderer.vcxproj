@@ -161,8 +161,10 @@
     <ClInclude Include="DX12\WindowDX12.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Renderer\Context.h" />
     <ClInclude Include="Renderer\DescriptorHeap.h" />
     <ClInclude Include="Renderer\Device.h" />
+    <ClInclude Include="Renderer\Format.h" />
     <ClInclude Include="Renderer\GPUResource.h" />
     <ClInclude Include="Renderer\Mesh.h" />
     <ClInclude Include="Renderer\PipelineState.h" />

@@ -10,27 +10,27 @@ namespace nv::graphics
     {
         enum Type
         {
-            kTextureTypeNone = 0,
-            kTexture1D,
-            kTexture2D,
-            kTexture3D,
-            kTextureCube
+            NONE = 0,
+            TEXTURE_1D,
+            TEXTURE_2D,
+            TEXTURE_3D,
+            TEXTURE_CUBE
         };
 
         enum Usage
         {
-            kTexUsageNone = 0,
-            kTexUsageShader,
-            kTexUsageUnordered,
-            kTexUsageRenderTarget,
-            kTexUsageDepthStencil
+            USAGE_NONE = 0,
+            USAGE_SHADER,
+            USAGE_UNORDERED,
+            USAGE_RENDER_TARGET,
+            USAGE_DEPTH_STENCIL
         };
     }
 
     struct TextureDesc
     {
-        tex::Type           mType = tex::kTexture2D;
-        tex::Usage          mUsage = tex::kTexUsageShader;
+        tex::Type           mType = tex::TEXTURE_2D;
+        tex::Usage          mUsage = tex::USAGE_SHADER;
         uint32_t            mWidth = 0;
         uint32_t            mHeight = 0;
         Handle<GPUResource> mBuffer = Handle<GPUResource>();
@@ -39,9 +39,8 @@ namespace nv::graphics
     class Texture
     {
     public:
-        virtual void Create(const TextureDesc& desc) = 0;
-
         virtual ~Texture() {}
+
     private:
         TextureDesc mDesc;
     };

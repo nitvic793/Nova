@@ -18,7 +18,7 @@ namespace nv::graphics
     {
     public:
         bool Init(Window& window) override;
-        void Present(); //Temp
+        void Present() override;
         ~DeviceDX12();
 
     private:

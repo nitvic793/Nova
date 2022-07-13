@@ -2,6 +2,14 @@
 
 namespace nv::graphics
 {
+    namespace buffer
+    {
+        enum Flags
+        {
+
+        };
+    }
+
     struct GPUResourceDesc
     {
 
@@ -9,6 +17,7 @@ namespace nv::graphics
 
     class GPUResource
     {
+    public:
 
     };
 }
