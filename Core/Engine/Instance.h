@@ -15,8 +15,17 @@ namespace nv
         bool Destroy();
         void Reload();
 
+    public:
+        static void SetError(bool isError, const char* pReason);
+        static bool HasError() { return sError; }
+        static const char* GetErrorReason() { return spErrorReason; }
+
     protected:
         const char* mAppName;
+
+    protected:
+        static bool sError;
+        static const char* spErrorReason;
     };
 }
 

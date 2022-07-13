@@ -8,6 +8,9 @@
 
 namespace nv
 { 
+    bool Instance::sError = false;
+    const char* Instance::spErrorReason = nullptr;
+
     bool Instance::Init()
     {
         log::Info("Init Nova App: {}", mAppName);
@@ -36,5 +39,11 @@ namespace nv
 
     void Instance::Reload()
     {
+    }
+
+    void Instance::SetError(bool isError, const char* pReason)
+    {
+        sError = isError;
+        spErrorReason = pReason;
     }
 }

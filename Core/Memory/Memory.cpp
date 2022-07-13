@@ -103,7 +103,11 @@ namespace nv
     {
 #if NV_ENABLE_MEM_TRACKING
         const size_t size = mPtrSizeMap.at((PtrType)ptr);
+        const auto key = (PtrType)ptr;
         mPtrSizeMap.erase((PtrType)ptr);
+        auto it = mTagSizeMap.find(key);
+        if (it != mTagSizeMap.end())
+            mTagSizeMap.erase(it);
         mBytesAllocated -= size;
 #endif
     }
