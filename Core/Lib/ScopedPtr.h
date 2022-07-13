@@ -30,11 +30,11 @@ namespace nv
 
 		ScopedPtr() {}
 
-		T& operator * () { return *ptr; }
-		T* operator -> () { return ptr; }
-		T* operator -> () const { return ptr; }
-		T* Get() { return ptr; }
-		T* Get() const { return ptr; }
+		constexpr T& operator * () { return *ptr; }
+		constexpr T* operator -> () { return ptr; }
+		constexpr T* operator -> () const { return ptr; }
+		constexpr T* Get() { return ptr; }
+		constexpr T* Get() const { return ptr; }
 
 		//For compatibility
 		T* get() { return ptr; }

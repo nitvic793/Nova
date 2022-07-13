@@ -102,6 +102,12 @@
     <ClInclude Include="Renderer\Format.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DX12\Interop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\CommonDefines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer\Renderer.cpp">
@@ -126,6 +132,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DX12\TextureDX12.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12\GPUResourceDX12.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

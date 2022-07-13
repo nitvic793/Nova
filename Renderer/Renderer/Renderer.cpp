@@ -46,4 +46,9 @@ namespace nv::graphics
         ReportLeaksDX12();
 #endif
     }
+
+    Device* IRenderer::GetDevice() const
+    {
+        return mDevice.Get();
+    }
 }

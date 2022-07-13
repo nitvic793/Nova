@@ -98,6 +98,11 @@ namespace nv::graphics
 	{
 	}
 
+	ID3D12Device* DeviceDX12::GetDevice() const
+	{
+		return mDevice.Get();
+	}
+
 	bool DeviceDX12::InitSwapChain(Window& window, DXGI_FORMAT format)
 	{
 		auto win = (WindowDX12*)&window;

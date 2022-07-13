@@ -152,6 +152,7 @@
     <ClInclude Include="DX12\DeviceDX12.h" />
     <ClInclude Include="DX12\DirectXIncludes.h" />
     <ClInclude Include="DX12\GPUResourceDX12.h" />
+    <ClInclude Include="DX12\Interop.h" />
     <ClInclude Include="DX12\MeshDX12.h" />
     <ClInclude Include="DX12\PipelineStateDX12.h" />
     <ClInclude Include="DX12\RendererDX12.h" />
@@ -161,6 +162,7 @@
     <ClInclude Include="DX12\WindowDX12.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Renderer\CommonDefines.h" />
     <ClInclude Include="Renderer\Context.h" />
     <ClInclude Include="Renderer\DescriptorHeap.h" />
     <ClInclude Include="Renderer\Device.h" />
@@ -178,6 +180,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DX12\DeviceDX12.cpp" />
+    <ClCompile Include="DX12\GPUResourceDX12.cpp" />
     <ClCompile Include="DX12\RendererDX12.cpp" />
     <ClCompile Include="DX12\ResourceManagerDX12.cpp" />
     <ClCompile Include="DX12\TextureDX12.cpp" />

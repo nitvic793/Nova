@@ -21,6 +21,8 @@ namespace nv::graphics
         void Present() override;
         ~DeviceDX12();
 
+        ID3D12Device* GetDevice() const;
+
     private:
         bool InitSwapChain(Window& window, DXGI_FORMAT format);
 

@@ -12,6 +12,7 @@ namespace nv::graphics
     class PipelineStateDX12;
     class TextureDX12;
     class MeshDX12;
+    class DeviceDX12;
 
     class ResourceManagerDX12 : public ResourceManager
     {
@@ -37,5 +38,6 @@ namespace nv::graphics
         Pool<PipelineState, PipelineStateDX12>  mPipelineStates;
         Pool<Texture, TextureDX12>              mTextures;
         Pool<Mesh, MeshDX12>                    mMeshes;
+        DeviceDX12*                             mDevice;
     };
 }

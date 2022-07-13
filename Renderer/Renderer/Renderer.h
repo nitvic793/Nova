@@ -19,6 +19,9 @@ namespace nv::graphics
         virtual void Present() {}
         virtual void Destroy() = 0;
         virtual ~IRenderer() {}
+
+        Device* GetDevice() const;
+
     protected:
         ScopedPtr<Device, true> mDevice;
     };

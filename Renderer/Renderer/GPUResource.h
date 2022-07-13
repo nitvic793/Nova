@@ -1,18 +1,25 @@
 #pragma once
 
+#include <Renderer/CommonDefines.h>
+
 namespace nv::graphics
 {
-    namespace buffer
-    {
-        enum Flags
-        {
+    class GPUResource;
 
-        };
-    }
+    struct TransitionBarrier
+    {
+        buffer::State       mFrom = buffer::STATE_COMMON;
+        buffer::State       mTo = buffer::STATE_COMMON;
+        Handle<GPUResource> mResource = Handle<GPUResource>();
+    };
 
     struct GPUResourceDesc
     {
-
+        uint32_t        mWidth = 0;
+        uint32_t        mHeight = 0;
+        buffer::Type    mType = buffer::TYPE_BUFFER;
+        buffer::Flags   mFlags = buffer::FLAG_NONE;
+        buffer::State   mInitialState = buffer::STATE_COMMON;
     };
 
     class GPUResource

@@ -1,18 +1,22 @@
 #include "pch.h"
 
 #include "ResourceManagerDX12.h"
-
+#include <DX12/RendererDX12.h>
 #include <DX12/ShaderDX12.h>
 #include <DX12/GPUResourceDX12.h>
 #include <DX12/PipelineStateDX12.h>
 #include <DX12/TextureDX12.h>
 #include <DX12/MeshDX12.h>
+#include <DX12/DeviceDX12.h>
+#include <DX12/Interop.h>
 #include <d3d12.h>
+#include "d3dx12.h"
 
 namespace nv::graphics
 {
     ResourceManagerDX12::ResourceManagerDX12()
     {
+        mDevice = (DeviceDX12*)gRenderer->GetDevice();
         mGpuResources.Init();
         mMeshes.Init();
         mPipelineStates.Init();
@@ -27,7 +31,32 @@ namespace nv::graphics
 
     Handle<GPUResource> ResourceManagerDX12::CreateResource(const GPUResourceDesc& desc)
     {
-        return Handle<GPUResource>();
+        ID3D12Device* device = mDevice->GetDevice();
+
+        Handle<GPUResource> handle;
+        auto resource = (GPUResourceDX12*)mGpuResources.CreateInstance(handle);
+        
+        ID3D12Resource* d3dResource = nullptr;
+        CD3DX12_RESOURCE_DESC bufferDesc = {};
+        CD3DX12_HEAP_PROPERTIES heapProps = {};
+        D3D12_HEAP_FLAGS heapFlag = D3D12_HEAP_FLAG_NONE;
+        D3D12_CLEAR_VALUE clearValue = {};
+        D3D12_RESOURCE_STATES initResourceState = GetState(desc.mInitialState);
+
+        switch (desc.mType)
+        {
+        case buffer::TYPE_BUFFER:
+            bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(desc.mWidth);
+            heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+            break;
+        case buffer::TYPE_TEXTURE_2D: 
+            //bufferDesc = CD3DX12_RESOURCE_DESC::Tex2D(,)
+            break;
+        }
+
+        device->CreateCommittedResource(&heapProps, heapFlag, &bufferDesc, initResourceState, &clearValue, IID_PPV_ARGS(resource->GetResource().ReleaseAndGetAddressOf()));
+
+        return handle;
     }
 
     Handle<PipelineState> ResourceManagerDX12::CreatePipelineState(const PipelineState& desc)
