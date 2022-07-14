@@ -26,11 +26,15 @@ namespace nv::graphics
         virtual Handle<Texture>         CreateTexture(const TextureDesc& desc) override;
         virtual Handle<Mesh>            CreateMesh(const TextureDesc& desc) override;
 
+        virtual GPUResource*            Emplace(Handle<GPUResource>& handle) override;
+
         virtual Texture*                GetTexture(Handle<Texture>) override;
         virtual GPUResource*            GetGPUResource(Handle<GPUResource>) override;
         virtual PipelineState*          GetPipelineState(Handle<PipelineState>) override;
         virtual Shader*                 GetShader(Handle<Shader>) override;
         virtual Mesh*                   GetMesh(Handle<Mesh>) override;
+
+        ~ResourceManagerDX12();
 
     private:
         Pool<GPUResource, GPUResourceDX12>      mGpuResources;

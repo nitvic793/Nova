@@ -9,6 +9,8 @@ namespace nv::graphics
 
     class SwapChain
     {
+    public:
 
+    protected:
     };
 }

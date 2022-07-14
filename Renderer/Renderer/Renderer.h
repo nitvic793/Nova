@@ -2,6 +2,7 @@
 
 #include <Lib/Handle.h>
 #include <Lib/ScopedPtr.h>
+#include <Renderer/CommonDefines.h>
 
 namespace nv::graphics
 {
@@ -15,6 +16,8 @@ namespace nv::graphics
     {
     public:
         virtual void Init(Window& window) = 0;
+        virtual void InitDependentResources() {};
+
         virtual void Draw() {}
         virtual void Present() {}
         virtual void Destroy() = 0;
@@ -24,6 +27,7 @@ namespace nv::graphics
 
     protected:
         ScopedPtr<Device, true> mDevice;
+        Handle<GPUResource>     mpBackBuffers[FRAMEBUFFER_COUNT];
     };
 
     extern IRenderer* gRenderer;

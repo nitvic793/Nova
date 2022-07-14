@@ -4,6 +4,8 @@
 
 namespace nv::graphics
 {
+    static constexpr int FRAMEBUFFER_COUNT = 3;
+
     enum ContextType : uint8_t
     {
         CONTEXT_GFX = 0,

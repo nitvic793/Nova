@@ -28,6 +28,7 @@ namespace nv::graphics
         gRenderer->Init(*gWindow);
 
         gResourceManager = Alloc<ResourceManagerDX12>();
+        gRenderer->InitDependentResources();
 
         gSystemManager.CreateSystem<RenderSystem>();
 #endif

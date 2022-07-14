@@ -21,8 +21,6 @@ namespace nv::graphics
     class Device
     {
     public:
-        static constexpr int kFrameBufferCount = 3;
-
         virtual bool Init(Window& window) = 0;
         virtual void Present() = 0;
         virtual ~Device() {}

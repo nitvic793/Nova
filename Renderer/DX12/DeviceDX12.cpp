@@ -4,6 +4,7 @@
 #include <DX12/WindowDX12.h>
 #include <Engine/Log.h>
 #include <DX12/DirectXIncludes.h>
+#include <Renderer/CommonDefines.h>
 
 namespace nv::graphics
 {
@@ -114,7 +115,7 @@ namespace nv::graphics
 		sampleDesc.Count = 1;
 
 		DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
-		swapChainDesc.BufferCount = kFrameBufferCount;
+		swapChainDesc.BufferCount = FRAMEBUFFER_COUNT;
 		swapChainDesc.BufferDesc = backBufferDesc;
 		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; 
@@ -134,7 +135,7 @@ namespace nv::graphics
 		if (window.IsFullScreen())
 		{
 			mSwapChain->SetFullscreenState(TRUE, nullptr);
-			mSwapChain->ResizeBuffers(kFrameBufferCount, window.GetWidth(), window.GetHeight(), format, 0);
+			mSwapChain->ResizeBuffers(FRAMEBUFFER_COUNT, window.GetWidth(), window.GetHeight(), format, 0);
 		}
 
 		return true;

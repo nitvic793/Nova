@@ -25,6 +25,8 @@ namespace nv::graphics
         virtual Handle<Texture>         CreateTexture(const TextureDesc& desc) = 0;
         virtual Handle<Mesh>            CreateMesh(const TextureDesc& desc) = 0;
 
+        virtual GPUResource*            Emplace(Handle<GPUResource>& handle) = 0;
+
         virtual Texture*                GetTexture(Handle<Texture>) = 0;
         virtual GPUResource*            GetGPUResource(Handle<GPUResource>) = 0;
         virtual PipelineState*          GetPipelineState(Handle<PipelineState>) = 0;

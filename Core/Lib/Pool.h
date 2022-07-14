@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include "Vector.h"
+#include <Lib/Util.h>
 
 namespace nv
 {
@@ -69,14 +70,15 @@ namespace nv
                 data = GetIndex(handle);
             }
 
-            new (data) TDerived(std::forward<Args>(args)...); // Placement construct
+            new (data) TDerived(nv::Forward<Args>(args)...); // Placement construct
             handle.mGeneration = mGenerations[handle.mIndex];
             return handle;
         }
 
-        T* CreateInstance(Handle<T>& outHandle)
+        template<typename ...Args>
+        T* CreateInstance(Handle<T>& outHandle, Args&&... args)
         {
-            outHandle = Create();
+            outHandle = Create(Forward<Args>(args)...);
             return GetIndex(outHandle);
         }
 

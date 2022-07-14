@@ -81,6 +81,9 @@
     <ClInclude Include="Lib\Util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Debug\Error.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -99,6 +102,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Instance.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\Error.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

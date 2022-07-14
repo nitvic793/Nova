@@ -14,13 +14,16 @@ namespace nv::graphics
         virtual void Init(Window& window) override;
         virtual void Destroy() override;
         virtual void Present() override;
+        virtual void InitDependentResources() override;
         ~RendererDX12();
 
     private:
-        Pool<DescriptorHeap, DescriptorHeapDX12> mDescriptorHeapPool;
+        Pool<DescriptorHeap, DescriptorHeapDX12, 8> mDescriptorHeapPool;
         Handle<DescriptorHeap> mRtvHeap;
         Handle<DescriptorHeap> mDsvHeap;
         Handle<DescriptorHeap> mGpuHeap;
+        Handle<DescriptorHeap> mTextureHeap;
+        Handle<DescriptorHeap> mConstantBufferHeap;
     };
 
     void ReportLeaksDX12();

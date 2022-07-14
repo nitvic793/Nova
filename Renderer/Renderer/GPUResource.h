@@ -31,6 +31,6 @@ namespace nv::graphics
     class GPUResource
     {
     public:
-
+        virtual ~GPUResource() {}
     };
 }

@@ -79,6 +79,11 @@ namespace nv::graphics
         return Handle<Mesh>();
     }
 
+    GPUResource* ResourceManagerDX12::Emplace(Handle<GPUResource>& handle)
+    {
+        return mGpuResources.CreateInstance(handle);
+    }
+
     Texture* ResourceManagerDX12::GetTexture(Handle<Texture> handle)
     {
         return mTextures.Get(handle);
@@ -102,5 +107,14 @@ namespace nv::graphics
     Mesh* ResourceManagerDX12::GetMesh(Handle<Mesh> handle)
     {
         return mMeshes.Get(handle);
+    }
+
+    ResourceManagerDX12::~ResourceManagerDX12()
+    {
+        mGpuResources.Destroy();
+        mMeshes.Destroy();
+        mPipelineStates.Destroy();
+        mShaders.Destroy();
+        mTextures.Destroy();
     }
 }

@@ -33,7 +33,7 @@ namespace nv::graphics
         return D3D12_RESOURCE_STATE_COMMON;
     }
 
-    const D3D12_RESOURCE_FLAGS GetFlags(buffer::Flags bufferFlags)
+    static const D3D12_RESOURCE_FLAGS GetFlags(buffer::Flags bufferFlags)
     {
         D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE;
         flags |= (bufferFlags & buffer::FLAG_ALLOW_RENDER_TARGET)       ? D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET               : D3D12_RESOURCE_FLAG_NONE;

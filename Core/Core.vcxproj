@@ -148,6 +148,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Debug\Error.h" />
     <ClInclude Include="Lib\Util.h" />
     <ClInclude Include="NovaConfig.h" />
     <ClInclude Include="Context.h" />
@@ -173,6 +174,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Context.cpp" />
+    <ClCompile Include="Debug\Error.cpp" />
     <ClCompile Include="Engine\Instance.cpp" />
     <ClCompile Include="Engine\System.cpp" />
     <ClCompile Include="Memory\Allocator.cpp" />
