@@ -35,13 +35,17 @@ namespace nv::graphics
 
         Handle<GPUResource> handle;
         auto resource = (GPUResourceDX12*)mGpuResources.CreateInstance(handle);
+        if (!resource)
+            return Null<GPUResource>();
         
         ID3D12Resource* d3dResource = nullptr;
         CD3DX12_RESOURCE_DESC bufferDesc = {};
-        CD3DX12_HEAP_PROPERTIES heapProps = {};
+        CD3DX12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
         D3D12_HEAP_FLAGS heapFlag = D3D12_HEAP_FLAG_NONE;
         D3D12_CLEAR_VALUE clearValue = {};
-        D3D12_RESOURCE_STATES initResourceState = GetState(desc.mInitialState);
+        const D3D12_RESOURCE_STATES initResourceState = GetState(desc.mInitialState);
+        const DXGI_FORMAT format = GetFormat(desc.mFormat);
+        const D3D12_RESOURCE_FLAGS flags = GetFlags(desc.mFlags);
 
         switch (desc.mType)
         {
@@ -50,11 +54,12 @@ namespace nv::graphics
             heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
             break;
         case buffer::TYPE_TEXTURE_2D: 
-            //bufferDesc = CD3DX12_RESOURCE_DESC::Tex2D(,)
+            bufferDesc = CD3DX12_RESOURCE_DESC::Tex2D(format, desc.mWidth, desc.mHeight, desc.mArraySize, desc.mMipLevels, desc.mSampleCount, desc.mSampleQuality, flags);
             break;
         }
 
-        device->CreateCommittedResource(&heapProps, heapFlag, &bufferDesc, initResourceState, &clearValue, IID_PPV_ARGS(resource->GetResource().ReleaseAndGetAddressOf()));
+        auto hr = device->CreateCommittedResource(&heapProps, heapFlag, &bufferDesc, initResourceState, &clearValue, IID_PPV_ARGS(resource->GetResource().ReleaseAndGetAddressOf()));
+        if (!SUCCEEDED(hr)) return Null<GPUResource>();
 
         return handle;
     }

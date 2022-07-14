@@ -41,7 +41,8 @@ namespace nv::graphics
             FLAG_NONE = 0,
             FLAG_ALLOW_RENDER_TARGET = 1,
             FLAG_ALLOW_DEPTH = 1 << 1,
-            FLAG_ALLOW_UNORDERED = 1 << 2
+            FLAG_ALLOW_UNORDERED = 1 << 2,
+            FLAG_RAYTRACING_ACCELERATION = 1 << 3
         };
 
         enum Type : uint8_t
