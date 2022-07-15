@@ -12,6 +12,7 @@ namespace nv
     {
     public:
         virtual void*   Allocate(size_t size) = 0;
+        virtual void*   Realloc(size_t size, void* ptr) {}
         virtual void    Free(void* ptr) = 0;
         virtual void    Reset() {};
     };
@@ -21,6 +22,7 @@ namespace nv
     public:
         void*   Allocate(size_t size) override;
         void    Free(void* ptr) override;
+        void*   Realloc(size_t size, void* ptr) override;
 
         static SystemAllocator* gPtr;
     };

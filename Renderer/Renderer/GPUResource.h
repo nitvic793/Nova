@@ -14,18 +14,27 @@ namespace nv::graphics
         Handle<GPUResource> mResource   = Handle<GPUResource>();
     };
 
+    struct ResourceClearValue
+    {
+        format::SurfaceFormat   mFormat     = format::UNKNOWN;
+        float                   mColor[4]   = { 0.f, 0.f, 0.f, 0.f };
+        uint8_t                 mStencil    = 0;
+        bool                    mIsDepth    = true;
+    };
+
     struct GPUResourceDesc
     {
         uint32_t                mWidth          = 0;
         uint32_t                mHeight         = 0;
+        format::SurfaceFormat   mFormat         = format::UNKNOWN;
+        buffer::Type            mType           = buffer::TYPE_BUFFER;
+        buffer::Flags           mFlags          = buffer::FLAG_NONE;
+        buffer::State           mInitialState   = buffer::STATE_COMMON;
         uint32_t                mArraySize      = 1;
         uint32_t                mMipLevels      = 0;
         uint32_t                mSampleCount    = 1;
         uint32_t                mSampleQuality  = 0;
-        buffer::Type            mType           = buffer::TYPE_BUFFER;
-        buffer::Flags           mFlags          = buffer::FLAG_NONE;
-        buffer::State           mInitialState   = buffer::STATE_COMMON;
-        format::SurfaceFormat   mFormat         = format::UNKNOWN;
+        ResourceClearValue      mClearValue     = {};
     };
 
     class GPUResource

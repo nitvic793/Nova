@@ -104,9 +104,13 @@ TEST_F(CoreTests, PoolTest)
     EXPECT_EQ(data4.GetTest(), 100);
 
     data4.Test(101);
+    pool.Destroy();
 }
 
-struct IComponent {};
+struct IComponent 
+{
+    const char* mName = "COMPONENT";
+};
 
 struct TestComponent : public IComponent
 {
@@ -136,7 +140,37 @@ TEST_F(CoreTests, PoolSpanTest)
 
     EXPECT_FLOAT_EQ(comPool.GetAsDerived(h1)->mMuliplier, 4.f);
     EXPECT_FLOAT_EQ(comPool.GetAsDerived(h2)->mMuliplier, 8.f);
+    comPool.Destroy();
+}
 
+TEST_F(CoreTests, PoolGrowTest)
+{
+    using namespace nv;
+
+    Pool<IComponent, TestComponent, 2> comPool;
+    comPool.Init();
+    auto h1 = comPool.Insert({ .mSpeed = 1.5f, .mMuliplier = 1.f });
+    auto h2 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
+    auto h3 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
+    auto h4 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
+
+    EXPECT_EQ(comPool.Size(), 4);
+
+    auto comSpan = comPool.Span();
+
+    for (TestComponent& comp : comSpan)
+    {
+        comp.mMuliplier *= 2.f;
+    }
+
+    for (auto i = 0llu; i < comSpan.Size(); ++i)
+    {
+        comSpan[i].mMuliplier *= 2.f;
+    }
+
+    EXPECT_FLOAT_EQ(comPool.GetAsDerived(h1)->mMuliplier, 4.f);
+    EXPECT_FLOAT_EQ(comPool.GetAsDerived(h3)->mMuliplier, 8.f);
+    comPool.Destroy();
 }
 
 TEST_F(CoreTests, StringHashTest)

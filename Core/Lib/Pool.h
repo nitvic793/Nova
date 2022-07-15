@@ -27,7 +27,7 @@ namespace nv
 
         void Init()
         {
-            mBuffer = (T*)SystemAllocator::gPtr->Allocate(sizeof(TDerived) * kDefaultPoolCount);
+            mBuffer = (TDerived*)SystemAllocator::gPtr->Allocate(sizeof(TDerived) * kDefaultPoolCount);
         }
 
         void Destroy()
@@ -36,7 +36,7 @@ namespace nv
             {
                 if (!mFreeIndices.Exists(i))
                 {
-                    GetIndex(i)->~T();
+                    GetIndex(i)->~TDerived();
                 }
             }
 
@@ -76,7 +76,7 @@ namespace nv
         }
 
         template<typename ...Args>
-        T* CreateInstance(Handle<T>& outHandle, Args&&... args)
+        TDerived* CreateInstance(Handle<T>& outHandle, Args&&... args)
         {
             outHandle = Create(Forward<Args>(args)...);
             return GetIndex(outHandle);
@@ -107,7 +107,7 @@ namespace nv
             {
                 mGenerations[handle.mIndex]++;
                 mFreeIndices.Push(handle.mIndex);
-                GetIndex(handle)->~T();
+                GetIndex(handle)->~TDerived();
             }
         }
 
@@ -138,33 +138,40 @@ namespace nv
             mSize = 0;
         }
 
+        constexpr size_t GetStrideSize() const { return sizeof(TDerived); }
+        constexpr uint32_t Size() const { return mSize; }
+        constexpr uint32_t Capacity() const { return mCapacity; }
+        constexpr TDerived* Data() const { return mBuffer; }
+
     private:
         void GrowIfNeeded()
         {
-            if (mSize + 1 >= mCapacity)
+            if (mSize + 1 > mCapacity)
             {
                 auto oldCapacity = mCapacity;
                 mCapacity *= 2;
-                void* pBuffer = SystemAllocator::gPtr->Allocate(sizeof(TDerived) * mCapacity);
+                void* pBuffer = SystemAllocator::gPtr->Allocate(sizeof(TDerived) * mCapacity);// , mBuffer);
                 memcpy(pBuffer, mBuffer, oldCapacity * sizeof(TDerived));
                 if(mBuffer)
                     SystemAllocator::gPtr->Free(mBuffer);
-                mBuffer = (T*)pBuffer;
+                mBuffer = (TDerived*)pBuffer;
+
+                mGenerations.Grow(mCapacity);
             }
         }
 
-        constexpr T* GetIndex(Handle<T> handle) const
+        constexpr TDerived* GetIndex(Handle<T> handle) const
         {
             return GetIndex(handle.mIndex);
         }
 
-        constexpr T* GetIndex(uint32_t index) const
+        constexpr TDerived* GetIndex(uint32_t index) const
         {
-            return (T*)((Byte*)mBuffer + index * sizeof(TDerived));
+            return (TDerived*)((Byte*)mBuffer + index * sizeof(TDerived));
         }
 
     private:
-        T*                      mBuffer;
+        TDerived*               mBuffer;
         uint32_t                mSize;
         uint32_t                mCapacity;
         nv::Vector<uint32_t>    mFreeIndices;

@@ -47,6 +47,11 @@ namespace nv::graphics
         const DXGI_FORMAT format = GetFormat(desc.mFormat);
         const D3D12_RESOURCE_FLAGS flags = GetFlags(desc.mFlags);
 
+        if (desc.mClearValue.mIsDepth)
+            clearValue = CD3DX12_CLEAR_VALUE(GetFormat(desc.mClearValue.mFormat), desc.mClearValue.mColor[0], desc.mClearValue.mStencil);
+        else
+            clearValue = CD3DX12_CLEAR_VALUE(GetFormat(desc.mClearValue.mFormat), desc.mClearValue.mColor);
+
         switch (desc.mType)
         {
         case buffer::TYPE_BUFFER:
