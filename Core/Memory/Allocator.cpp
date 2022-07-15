@@ -23,6 +23,17 @@ namespace nv
         free(ptr);
     }
 
+    void* SystemAllocator::Realloc(size_t size, void* ptr)
+    {
+        auto buffer = realloc(ptr, size);
+        if (nv::MemTracker::gPtr)
+        {
+            nv::MemTracker::gPtr->TrackSysFree(ptr);
+            nv::MemTracker::gPtr->TrackSysAlloc(buffer, size);
+        }
+        return buffer;
+    }
+
     void* ArenaAllocator::Allocate(size_t size)
     {
         assert((mCurrent - mBuffer) + size <= mCapacity);

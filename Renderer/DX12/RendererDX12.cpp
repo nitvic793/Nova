@@ -56,11 +56,12 @@ namespace nv::graphics
         assert(gResourceManager);
 
         const format::SurfaceFormat format = format::R8G8B8A8_UNORM;
-        constexpr auto dxgiFormat = GetFormat(format);
+        const auto dxgiFormat = GetFormat(format);
         GPUResourceDX12* backBufferResources[FRAMEBUFFER_COUNT];
 
         auto dxDevice = (DeviceDX12*)mDevice.Get();
         auto rtvDescriptorHeap = mDescriptorHeapPool.GetAsDerived(mRtvHeap);
+        auto dsvDescriptorHeap = mDescriptorHeapPool.GetAsDerived(mDsvHeap);
 
         for (int32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
             backBufferResources[i] = (GPUResourceDX12*)gResourceManager->Emplace(mpBackBuffers[i]);
@@ -90,6 +91,29 @@ namespace nv::graphics
             dxDevice->GetDevice()->CreateRenderTargetView(backBufferResources[i]->GetResource().Get(), &rtvDesc, rtvDescriptorHeap->HandleCPU(i));
             backBufferResources[i]->SetView(VIEW_RENDER_TARGET, DescriptorHandle(rtvDescriptorHeap->HandleCPU(i)));
         }
+
+        const auto dsvFormat = format::D32_FLOAT;
+        
+        auto depthHandle = gResourceManager->CreateResource(
+            {
+                .mWidth = gWindow->GetWidth(),
+                .mHeight = gWindow->GetHeight(),
+                .mFormat = dsvFormat,
+                .mType = buffer::TYPE_TEXTURE_2D,
+                .mFlags = buffer::FLAG_ALLOW_DEPTH,
+                .mInitialState = buffer::STATE_DEPTH_WRITE,
+                .mClearValue = {.mFormat = dsvFormat,.mColor = {1.f,0,0,0} , .mStencil = 0}
+            }
+        );
+
+        D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+        dsvDesc.Texture2D.MipSlice = 0;
+        dsvDesc.Format = GetFormat(dsvFormat);
+        dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+        dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+        auto depthResource = (GPUResourceDX12*)gResourceManager->GetGPUResource(depthHandle);
+        dxDevice->mDevice->CreateDepthStencilView(depthResource->GetResource().Get(), &dsvDesc, dsvDescriptorHeap->HandleCPU(0));
     }
 
     RendererDX12::~RendererDX12()

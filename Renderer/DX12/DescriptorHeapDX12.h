@@ -70,11 +70,12 @@ namespace nv::graphics
 		}
 
 		~DescriptorHeapDX12() { }
+
 	private:
-		D3D12_DESCRIPTOR_HEAP_DESC mHeapDesc;
-		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mpDescriptorHeap;
-		D3D12_CPU_DESCRIPTOR_HANDLE mCPUHeapStart;
-		D3D12_GPU_DESCRIPTOR_HANDLE mGPUHeapStart;
-		UINT mHandleIncrementSize;
+		D3D12_DESCRIPTOR_HEAP_DESC						mHeapDesc;
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>	mpDescriptorHeap;
+		D3D12_CPU_DESCRIPTOR_HANDLE						mCPUHeapStart;
+		D3D12_GPU_DESCRIPTOR_HANDLE						mGPUHeapStart;
+		UINT											mHandleIncrementSize;
 	};
 }
