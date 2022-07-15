@@ -31,6 +31,12 @@ namespace nv::graphics
     class GPUResource
     {
     public:
+        GPUResource(const GPUResourceDesc& desc) :
+            mDesc(desc) {}
         virtual ~GPUResource() {}
+        constexpr const GPUResourceDesc& GetDesc() const { return mDesc; }
+
+    protected:
+        GPUResourceDesc mDesc;
     };
 }

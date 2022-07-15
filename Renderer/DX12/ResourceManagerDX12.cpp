@@ -32,9 +32,9 @@ namespace nv::graphics
     Handle<GPUResource> ResourceManagerDX12::CreateResource(const GPUResourceDesc& desc)
     {
         ID3D12Device* device = mDevice->GetDevice();
-
+        
         Handle<GPUResource> handle;
-        auto resource = (GPUResourceDX12*)mGpuResources.CreateInstance(handle);
+        auto resource = (GPUResourceDX12*)mGpuResources.CreateInstance(handle, desc);
         if (!resource)
             return Null<GPUResource>();
         
