@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Lib/ScopedPtr.h>
+#include <Renderer/Format.h>
 
 namespace nv::graphics
 {
@@ -23,6 +24,7 @@ namespace nv::graphics
     public:
         virtual bool Init(Window& window) = 0;
         virtual void Present() = 0;
+        virtual bool InitSwapChain(const Window& window, const format::SurfaceFormat format) = 0;
         virtual ~Device() {}
 
     public:

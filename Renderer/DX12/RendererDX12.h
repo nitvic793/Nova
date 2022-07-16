@@ -14,7 +14,7 @@ namespace nv::graphics
         virtual void Init(Window& window) override;
         virtual void Destroy() override;
         virtual void Present() override;
-        virtual void InitDependentResources() override;
+        virtual void InitFrameBuffers(const Window& window, const format::SurfaceFormat format) override;
         ~RendererDX12();
 
     private:

@@ -11,7 +11,7 @@ namespace nv::graphics
     {
         buffer::State       mFrom       = buffer::STATE_COMMON;
         buffer::State       mTo         = buffer::STATE_COMMON;
-        Handle<GPUResource> mResource   = Handle<GPUResource>();
+        Handle<GPUResource> mResource   = Null<GPUResource>();
     };
 
     struct ResourceClearValue

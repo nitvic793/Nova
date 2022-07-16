@@ -22,9 +22,7 @@ namespace nv::graphics
         ~DeviceDX12();
 
         ID3D12Device* GetDevice() const;
-
-    private:
-        bool InitSwapChain(Window& window, DXGI_FORMAT format);
+        bool InitSwapChain(const Window& window, const format::SurfaceFormat format) override;
 
     private:
         template<typename T>

@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "DeviceDX12.h"
+#include <Engine/Log.h>
 #include <Renderer/Window.h>
 #include <DX12/WindowDX12.h>
-#include <Engine/Log.h>
 #include <DX12/DirectXIncludes.h>
-#include <Renderer/CommonDefines.h>
+#include <DX12/Interop.h>
 
 namespace nv::graphics
 {
@@ -84,9 +84,6 @@ namespace nv::graphics
 
 		if (!SUCCEEDED(hr)) return false;
 
-		if (!InitSwapChain(window, DXGI_FORMAT_R8G8B8A8_UNORM))
-			return false;
-
 		return true;
     }
 
@@ -104,13 +101,14 @@ namespace nv::graphics
 		return mDevice.Get();
 	}
 
-	bool DeviceDX12::InitSwapChain(Window& window, DXGI_FORMAT format)
+	bool DeviceDX12::InitSwapChain(const Window& window, const format::SurfaceFormat format)
 	{
+		const auto dxgiFormat = GetFormat(format);
 		auto win = (WindowDX12*)&window;
 		DXGI_MODE_DESC backBufferDesc = {};
 		backBufferDesc.Width = window.GetWidth();
 		backBufferDesc.Height = window.GetHeight();
-		backBufferDesc.Format = format;
+		backBufferDesc.Format = dxgiFormat;
 		DXGI_SAMPLE_DESC sampleDesc = {};
 		sampleDesc.Count = 1;
 
@@ -135,7 +133,7 @@ namespace nv::graphics
 		if (window.IsFullScreen())
 		{
 			mSwapChain->SetFullscreenState(TRUE, nullptr);
-			mSwapChain->ResizeBuffers(FRAMEBUFFER_COUNT, window.GetWidth(), window.GetHeight(), format, 0);
+			mSwapChain->ResizeBuffers(FRAMEBUFFER_COUNT, window.GetWidth(), window.GetHeight(), dxgiFormat, 0);
 		}
 
 		return true;

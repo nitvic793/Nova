@@ -51,12 +51,13 @@ namespace nv::graphics
         device->Present();
     }
 
-    void RendererDX12::InitDependentResources()
+    void RendererDX12::InitFrameBuffers(const Window& window, const format::SurfaceFormat format)
     {
         assert(gResourceManager);
-
-        const format::SurfaceFormat format = format::R8G8B8A8_UNORM;
         const auto dxgiFormat = GetFormat(format);
+        if (!mDevice->InitSwapChain(window, format))
+            return;
+
         GPUResourceDX12* backBufferResources[FRAMEBUFFER_COUNT];
 
         auto dxDevice = (DeviceDX12*)mDevice.Get();

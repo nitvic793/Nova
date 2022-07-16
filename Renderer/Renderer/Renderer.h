@@ -3,6 +3,7 @@
 #include <Lib/Handle.h>
 #include <Lib/ScopedPtr.h>
 #include <Renderer/CommonDefines.h>
+#include <Renderer/Format.h>
 
 namespace nv::graphics
 {
@@ -16,7 +17,7 @@ namespace nv::graphics
     {
     public:
         virtual void Init(Window& window) = 0;
-        virtual void InitDependentResources() {};
+        virtual void InitFrameBuffers(const Window& window, const format::SurfaceFormat format) = 0;
 
         virtual void Draw() {}
         virtual void Present() {}

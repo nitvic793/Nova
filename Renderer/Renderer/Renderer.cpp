@@ -4,6 +4,7 @@
 #include <Renderer/RenderSystem.h>
 #include <Engine/System.h>
 #include <Renderer/ResourceManager.h>
+#include <Renderer/Format.h>
 
 #if NV_PLATFORM_WINDOWS && NV_RENDERER_DX12
 #include <DX12/WindowDX12.h>
@@ -14,9 +15,9 @@
 
 namespace nv::graphics
 {
-    IRenderer* gRenderer = nullptr;
-    Window* gWindow = nullptr;
-    ResourceManager* gResourceManager = nullptr;
+    IRenderer*          gRenderer           = nullptr;
+    Window*             gWindow             = nullptr;
+    ResourceManager*    gResourceManager    = nullptr;
 
     void InitGraphics(void* context)
     {
@@ -28,7 +29,7 @@ namespace nv::graphics
         gRenderer->Init(*gWindow);
 
         gResourceManager = Alloc<ResourceManagerDX12>();
-        gRenderer->InitDependentResources();
+        gRenderer->InitFrameBuffers(*gWindow, format::R8G8B8A8_UNORM); // Dependent on resource manager. 
 
         gSystemManager.CreateSystem<RenderSystem>();
 #endif
