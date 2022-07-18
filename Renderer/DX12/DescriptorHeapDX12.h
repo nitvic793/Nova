@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <wrl/client.h>
 #include <d3d12.h>
+#include <Lib/Vector.h>
 
 namespace nv::graphics
 {
@@ -64,6 +65,35 @@ namespace nv::graphics
 			return handle;
 		}
 
+		D3D12_GPU_DESCRIPTOR_HANDLE GetCurrentGPUHandle() const
+		{
+			assert(mSize > 0);
+			return HandleGPU(mSize - 1);
+		}
+
+		uint32_t GetCurrentIndex() const { return mSize;  }
+
+		D3D12_CPU_DESCRIPTOR_HANDLE PushCPU()
+		{
+			if (mFreeIndices.IsEmpty())
+				return HandleCPU(mSize++);
+			else
+				return HandleCPU(mFreeIndices.Pop());
+		}
+
+		D3D12_GPU_DESCRIPTOR_HANDLE PushGPU()
+		{
+			if (mFreeIndices.IsEmpty())
+				return HandleGPU(mSize++);
+			else
+				return HandleGPU(mFreeIndices.Pop());
+		}
+
+		void Remove(uint32_t index)
+		{
+			mFreeIndices.Push(index);
+		}
+
 		constexpr bool IsShaderVisible() const
 		{
 			return mHeapDesc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
@@ -77,5 +107,7 @@ namespace nv::graphics
 		D3D12_CPU_DESCRIPTOR_HANDLE						mCPUHeapStart;
 		D3D12_GPU_DESCRIPTOR_HANDLE						mGPUHeapStart;
 		UINT											mHandleIncrementSize;
+		uint32_t										mSize = 0;
+		Vector<uint32_t>								mFreeIndices;
 	};
 }

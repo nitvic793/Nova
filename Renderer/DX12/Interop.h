@@ -33,6 +33,19 @@ namespace nv::graphics
         return D3D12_RESOURCE_STATE_COMMON;
     }
 
+    constexpr D3D12_UAV_DIMENSION GetUAVDimension(tex::Type type)
+    {
+        switch (type)
+        {
+        case tex::TEXTURE_1D:   return D3D12_UAV_DIMENSION_TEXTURE1D;
+        case tex::TEXTURE_2D:   return D3D12_UAV_DIMENSION_TEXTURE2D;
+        case tex::TEXTURE_3D:   return D3D12_UAV_DIMENSION_TEXTURE3D;
+        case tex::BUFFER:       return D3D12_UAV_DIMENSION_BUFFER;
+        }
+
+        return D3D12_UAV_DIMENSION_UNKNOWN;
+    }
+
     static const D3D12_RESOURCE_FLAGS GetFlags(buffer::Flags bufferFlags)
     {
         D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE;

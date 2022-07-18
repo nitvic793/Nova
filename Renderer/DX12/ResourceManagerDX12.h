@@ -43,5 +43,7 @@ namespace nv::graphics
         Pool<Texture, TextureDX12>              mTextures;
         Pool<Mesh, MeshDX12>                    mMeshes;
         DeviceDX12*                             mDevice;
+
+        friend class RendererDX12;
     };
 }

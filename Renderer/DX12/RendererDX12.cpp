@@ -8,6 +8,7 @@
 #include <DX12/ResourceManagerDX12.h>
 #include <DX12/GPUResourceDX12.h>
 #include <DX12/Interop.h>
+#include <DX12/TextureDX12.h>
 
 #include <Debug/Error.h>
 
@@ -64,8 +65,9 @@ namespace nv::graphics
         auto rtvDescriptorHeap = mDescriptorHeapPool.GetAsDerived(mRtvHeap);
         auto dsvDescriptorHeap = mDescriptorHeapPool.GetAsDerived(mDsvHeap);
 
+        auto rm = (ResourceManagerDX12*)gResourceManager;
         for (int32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
-            backBufferResources[i] = (GPUResourceDX12*)gResourceManager->Emplace(mpBackBuffers[i]);
+            backBufferResources[i] = rm->mGpuResources.CreateInstance(mpBackBuffers[i], GPUResourceDesc{.mFormat = format /*TODO: Translate all*/});
 
         for (int32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
         {
@@ -89,8 +91,8 @@ namespace nv::graphics
 
         for (int32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
         {
-            dxDevice->GetDevice()->CreateRenderTargetView(backBufferResources[i]->GetResource().Get(), &rtvDesc, rtvDescriptorHeap->HandleCPU(i));
-            backBufferResources[i]->SetView(VIEW_RENDER_TARGET, DescriptorHandle(rtvDescriptorHeap->HandleCPU(i)));
+            TextureDesc rtvDesc = { .mUsage = tex::USAGE_RENDER_TARGET, .mFormat = format,.mBuffer = mpBackBuffers[i] };
+            gResourceManager->CreateTexture(rtvDesc);
         }
 
         const auto dsvFormat = format::D32_FLOAT;
@@ -107,14 +109,7 @@ namespace nv::graphics
             }
         );
 
-        D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-        dsvDesc.Texture2D.MipSlice = 0;
-        dsvDesc.Format = GetFormat(dsvFormat);
-        dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-        dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
-
-        auto depthResource = (GPUResourceDX12*)gResourceManager->GetGPUResource(depthHandle);
-        dxDevice->mDevice->CreateDepthStencilView(depthResource->GetResource().Get(), &dsvDesc, dsvDescriptorHeap->HandleCPU(0));
+        gResourceManager->CreateTexture({ .mUsage = tex::USAGE_DEPTH_STENCIL, .mFormat = dsvFormat, .mBuffer = depthHandle, .mType = tex::TEXTURE_2D });
     }
 
     RendererDX12::~RendererDX12()

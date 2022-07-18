@@ -24,6 +24,8 @@ namespace nv::graphics
         Handle<DescriptorHeap> mGpuHeap;
         Handle<DescriptorHeap> mTextureHeap;
         Handle<DescriptorHeap> mConstantBufferHeap;
+
+        friend class ResourceManagerDX12;
     };
 
     void ReportLeaksDX12();

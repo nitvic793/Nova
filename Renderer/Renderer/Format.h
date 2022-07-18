@@ -121,7 +121,8 @@ namespace nv::graphics
             IA44                                    = 112,
             P8                                      = 113,
             A8P8                                    = 114,
-            B4G4R4A4_UNORM                          = 115
+            B4G4R4A4_UNORM                          = 115,
+            FORMAT_UNKNOWN                          = 0xFF
         };
     }
 }

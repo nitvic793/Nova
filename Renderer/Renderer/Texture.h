@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Lib/Handle.h>
+#include <Renderer/Format.h>
 #include <Renderer/CommonDefines.h>
 
 namespace nv::graphics
@@ -9,18 +10,25 @@ namespace nv::graphics
 
     struct TextureDesc
     {
-        tex::Usage          mUsage = tex::USAGE_SHADER;
-        uint32_t            mWidth = 0;
-        uint32_t            mHeight = 0;
-        Handle<GPUResource> mBuffer = Handle<GPUResource>();
+        tex::Usage              mUsage = tex::USAGE_SHADER;
+        format::SurfaceFormat   mFormat = format::FORMAT_UNKNOWN;
+        Handle<GPUResource>     mBuffer = Handle<GPUResource>();
+        tex::Type               mType = tex::TEXTURE_2D;
     };
 
     class Texture
     {
     public:
+        Texture(const TextureDesc& desc) :
+            mDesc(desc) {}
         virtual ~Texture() {}
 
-    private:
+        constexpr const TextureDesc& GetDesc() const { return mDesc; }
+        constexpr Handle<GPUResource> GetBuffer() const { return mDesc.mBuffer; }
+        constexpr tex::Type GetType() const { return mDesc.mType; }
+        constexpr tex::Usage GetUsage() const { return mDesc.mUsage; }
+
+    protected:
         TextureDesc mDesc;
     };
 

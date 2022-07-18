@@ -9,8 +9,11 @@
 #include <DX12/MeshDX12.h>
 #include <DX12/DeviceDX12.h>
 #include <DX12/Interop.h>
+#include <DX12/DescriptorHeapDX12.h>
 #include <d3d12.h>
 #include "d3dx12.h"
+
+#include <DirectXHelpers.h>
 
 namespace nv::graphics
 {
@@ -76,7 +79,81 @@ namespace nv::graphics
 
     Handle<Texture> ResourceManagerDX12::CreateTexture(const TextureDesc& desc)
     {
-        return Handle<Texture>();
+        assert(mGpuResources.IsValid(desc.mBuffer));
+        assert(gRenderer);
+        assert(mDevice);
+
+        Handle<Texture> handle;
+        D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = {};
+        DescriptorViews view = VIEW_NONE;
+        auto renderer = (RendererDX12*)gRenderer;
+        auto resource = mGpuResources.GetAsDerived(desc.mBuffer);
+        auto device = mDevice->GetDevice();
+        const auto resourceDesc = resource->GetDesc();
+
+        DXGI_FORMAT dxgiFormat = GetFormat(resourceDesc.mFormat == format::UNKNOWN ? desc.mFormat : resourceDesc.mFormat);
+
+        switch (desc.mUsage)
+        {
+        case tex::USAGE_SHADER:
+        {
+            view = VIEW_SHADER_RESOURCE;
+            auto heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mTextureHeap);
+            cpuHandle = heap->PushCPU();
+            DirectX::CreateShaderResourceView(device, resource->GetResource().Get(), cpuHandle, tex::TEXTURE_CUBE == desc.mType);
+            break;
+        }
+        case tex::USAGE_UNORDERED:
+        {
+            view = VIEW_UNORDERED_ACCESS;
+            auto heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mTextureHeap);
+            cpuHandle = heap->PushCPU();
+
+            D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+            uavDesc.ViewDimension = GetUAVDimension(desc.mType);
+            uavDesc.Format = dxgiFormat;
+            device->CreateUnorderedAccessView(resource->GetResource().Get(), nullptr, &uavDesc, cpuHandle);
+            break;
+        }
+        case tex::USAGE_DEPTH_STENCIL:
+        {
+            view = VIEW_DEPTH_STENCIL;
+            auto heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mDsvHeap);
+            cpuHandle = heap->PushCPU();
+
+            D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+            dsvDesc.Texture2D.MipSlice = 0;
+            dsvDesc.Format = dxgiFormat;
+            dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+            dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+            device->CreateDepthStencilView(resource->GetResource().Get(), &dsvDesc, cpuHandle);
+            break;
+        }
+        case tex::USAGE_RENDER_TARGET:
+        {
+            view = VIEW_RENDER_TARGET;
+            auto heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mRtvHeap);
+            cpuHandle = heap->PushCPU();
+
+            const D3D12_RENDER_TARGET_VIEW_DESC rtvDesc =
+            {
+                .Format = dxgiFormat,
+                .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
+                .Texture2D = {.MipSlice = 0, .PlaneSlice = 0},
+            };
+            device->CreateRenderTargetView(resource->GetResource().Get(), &rtvDesc, cpuHandle);
+            break;
+        }
+        default:
+            break;
+        }
+
+        DescriptorHandle descHandle(cpuHandle);
+        descHandle.mView = view;
+        descHandle.mType = DescriptorHandle::CPU;
+        auto texture = mTextures.CreateInstance(handle, desc, descHandle);
+        
+        return handle;
     }
 
     Handle<Mesh> ResourceManagerDX12::CreateMesh(const TextureDesc& desc)
