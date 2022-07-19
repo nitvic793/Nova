@@ -67,11 +67,14 @@ namespace nv::graphics
 
 		D3D12_GPU_DESCRIPTOR_HANDLE GetCurrentGPUHandle() const
 		{
-			assert(mSize > 0);
-			return HandleGPU(mSize - 1);
+			return HandleGPU(GetCurrentIndex());
 		}
 
-		uint32_t GetCurrentIndex() const { return mSize;  }
+		uint32_t GetCurrentIndex() const 
+		{ 
+			assert(mSize > 0); 
+			return mSize - 1;  
+		}
 
 		D3D12_CPU_DESCRIPTOR_HANDLE PushCPU()
 		{
@@ -97,6 +100,11 @@ namespace nv::graphics
 		constexpr bool IsShaderVisible() const
 		{
 			return mHeapDesc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		}
+
+		constexpr D3D12_DESCRIPTOR_HEAP_TYPE GetHeapType() const
+		{
+			return mHeapDesc.Type;
 		}
 
 		~DescriptorHeapDX12() { }
