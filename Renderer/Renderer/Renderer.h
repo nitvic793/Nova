@@ -8,6 +8,7 @@
 namespace nv::graphics
 {
     class Shader;
+    class Texture;
     class GPUResource;
     class Device;
     class Window;
@@ -29,6 +30,8 @@ namespace nv::graphics
     protected:
         ScopedPtr<Device, true> mDevice;
         Handle<GPUResource>     mpBackBuffers[FRAMEBUFFER_COUNT];
+        Handle<Texture>         mRenderTargets[FRAMEBUFFER_COUNT];
+        Handle<Texture>         mDepthStencil;
     };
 
     extern IRenderer* gRenderer;

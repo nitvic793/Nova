@@ -92,12 +92,12 @@ namespace nv::graphics
         for (int32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
         {
             TextureDesc rtvDesc = { .mUsage = tex::USAGE_RENDER_TARGET, .mFormat = format,.mBuffer = mpBackBuffers[i] };
-            gResourceManager->CreateTexture(rtvDesc);
+            mRenderTargets[i] = gResourceManager->CreateTexture(rtvDesc);
         }
 
         const auto dsvFormat = format::D32_FLOAT;
         
-        auto depthHandle = gResourceManager->CreateResource(
+        auto depthResource = gResourceManager->CreateResource(
             {
                 .mWidth = gWindow->GetWidth(),
                 .mHeight = gWindow->GetHeight(),
@@ -109,7 +109,7 @@ namespace nv::graphics
             }
         );
 
-        gResourceManager->CreateTexture({ .mUsage = tex::USAGE_DEPTH_STENCIL, .mFormat = dsvFormat, .mBuffer = depthHandle, .mType = tex::TEXTURE_2D });
+        mDepthStencil = gResourceManager->CreateTexture({ .mUsage = tex::USAGE_DEPTH_STENCIL, .mFormat = dsvFormat, .mBuffer = depthResource, .mType = tex::TEXTURE_2D });
     }
 
     RendererDX12::~RendererDX12()
