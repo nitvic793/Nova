@@ -86,6 +86,7 @@ namespace nv::graphics
         Handle<Texture> handle;
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = {};
         DescriptorViews view = VIEW_NONE;
+        DescriptorHeapDX12* heap = nullptr;
         auto renderer = (RendererDX12*)gRenderer;
         auto resource = mGpuResources.GetAsDerived(desc.mBuffer);
         auto device = mDevice->GetDevice();
@@ -98,7 +99,7 @@ namespace nv::graphics
         case tex::USAGE_SHADER:
         {
             view = VIEW_SHADER_RESOURCE;
-            auto heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mTextureHeap);
+            heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mTextureHeap);
             cpuHandle = heap->PushCPU();
             DirectX::CreateShaderResourceView(device, resource->GetResource().Get(), cpuHandle, tex::TEXTURE_CUBE == desc.mType);
             break;
@@ -106,7 +107,7 @@ namespace nv::graphics
         case tex::USAGE_UNORDERED:
         {
             view = VIEW_UNORDERED_ACCESS;
-            auto heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mTextureHeap);
+            heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mTextureHeap);
             cpuHandle = heap->PushCPU();
 
             D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
@@ -118,7 +119,7 @@ namespace nv::graphics
         case tex::USAGE_DEPTH_STENCIL:
         {
             view = VIEW_DEPTH_STENCIL;
-            auto heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mDsvHeap);
+            heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mDsvHeap);
             cpuHandle = heap->PushCPU();
 
             D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
@@ -132,7 +133,7 @@ namespace nv::graphics
         case tex::USAGE_RENDER_TARGET:
         {
             view = VIEW_RENDER_TARGET;
-            auto heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mRtvHeap);
+            heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mRtvHeap);
             cpuHandle = heap->PushCPU();
 
             const D3D12_RENDER_TARGET_VIEW_DESC rtvDesc =
@@ -148,9 +149,12 @@ namespace nv::graphics
             break;
         }
 
+        assert(heap);
         DescriptorHandle descHandle(cpuHandle);
         descHandle.mView = view;
         descHandle.mType = DescriptorHandle::CPU;
+        if(heap)
+            descHandle.mHeapIndex = heap->GetCurrentIndex();
         auto texture = mTextures.CreateInstance(handle, desc, descHandle);
         
         return handle;

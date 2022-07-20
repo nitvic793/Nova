@@ -102,6 +102,12 @@ namespace nv::graphics
 
 	DeviceDX12::~DeviceDX12()
 	{
+		BOOL fullscreen = false;
+		mSwapChain->GetFullscreenState(&fullscreen, nullptr);
+		if (fullscreen)
+		{
+			mSwapChain->SetFullscreenState(FALSE, nullptr);
+		}
 	}
 
 	ID3D12Device* DeviceDX12::GetDevice() const

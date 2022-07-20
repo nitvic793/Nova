@@ -32,8 +32,9 @@ namespace nv::graphics
             GPUHandle mGpuHandle;
         };
 
-        Type            mType   = NONE;
-        DescriptorViews mView   = VIEW_NONE;
+        uint32_t        mHeapIndex  = 0;
+        Type            mType       = NONE;
+        DescriptorViews mView       = VIEW_NONE;
 
     public:
         DescriptorHandle() {}
