@@ -115,6 +115,11 @@ namespace nv::graphics
 		return mDevice.Get();
 	}
 
+	D3D12MA::Allocator* DeviceDX12::GetAllocator() const
+	{
+		return mGpuAllocator.Get();
+	}
+
 	bool DeviceDX12::InitSwapChain(const Window& window, const format::SurfaceFormat format)
 	{
 		const auto dxgiFormat = GetFormat(format);

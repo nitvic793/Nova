@@ -30,8 +30,10 @@ namespace nv::graphics
         void Present() override;
         ~DeviceDX12();
 
-        ID3D12Device* GetDevice() const;
         bool InitSwapChain(const Window& window, const format::SurfaceFormat format) override;
+
+        ID3D12Device* GetDevice() const;
+        D3D12MA::Allocator* GetAllocator() const;
 
     private:
         template<typename T>

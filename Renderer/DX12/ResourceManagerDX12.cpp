@@ -12,7 +12,7 @@
 #include <DX12/DescriptorHeapDX12.h>
 #include <d3d12.h>
 #include "d3dx12.h"
-
+#include <D3D12MemAlloc.h>
 #include <DirectXHelpers.h>
 
 namespace nv::graphics
@@ -35,6 +35,9 @@ namespace nv::graphics
     Handle<GPUResource> ResourceManagerDX12::CreateResource(const GPUResourceDesc& desc)
     {
         ID3D12Device* device = mDevice->GetDevice();
+        auto pAllocator = mDevice->GetAllocator();
+
+        assert(pAllocator);
         
         Handle<GPUResource> handle;
         auto resource = (GPUResourceDX12*)mGpuResources.CreateInstance(handle, desc);
@@ -44,6 +47,8 @@ namespace nv::graphics
         ID3D12Resource* d3dResource = nullptr;
         CD3DX12_RESOURCE_DESC bufferDesc = {};
         CD3DX12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+        D3D12MA::ALLOCATION_DESC allocationDesc = {};
+        allocationDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
         D3D12_HEAP_FLAGS heapFlag = D3D12_HEAP_FLAG_NONE;
         D3D12_CLEAR_VALUE clearValue = {};
         const D3D12_RESOURCE_STATES initResourceState = GetState(desc.mInitialState);
@@ -60,13 +65,17 @@ namespace nv::graphics
         case buffer::TYPE_BUFFER:
             bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(desc.mWidth);
             heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+            allocationDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
             break;
         case buffer::TYPE_TEXTURE_2D: 
             bufferDesc = CD3DX12_RESOURCE_DESC::Tex2D(format, desc.mWidth, desc.mHeight, desc.mArraySize, desc.mMipLevels, desc.mSampleCount, desc.mSampleQuality, flags);
             break;
         }
 
-        auto hr = device->CreateCommittedResource(&heapProps, heapFlag, &bufferDesc, initResourceState, &clearValue, IID_PPV_ARGS(resource->GetResource().ReleaseAndGetAddressOf()));
+        D3D12MA::Allocation* allocation = nullptr;
+        auto hr = pAllocator->CreateResource(&allocationDesc, &bufferDesc, initResourceState, &clearValue, &allocation, IID_NULL, nullptr);
+        resource->SetResource(allocation);
+        
         if (!SUCCEEDED(hr)) return Null<GPUResource>();
 
         return handle;

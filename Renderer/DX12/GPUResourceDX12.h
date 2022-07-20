@@ -6,6 +6,11 @@
 
 struct ID3D12Resource;
 
+namespace D3D12MA
+{
+    class Allocation;
+}
+
 namespace nv::graphics
 {
     class GPUResourceDX12 : public GPUResource
@@ -20,9 +25,11 @@ namespace nv::graphics
         using ComPtr = Microsoft::WRL::ComPtr<T>;
 
         void                    SetResource(ID3D12Resource* pResource) noexcept;
+        void                    SetResource(D3D12MA::Allocation* pAllocation, ID3D12Resource* pResource = nullptr) noexcept;
         ComPtr<ID3D12Resource>& GetResource() noexcept;
 
     private:
-        ComPtr<ID3D12Resource>  mResource;
+        ComPtr<ID3D12Resource>      mResource;
+        ComPtr<D3D12MA::Allocation> mAllocation;
     };
 }

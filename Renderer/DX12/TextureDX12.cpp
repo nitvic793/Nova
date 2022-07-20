@@ -3,6 +3,7 @@
 #include <d3d12.h>
 #include <DX12/GPUResourceDX12.h>
 #include <DX12/ResourceManagerDX12.h>
+#include <D3D12MemAlloc.h>
 
 namespace nv::graphics
 { 
