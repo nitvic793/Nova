@@ -13,6 +13,7 @@
 #include <Debug/Error.h>
 
 #include <dxgidebug.h>
+#include <D3D12MemAlloc.h>
 
 namespace nv::graphics
 {

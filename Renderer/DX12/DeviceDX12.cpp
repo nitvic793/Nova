@@ -5,11 +5,13 @@
 #include <DX12/WindowDX12.h>
 #include <DX12/DirectXIncludes.h>
 #include <DX12/Interop.h>
+#include <D3D12MemAlloc.h>
 
 namespace nv::graphics
 {
     bool DeviceDX12::Init(Window& window)
     {
+
 #if NV_RENDERER_ENABLE_DEBUG_LAYER
 		ID3D12Debug1* debugInterface;
 		D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface));
@@ -19,7 +21,7 @@ namespace nv::graphics
 
         if (!SUCCEEDED(hr)) return false;
 
-		IDXGIAdapter1* adapter;
+		ComPtr<IDXGIAdapter1> adapter;
 		UINT adapterIndex = 0;
 		bool adapterFound = false;
 		while (mDxgiFactory->EnumAdapters1(adapterIndex, &adapter) != DXGI_ERROR_NOT_FOUND)
@@ -34,7 +36,7 @@ namespace nv::graphics
 			}
 			
 			//direct3d 12 (feature level 12.1 or higher)
-			hr = D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_0, _uuidof(ID3D12Device), nullptr);
+			hr = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_0, _uuidof(ID3D12Device), nullptr);
 			if (SUCCEEDED(hr))
 			{
 				adapterFound = true;
@@ -51,12 +53,18 @@ namespace nv::graphics
 		}
 
 		hr = D3D12CreateDevice(
-			adapter,
+			adapter.Get(),
 			D3D_FEATURE_LEVEL_12_1,
 			IID_PPV_ARGS(mDevice.ReleaseAndGetAddressOf())
 		);
 
-		adapter->Release();
+		if (!SUCCEEDED(hr)) return false;
+
+		D3D12MA::ALLOCATOR_DESC allocatorDesc = {};
+		allocatorDesc.pDevice = mDevice.Get();
+		allocatorDesc.pAdapter = adapter.Get();
+
+		hr = D3D12MA::CreateAllocator(&allocatorDesc, mGpuAllocator.ReleaseAndGetAddressOf());
 
 		if (!SUCCEEDED(hr)) return false;
 
@@ -136,6 +144,7 @@ namespace nv::graphics
 			mSwapChain->ResizeBuffers(FRAMEBUFFER_COUNT, window.GetWidth(), window.GetHeight(), dxgiFormat, 0);
 		}
 
+		
 		return true;
 	}
 }

@@ -111,6 +111,9 @@
     <ClInclude Include="DX12\ContextDX12.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DX12\D3D12MemoryAllocator\include\D3D12MemAlloc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer\Renderer.cpp">
@@ -140,8 +143,14 @@
     <ClCompile Include="DX12\GPUResourceDX12.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DX12\D3D12MemoryAllocator\src\D3D12MemAlloc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="DX12\D3D12MemoryAllocator\src\D3D12MemAlloc.natvis" />
   </ItemGroup>
 </Project>

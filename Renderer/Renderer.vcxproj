@@ -113,7 +113,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -133,7 +133,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -148,6 +148,7 @@
   <ItemGroup>
     <ClInclude Include="DX12\ConstantBuffer.h" />
     <ClInclude Include="DX12\ContextDX12.h" />
+    <ClInclude Include="DX12\D3D12MemoryAllocator\include\D3D12MemAlloc.h" />
     <ClInclude Include="DX12\d3dx12.h" />
     <ClInclude Include="DX12\DescriptorHeapDX12.h" />
     <ClInclude Include="DX12\DeviceDX12.h" />
@@ -180,6 +181,7 @@
     <ClInclude Include="Renderer\Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DX12\D3D12MemoryAllocator\src\D3D12MemAlloc.cpp" />
     <ClCompile Include="DX12\DeviceDX12.cpp" />
     <ClCompile Include="DX12\GPUResourceDX12.cpp" />
     <ClCompile Include="DX12\RendererDX12.cpp" />
@@ -202,6 +204,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="DX12\D3D12MemoryAllocator\src\D3D12MemAlloc.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
