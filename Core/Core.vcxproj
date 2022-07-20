@@ -115,7 +115,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
     </ClCompile>
     <Link>
@@ -134,7 +134,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
@@ -149,6 +149,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Debug\Error.h" />
+    <ClInclude Include="IO\Utility.h" />
     <ClInclude Include="Lib\Util.h" />
     <ClInclude Include="NovaConfig.h" />
     <ClInclude Include="Context.h" />
@@ -177,6 +178,7 @@
     <ClCompile Include="Debug\Error.cpp" />
     <ClCompile Include="Engine\Instance.cpp" />
     <ClCompile Include="Engine\System.cpp" />
+    <ClCompile Include="IO\Utility.cpp" />
     <ClCompile Include="Memory\Allocator.cpp" />
     <ClCompile Include="Memory\Memory.cpp" />
     <ClCompile Include="pch.cpp">

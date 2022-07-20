@@ -344,3 +344,4 @@ healthchecksdb
 !external/rpclib/**/
 !external/wren/**
 !external/wren/lib/**
+!Shared/External/assimp/**
