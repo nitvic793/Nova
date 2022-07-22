@@ -57,6 +57,19 @@ namespace nv::graphics
         return flags;
     }
 
+    constexpr D3D12_COMMAND_LIST_TYPE GetCommandListType(ContextType context)
+    {
+        switch (context)
+        {
+        case CONTEXT_COMPUTE:       return D3D12_COMMAND_LIST_TYPE_COMPUTE;
+        case CONTEXT_GFX:           return D3D12_COMMAND_LIST_TYPE_DIRECT;
+        case CONTEXT_UPLOAD:        return D3D12_COMMAND_LIST_TYPE_COPY;
+        case CONTEXT_RAYTRACING:    return D3D12_COMMAND_LIST_TYPE_DIRECT;
+        }
+
+        return D3D12_COMMAND_LIST_TYPE_DIRECT;
+    }
+
     // At the moment, the DXGI format directly maps to format::SurfaceFormat
     constexpr DXGI_FORMAT GetFormat(format::SurfaceFormat format)
     {

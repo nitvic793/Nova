@@ -2,6 +2,9 @@
 
 #include <Lib/Pool.h>
 #include <Renderer/Renderer.h>
+#include <wrl/client.h>
+
+struct ID3D12CommandAllocator;
 
 namespace nv::graphics
 {
@@ -24,6 +27,7 @@ namespace nv::graphics
         Handle<DescriptorHeap> mGpuHeap;
         Handle<DescriptorHeap> mTextureHeap;
         Handle<DescriptorHeap> mConstantBufferHeap;
+        Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mCommandAllocators[FRAMEBUFFER_COUNT];
 
         friend class ResourceManagerDX12;
     };

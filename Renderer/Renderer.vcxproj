@@ -181,6 +181,7 @@
     <ClInclude Include="Renderer\Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DX12\ContextDX12.cpp" />
     <ClCompile Include="DX12\D3D12MemoryAllocator\src\D3D12MemAlloc.cpp" />
     <ClCompile Include="DX12\DeviceDX12.cpp" />
     <ClCompile Include="DX12\GPUResourceDX12.cpp" />

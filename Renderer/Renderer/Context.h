@@ -24,6 +24,8 @@ namespace nv::graphics
     class Context
     {
     public:
+        Context(const ContextDesc& desc) :
+            mDesc(desc) {}
         virtual ~Context() {}
 
         virtual void Begin() {}

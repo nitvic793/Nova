@@ -11,6 +11,8 @@
 #include <DX12/RendererDX12.h>
 #include <DX12/DeviceDX12.h>
 #include <DX12/ResourceManagerDX12.h>
+#include <DX12/ContextDX12.h>
+#include <d3d12.h>
 #endif
 
 namespace nv::graphics

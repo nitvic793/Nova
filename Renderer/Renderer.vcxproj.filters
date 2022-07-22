@@ -146,6 +146,9 @@
     <ClCompile Include="DX12\D3D12MemoryAllocator\src\D3D12MemAlloc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DX12\ContextDX12.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

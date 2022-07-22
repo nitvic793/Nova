@@ -1,8 +1,10 @@
 #include "pch.h"
+
+#include <Debug/Error.h>
+
 #include "RendererDX12.h"
 #include <Renderer/DescriptorHeap.h>
 #include <DX12/DeviceDX12.h>
-#include <DX12/DirectXIncludes.h>
 #include <DX12/WindowDX12.h>
 #include <DX12/DescriptorHeapDX12.h>
 #include <DX12/ResourceManagerDX12.h>
@@ -10,8 +12,7 @@
 #include <DX12/Interop.h>
 #include <DX12/TextureDX12.h>
 
-#include <Debug/Error.h>
-
+#include <DX12/DirectXIncludes.h>
 #include <dxgidebug.h>
 #include <D3D12MemAlloc.h>
 
@@ -26,12 +27,12 @@ namespace nv::graphics
         mDevice = ScopedPtr<Device, true>((Device*)Alloc<DeviceDX12>());
         mDevice->Init(window);
 
-        auto dxDevice = (DeviceDX12*)mDevice.Get();
+        auto pDevice = mDevice.As<DeviceDX12>()->GetDevice();
 
         auto initDescriptorHeap = [&](D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptorCount, Handle<DescriptorHeap>& handle, bool shaderVisible = false)
         {
             auto descriptorHeap = (DescriptorHeapDX12*)mDescriptorHeapPool.CreateInstance(handle);
-            descriptorHeap->Create(dxDevice->mDevice.Get(), type, descriptorCount, shaderVisible);
+            descriptorHeap->Create(pDevice, type, descriptorCount, shaderVisible);
             return descriptorHeap;
         };
 
@@ -40,6 +41,11 @@ namespace nv::graphics
         initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultGPUDescriptorCount, mGpuHeap, true);
         initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultDescriptorCount, mTextureHeap);
         initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultDescriptorCount, mConstantBufferHeap);
+
+        for (uint32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
+        {
+            pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(mCommandAllocators[i].ReleaseAndGetAddressOf()));
+        }
     }
 
     void RendererDX12::Destroy()
@@ -62,7 +68,7 @@ namespace nv::graphics
 
         GPUResourceDX12* backBufferResources[FRAMEBUFFER_COUNT];
 
-        auto dxDevice = (DeviceDX12*)mDevice.Get();
+        auto dxDevice = mDevice.As<DeviceDX12>();
         auto rtvDescriptorHeap = mDescriptorHeapPool.GetAsDerived(mRtvHeap);
         auto dsvDescriptorHeap = mDescriptorHeapPool.GetAsDerived(mDsvHeap);
 
