@@ -3,6 +3,8 @@
 #include <DX12/Interop.h>
 #include <DX12/RendererDX12.h>
 #include <DX12/DeviceDX12.h>
+#include <DX12/TextureDX12.h>
+#include <DX12/ResourceManagerDX12.h>
 #include <d3d12.h>
 
 namespace nv::graphics
@@ -32,14 +34,32 @@ namespace nv::graphics
 
     void ContextDX12::SetMesh(Handle<Mesh> mesh)
     {
+        auto dxMesh = (MeshDX12*)gResourceManager->GetMesh(mesh);
     }
 
     void ContextDX12::SetPipeline(Handle<PipelineState> pipeline)
     {
+        auto pipeState = (PipelineStateDX12*)gResourceManager->GetPipelineState(pipeline);
     }
 
     void ContextDX12::SetRenderTarget(Span<Handle<Texture>> renderTargets, Handle<Texture> dsvHandle, bool singleRTV)
     {
+        nv::Vector<D3D12_CPU_DESCRIPTOR_HANDLE> handles(1);
+        for (auto rtv : renderTargets)
+        {
+            auto tex = (TextureDX12*)gResourceManager->GetTexture(rtv);
+            handles.Push(tex->GetCPUHandle());
+        }
+
+        TextureDX12* dsvTex = nullptr; 
+        if(!dsvHandle.IsNull())
+        dsvTex = (TextureDX12*)gResourceManager->GetTexture(dsvHandle);
+
+        D3D12_CPU_DESCRIPTOR_HANDLE dsvCpuHandle;
+        if(dsvTex)
+            dsvCpuHandle = dsvTex->GetCPUHandle();
+
+        mCommandList->OMSetRenderTargets((UINT)renderTargets.Size(), handles.Data(), FALSE, dsvTex? &dsvCpuHandle : nullptr);
     }
 
     void ContextDX12::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation, uint32_t baseVertexLocation, uint32_t startInstanceLocation)

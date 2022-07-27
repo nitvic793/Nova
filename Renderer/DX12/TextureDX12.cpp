@@ -31,11 +31,13 @@ namespace nv::graphics
 
     D3D12_CPU_DESCRIPTOR_HANDLE TextureDX12::GetCPUHandle() const
     {
+        assert(mDescriptorHandle.mType == DescriptorHandle::CPU);
         return mDescriptorHandle.GetCPUHandle();
     }
 
     D3D12_GPU_DESCRIPTOR_HANDLE TextureDX12::GetGPUHandle() const
     {
+        assert(mDescriptorHandle.mType == DescriptorHandle::GPU);
         return mDescriptorHandle.GetGPUHandle();
     }
 
