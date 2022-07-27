@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "ContextDX12.h"
 #include <DX12/Interop.h>
+#include <DX12/RendererDX12.h>
+#include <DX12/DeviceDX12.h>
 #include <d3d12.h>
 
 namespace nv::graphics
@@ -16,10 +18,16 @@ namespace nv::graphics
 
     void ContextDX12::Begin()
     {
+        auto renderer = (RendererDX12*)gRenderer;
+        auto device = ((DeviceDX12*)renderer->GetDevice())->GetDevice();
+        auto pCommandAllocator = renderer->GetAllocator();
+        
+        mCommandList->Reset(pCommandAllocator, nullptr);
     }
 
     void ContextDX12::End()
     {
+        mCommandList->Close();
     }
 
     void ContextDX12::SetMesh(Handle<Mesh> mesh)

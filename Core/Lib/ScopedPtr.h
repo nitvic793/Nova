@@ -39,6 +39,9 @@ namespace nv
 		template<typename TT>
 		constexpr TT* As() { return static_cast<TT*>(ptr); }
 
+		template<typename TT>
+		constexpr TT* As() const { return static_cast<TT*>(ptr); }
+
 		//For compatibility
 		T* get() { return ptr; }
 		T* get() const { return ptr; }

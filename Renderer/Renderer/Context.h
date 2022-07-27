@@ -9,7 +9,7 @@ namespace nv::graphics
     class Mesh;
     class PipelineState;
     class Texture;
-    class TransitionBarrier;
+    struct TransitionBarrier;
 
     struct ContextDesc
     {

@@ -13,6 +13,7 @@ namespace nv::graphics
     class Device;
     class Window;
     class DescriptorHeap;
+    class Context;
 
     class IRenderer
     {
@@ -23,6 +24,7 @@ namespace nv::graphics
         virtual void Draw() {}
         virtual void Present() {}
         virtual void Destroy() = 0;
+        virtual void Submit(Context* pContext) = 0;
         virtual ~IRenderer() {}
 
         Device* GetDevice() const;

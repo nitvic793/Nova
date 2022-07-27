@@ -11,6 +11,7 @@
 #include <DX12/GPUResourceDX12.h>
 #include <DX12/Interop.h>
 #include <DX12/TextureDX12.h>
+#include <DX12/ContextDX12.h>
 
 #include <DX12/DirectXIncludes.h>
 #include <dxgidebug.h>
@@ -46,6 +47,10 @@ namespace nv::graphics
         {
             pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(mCommandAllocators[i].ReleaseAndGetAddressOf()));
         }
+
+        D3D12_COMMAND_QUEUE_DESC cqDesc = {};
+        cqDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+        pDevice->CreateCommandQueue(&cqDesc, IID_PPV_ARGS(mCommandQueue.ReleaseAndGetAddressOf()));
     }
 
     void RendererDX12::Destroy()
@@ -119,8 +124,23 @@ namespace nv::graphics
         mDepthStencil = gResourceManager->CreateTexture({ .mUsage = tex::USAGE_DEPTH_STENCIL, .mFormat = dsvFormat, .mBuffer = depthResource, .mType = tex::TEXTURE_2D });
     }
 
+    void RendererDX12::Submit(Context* pContext)
+    {
+        auto context = (ContextDX12*)pContext;
+        auto clist = context->GetCommandList();
+        
+        ID3D12CommandList* ppCommandLists[] = { clist };
+        mCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+    }
+
     RendererDX12::~RendererDX12()
     {
+    }
+
+    ID3D12CommandAllocator* RendererDX12::GetAllocator() const
+    {
+        uint32_t idx = mDevice.As<DeviceDX12>()->mSwapChain->GetCurrentBackBufferIndex();
+        return mCommandAllocators[idx].Get();
     }
 
     void ReportLeaksDX12()

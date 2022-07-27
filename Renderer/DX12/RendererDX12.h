@@ -5,6 +5,7 @@
 #include <wrl/client.h>
 
 struct ID3D12CommandAllocator;
+struct ID3D12CommandQueue;
 
 namespace nv::graphics
 {
@@ -18,16 +19,24 @@ namespace nv::graphics
         virtual void Destroy() override;
         virtual void Present() override;
         virtual void InitFrameBuffers(const Window& window, const format::SurfaceFormat format) override;
+        virtual void Submit(Context* pContext) override;
         ~RendererDX12();
 
+    public:
+        ID3D12CommandAllocator* GetAllocator() const;
+
     private:
+        template<typename T>
+        using ComPtr = Microsoft::WRL::ComPtr<T>;
+
         Pool<DescriptorHeap, DescriptorHeapDX12, 8> mDescriptorHeapPool;
-        Handle<DescriptorHeap> mRtvHeap;
-        Handle<DescriptorHeap> mDsvHeap;
-        Handle<DescriptorHeap> mGpuHeap;
-        Handle<DescriptorHeap> mTextureHeap;
-        Handle<DescriptorHeap> mConstantBufferHeap;
-        Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mCommandAllocators[FRAMEBUFFER_COUNT];
+        Handle<DescriptorHeap>                      mRtvHeap;
+        Handle<DescriptorHeap>                      mDsvHeap;
+        Handle<DescriptorHeap>                      mGpuHeap;
+        Handle<DescriptorHeap>                      mTextureHeap;
+        Handle<DescriptorHeap>                      mConstantBufferHeap;
+        ComPtr<ID3D12CommandAllocator>              mCommandAllocators[FRAMEBUFFER_COUNT];
+        ComPtr<ID3D12CommandQueue>                  mCommandQueue;
 
         friend class ResourceManagerDX12;
     };
