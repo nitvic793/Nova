@@ -116,6 +116,6 @@ namespace nv::graphics
 		D3D12_GPU_DESCRIPTOR_HANDLE						mGPUHeapStart;
 		UINT											mHandleIncrementSize;
 		uint32_t										mSize = 0;
-		Vector<uint32_t>								mFreeIndices;
+		nv::Vector<uint32_t>							mFreeIndices;
 	};
 }
