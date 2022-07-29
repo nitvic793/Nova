@@ -10,6 +10,9 @@
 #include <DX12/DeviceDX12.h>
 #include <DX12/Interop.h>
 #include <DX12/DescriptorHeapDX12.h>
+#include <DX12/ContextDX12.h>
+#include <Engine/Log.h>
+
 #include <d3d12.h>
 #include "d3dx12.h"
 #include <D3D12MemAlloc.h>
@@ -25,6 +28,7 @@ namespace nv::graphics
         mPipelineStates.Init();
         mShaders.Init();
         mTextures.Init();
+        mContexts.Init();
     }
 
     Handle<Shader> ResourceManagerDX12::CreateShader(const ShaderDesc& desc)
@@ -174,6 +178,17 @@ namespace nv::graphics
         return Handle<Mesh>();
     }
 
+    Handle<Context> ResourceManagerDX12::CreateContext(const ContextDesc& desc)
+    {
+        Handle<Context> handle;
+        auto context = (ContextDX12*)mContexts.CreateInstance(handle, desc);
+        auto renderer = (RendererDX12*)gRenderer;
+
+        if (!context->Init(renderer->mDevice.As<DeviceDX12>()->GetDevice(), renderer->GetAllocator()))
+            log::Error("Unable to create renderer context.");
+        return handle;
+    }
+
     GPUResource* ResourceManagerDX12::Emplace(Handle<GPUResource>& handle)
     {
         return mGpuResources.CreateInstance(handle);
@@ -204,6 +219,11 @@ namespace nv::graphics
         return mMeshes.Get(handle);
     }
 
+    Context* ResourceManagerDX12::GetContext(Handle<Context> handle)
+    {
+        return mContexts.Get(handle);
+    }
+
     ResourceManagerDX12::~ResourceManagerDX12()
     {
         mGpuResources.Destroy();
@@ -211,5 +231,6 @@ namespace nv::graphics
         mPipelineStates.Destroy();
         mShaders.Destroy();
         mTextures.Destroy();
+        mContexts.Destroy();
     }
 }

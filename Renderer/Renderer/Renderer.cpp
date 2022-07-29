@@ -35,6 +35,8 @@ namespace nv::graphics
 
         gSystemManager.CreateSystem<RenderSystem>();
 #endif
+
+        gResourceManager->CreateContext({ .mType = ContextType::CONTEXT_GFX });
     }
 
     void DestroyGraphics()

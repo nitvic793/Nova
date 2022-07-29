@@ -9,12 +9,14 @@ namespace nv::graphics
     struct PipelineStateDesc;
     struct TextureDesc;
     struct MeshDesc;
+    struct ContextDesc;
 
     class Shader;
     class GPUResource;
     class PipelineState;
     class Texture;
     class Mesh;
+    class Context;
 
     class ResourceManager
     {
@@ -24,6 +26,7 @@ namespace nv::graphics
         virtual Handle<PipelineState>   CreatePipelineState(const PipelineState& desc) = 0;
         virtual Handle<Texture>         CreateTexture(const TextureDesc& desc) = 0;
         virtual Handle<Mesh>            CreateMesh(const TextureDesc& desc) = 0;
+        virtual Handle<Context>         CreateContext(const ContextDesc& desc) = 0;
 
         virtual GPUResource*            Emplace(Handle<GPUResource>& handle) = 0;
 
@@ -32,6 +35,7 @@ namespace nv::graphics
         virtual PipelineState*          GetPipelineState(Handle<PipelineState>) = 0;
         virtual Shader*                 GetShader(Handle<Shader>) = 0;
         virtual Mesh*                   GetMesh(Handle<Mesh>) = 0;
+        virtual Context*                GetContext(Handle<Context>) = 0;
 
         virtual ~ResourceManager() {}
     };

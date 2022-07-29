@@ -56,6 +56,7 @@ namespace nv
         {
             Handle<T> handle;
             T* data = nullptr;
+            assert(mBuffer != nullptr);
             if (mFreeIndices.Size() == 0)
             {
                 GrowIfNeeded();

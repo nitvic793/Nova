@@ -13,6 +13,7 @@ namespace nv::graphics
     class TextureDX12;
     class MeshDX12;
     class DeviceDX12;
+    class ContextDX12;
 
     class ResourceManagerDX12 : public ResourceManager
     {
@@ -25,6 +26,7 @@ namespace nv::graphics
         virtual Handle<PipelineState>   CreatePipelineState(const PipelineState& desc) override;
         virtual Handle<Texture>         CreateTexture(const TextureDesc& desc) override;
         virtual Handle<Mesh>            CreateMesh(const TextureDesc& desc) override;
+        virtual Handle<Context>         CreateContext(const ContextDesc& desc) override;
 
         virtual GPUResource*            Emplace(Handle<GPUResource>& handle) override;
 
@@ -33,6 +35,7 @@ namespace nv::graphics
         virtual PipelineState*          GetPipelineState(Handle<PipelineState>) override;
         virtual Shader*                 GetShader(Handle<Shader>) override;
         virtual Mesh*                   GetMesh(Handle<Mesh>) override;
+        virtual Context*                GetContext(Handle<Context>) override;
 
         ~ResourceManagerDX12();
 
@@ -42,6 +45,7 @@ namespace nv::graphics
         Pool<PipelineState, PipelineStateDX12>  mPipelineStates;
         Pool<Texture, TextureDX12>              mTextures;
         Pool<Mesh, MeshDX12>                    mMeshes;
+        Pool<Context, ContextDX12>              mContexts;
         DeviceDX12*                             mDevice;
         friend class RendererDX12;
     };
