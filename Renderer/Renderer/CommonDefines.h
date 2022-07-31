@@ -47,6 +47,14 @@ namespace nv::graphics
             FLAG_RAYTRACING_ACCELERATION = 1 << 3
         };
 
+        enum BufferMode : uint8_t
+        {
+            BUFFER_MODE_DEFAULT = 1,
+            BUFFER_MODE_UPLOAD = 2,
+            BUFFER_MODE_READBACK = 3,
+            BUFFER_MODE_CUSTOM = 4
+        };
+
         enum Type : uint8_t
         {
             TYPE_NONE = 0,

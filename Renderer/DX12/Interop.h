@@ -57,6 +57,17 @@ namespace nv::graphics
         return flags;
     }
 
+    constexpr D3D12_HEAP_TYPE GetHeapType(buffer::BufferMode mode)
+    {
+        switch (mode)
+        {
+        case buffer::BUFFER_MODE_DEFAULT:   return D3D12_HEAP_TYPE_DEFAULT;
+        case buffer::BUFFER_MODE_UPLOAD:    return D3D12_HEAP_TYPE_UPLOAD;
+        case buffer::BUFFER_MODE_READBACK:  return D3D12_HEAP_TYPE_READBACK;
+        case buffer::BUFFER_MODE_CUSTOM:    return D3D12_HEAP_TYPE_CUSTOM;
+        }
+    }
+
     constexpr D3D12_COMMAND_LIST_TYPE GetCommandListType(ContextType context)
     {
         switch (context)

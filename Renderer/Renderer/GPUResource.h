@@ -19,7 +19,7 @@ namespace nv::graphics
         format::SurfaceFormat   mFormat     = format::UNKNOWN;
         float                   mColor[4]   = { 0.f, 0.f, 0.f, 0.f };
         uint8_t                 mStencil    = 0;
-        bool                    mIsDepth    = true;
+        bool                    mIsDepth    = false;
     };
 
     struct GPUResourceDesc
@@ -35,6 +35,7 @@ namespace nv::graphics
         uint32_t                mSampleCount    = 1;
         uint32_t                mSampleQuality  = 0;
         ResourceClearValue      mClearValue     = {};
+        buffer::BufferMode      mBufferMode     = buffer::BUFFER_MODE_DEFAULT;
     };
 
     class GPUResource

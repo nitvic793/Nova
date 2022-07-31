@@ -117,7 +117,7 @@ namespace nv::graphics
                 .mType = buffer::TYPE_TEXTURE_2D,
                 .mFlags = buffer::FLAG_ALLOW_DEPTH,
                 .mInitialState = buffer::STATE_DEPTH_WRITE,
-                .mClearValue = {.mFormat = dsvFormat,.mColor = {1.f,0,0,0} , .mStencil = 0}
+                .mClearValue = {.mFormat = dsvFormat,.mColor = {1.f,0,0,0} , .mStencil = 0, .mIsDepth = true}
             }
         );
 
@@ -139,7 +139,7 @@ namespace nv::graphics
 
     ID3D12CommandAllocator* RendererDX12::GetAllocator() const
     {
-        uint32_t idx = mDevice.As<DeviceDX12>()->mSwapChain->GetCurrentBackBufferIndex();
+        const uint32_t idx = mDevice.As<DeviceDX12>()->mSwapChain->GetCurrentBackBufferIndex();
         return mCommandAllocators[idx].Get();
     }
 

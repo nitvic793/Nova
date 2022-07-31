@@ -53,13 +53,13 @@ namespace nv::graphics
 
         TextureDX12* dsvTex = nullptr; 
         if(!dsvHandle.IsNull())
-        dsvTex = (TextureDX12*)gResourceManager->GetTexture(dsvHandle);
+            dsvTex = (TextureDX12*)gResourceManager->GetTexture(dsvHandle);
 
         D3D12_CPU_DESCRIPTOR_HANDLE dsvCpuHandle;
         if(dsvTex)
             dsvCpuHandle = dsvTex->GetCPUHandle();
 
-        mCommandList->OMSetRenderTargets((UINT)renderTargets.Size(), handles.Data(), FALSE, dsvTex? &dsvCpuHandle : nullptr);
+        mCommandList->OMSetRenderTargets((UINT)renderTargets.Size(), handles.Data(), singleRTV, dsvTex? &dsvCpuHandle : nullptr);
     }
 
     void ContextDX12::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation, uint32_t baseVertexLocation, uint32_t startInstanceLocation)

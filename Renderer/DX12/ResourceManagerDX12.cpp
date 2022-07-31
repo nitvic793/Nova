@@ -50,11 +50,11 @@ namespace nv::graphics
         
         ID3D12Resource* d3dResource = nullptr;
         CD3DX12_RESOURCE_DESC bufferDesc = {};
-        CD3DX12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-        D3D12MA::ALLOCATION_DESC allocationDesc = {};
-        allocationDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
         D3D12_HEAP_FLAGS heapFlag = D3D12_HEAP_FLAG_NONE;
         D3D12_CLEAR_VALUE clearValue = {};
+
+        const D3D12MA::ALLOCATION_DESC allocationDesc = { .HeapType = GetHeapType(desc.mBufferMode) };
+        const CD3DX12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(GetHeapType(desc.mBufferMode));
         const D3D12_RESOURCE_STATES initResourceState = GetState(desc.mInitialState);
         const DXGI_FORMAT format = GetFormat(desc.mFormat);
         const D3D12_RESOURCE_FLAGS flags = GetFlags(desc.mFlags);
@@ -68,8 +68,6 @@ namespace nv::graphics
         {
         case buffer::TYPE_BUFFER:
             bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(desc.mWidth);
-            heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-            allocationDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
             break;
         case buffer::TYPE_TEXTURE_2D: 
             bufferDesc = CD3DX12_RESOURCE_DESC::Tex2D(format, desc.mWidth, desc.mHeight, desc.mArraySize, desc.mMipLevels, desc.mSampleCount, desc.mSampleQuality, flags);
