@@ -5,10 +5,22 @@
 #include <DX12/DeviceDX12.h>
 #include <DX12/TextureDX12.h>
 #include <DX12/ResourceManagerDX12.h>
+#include <DX12/GPUResourceDX12.h>
+#include <D3D12MemAlloc.h>
 #include <d3d12.h>
+#include "d3dx12.h"
 
 namespace nv::graphics
 {
+    namespace util
+    {
+        // TODO: Move to DX Utils file and dxutils namespace
+        static ID3D12Resource* GetResource(Handle<GPUResource> handle)
+        {
+            return ((GPUResourceDX12*)gResourceManager->GetGPUResource(handle))->GetResource().Get();
+        }
+    }
+
     bool ContextDX12::Init(ID3D12Device* pDevice, ID3D12CommandAllocator* pCommandAllocator)
     {
         auto clistType = GetCommandListType(mDesc.mType);
@@ -69,6 +81,26 @@ namespace nv::graphics
 
     void ContextDX12::ResourceBarrier(Span<TransitionBarrier> barriers)
     {
+        nv::Vector<CD3DX12_RESOURCE_BARRIER> dxBarriers;
+        dxBarriers.Reserve(barriers.Size());
+        for (auto barrier : barriers)
+        {
+            ID3D12Resource* pResource = util::GetResource(barrier.mResource);
+            auto from = GetState(barrier.mFrom);
+            auto to = GetState(barrier.mTo);
+            dxBarriers.Push(CD3DX12_RESOURCE_BARRIER::Transition(pResource, from, to));
+        }
+
+        mCommandList->ResourceBarrier((UINT)dxBarriers.Size(), dxBarriers.Data());
+    }
+
+    void ContextDX12::UpdateSubresources(Handle<GPUResource> dest, Handle<GPUResource> staging, const SubResourceDesc& desc)
+    {
+        ID3D12Resource* pDest = util::GetResource(dest);
+        ID3D12Resource* pStaging = util::GetResource(staging);
+        D3D12_SUBRESOURCE_DATA subData = { .pData = desc.mpData, .RowPitch = desc.mRowPitch, .SlicePitch = desc.mSlicePitch };
+
+        ::UpdateSubresources(mCommandList.Get(), pDest, pStaging, desc.mIntermediateOffset, desc.mFirstSubresource, desc.mNumSubresources, &subData);
     }
 
 }
