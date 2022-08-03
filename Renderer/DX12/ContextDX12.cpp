@@ -82,7 +82,7 @@ namespace nv::graphics
     void ContextDX12::ResourceBarrier(Span<TransitionBarrier> barriers)
     {
         nv::Vector<CD3DX12_RESOURCE_BARRIER> dxBarriers;
-        dxBarriers.Reserve(barriers.Size());
+        dxBarriers.Reserve((uint32_t)barriers.Size());
         for (auto barrier : barriers)
         {
             ID3D12Resource* pResource = util::GetResource(barrier.mResource);

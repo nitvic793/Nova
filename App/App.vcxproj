@@ -112,11 +112,11 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>assimp-vc143-mt.lib;dxguid.lib;d3d12.lib;dxgi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)Shared\External\assimp\lib\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>dxcompiler.lib;assimp-vc143-mt.lib;dxguid.lib;d3d12.lib;dxgi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Shared\External\dxc\lib\x64;$(SolutionDir)Shared\External\assimp\lib\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(SolutionDir)Shared\External\assimp\bin\Release\ $(TargetDir) /s /d</Command>
+      <Command>xcopy $(SolutionDir)Shared\External\assimp\bin\Release\ $(TargetDir) /s /d &amp; xcopy $(SolutionDir)Shared\External\dxc\bin\x64\ $(TargetDir) /s /d</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -136,11 +136,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>assimp-vc143-mt.lib;dxguid.lib;d3d12.lib;dxgi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)Shared\External\assimp\lib\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>dxcompiler.lib;assimp-vc143-mt.lib;dxguid.lib;d3d12.lib;dxgi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Shared\External\dxc\lib\x64;$(SolutionDir)Shared\External\assimp\lib\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(SolutionDir)Shared\External\assimp\bin\Release\ $(TargetDir) /s /d</Command>
+      <Command>xcopy $(SolutionDir)Shared\External\assimp\bin\Release\ $(TargetDir) /s /d &amp; xcopy $(SolutionDir)Shared\External\dxc\bin\x64\ $(TargetDir) /s /d</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -1,6 +1,8 @@
 #include "pch.h"
 
 #include "ResourceManagerDX12.h"
+#include <Engine/Log.h>
+
 #include <DX12/RendererDX12.h>
 #include <DX12/ShaderDX12.h>
 #include <DX12/GPUResourceDX12.h>
@@ -11,12 +13,12 @@
 #include <DX12/Interop.h>
 #include <DX12/DescriptorHeapDX12.h>
 #include <DX12/ContextDX12.h>
-#include <Engine/Log.h>
 
 #include <d3d12.h>
-#include "d3dx12.h"
 #include <D3D12MemAlloc.h>
 #include <DirectXHelpers.h>
+#include <d3dcompiler.h>
+#include "d3dx12.h"
 
 namespace nv::graphics
 {

@@ -345,3 +345,4 @@ healthchecksdb
 !external/wren/**
 !external/wren/lib/**
 !Shared/External/assimp/**
+!Shared/External/dxc/**

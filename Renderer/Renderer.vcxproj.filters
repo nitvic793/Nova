@@ -117,6 +117,9 @@
     <ClInclude Include="Renderer\ShaderInteropTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DX12\InputLayout.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer\Renderer.cpp">
@@ -150,6 +153,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DX12\ContextDX12.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12\ShaderDX12.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
