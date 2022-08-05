@@ -180,6 +180,27 @@ TEST_F(CoreTests, StringHashTest)
     static_assert(check == 2531704439, "bad hash value");
 }
 
+TEST_F(CoreTests, SpanTest)
+{
+    using namespace nv;
+    struct Data
+    {
+        int mVal;
+    };
+
+    auto transform = [](Span<uint64_t> items)
+    {
+        for (auto& item : items)
+            item++;
+        return items;
+    };
+
+    auto val = transform({ 1, 2 });
+    EXPECT_EQ(val[0], 2);
+    EXPECT_EQ(val[1], 3);
+
+}
+
 TEST_F(CoreTests, SystemManagerCreate)
 {
     using namespace nv;

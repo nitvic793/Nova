@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Lib/Handle.h>
+#include <Lib/Vector.h>
 
-namespace nv
+namespace nv::jobs
 {
     struct Job
     {
@@ -40,7 +40,8 @@ namespace nv
     class IJobSystem
     {
     public:
-        virtual Handle<Job> Create(Job&& job) = 0;
+        virtual Handle<Job> Enqueue(Job&& job) = 0;
+        virtual void        Wait(Handle<Job> job) = 0;
 
     protected:
     };
