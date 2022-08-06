@@ -3,10 +3,11 @@
 
 #include <NovaCore.h>
 #include <Engine/Instance.h>
-
+//#include <vld.h>
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
+
 
 int main()
 {

@@ -15,6 +15,11 @@ namespace nv::jobs
             mArgs(nullptr)
         {}
 
+        constexpr Job(Fn&& func) :
+            mFunction(func),
+            mArgs(nullptr)
+        {}
+
         constexpr Job(Fn func, void* args) :
             mFunction(func),
             mArgs(args)
@@ -31,7 +36,7 @@ namespace nv::jobs
             mArgs(nullptr)
         {}
 
-        constexpr Job& operator=(void (*fn)(void*))
+        constexpr Job& operator=(const Fn& fn)
         {
             mFunction = fn;
             return *this;

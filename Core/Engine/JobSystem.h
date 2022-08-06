@@ -22,6 +22,7 @@ namespace nv::jobs
     void DestroyJobSystem();
 
     Handle<Job> Execute(Job&& job);
+    Handle<Job> Execute(void (*fn)(void*), void* args = nullptr);
     void        Wait(Handle<Job> handle);
     bool        IsFinished(Handle<Job> handle);
     

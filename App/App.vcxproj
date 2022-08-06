@@ -107,13 +107,13 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Shared\External\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>dxcompiler.lib;assimp-vc143-mt.lib;dxguid.lib;d3d12.lib;dxgi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)Shared\External\dxc\lib\x64;$(SolutionDir)Shared\External\assimp\lib\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Shared\External\dxc\lib\x64;$(SolutionDir)Shared\External\assimp\lib\Release\;$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\address-model-64\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy $(SolutionDir)Shared\External\assimp\bin\Release\ $(TargetDir) /s /d &amp; xcopy $(SolutionDir)Shared\External\dxc\bin\x64\ $(TargetDir) /s /d</Command>
@@ -129,7 +129,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Shared\External\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -137,7 +137,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>dxcompiler.lib;assimp-vc143-mt.lib;dxguid.lib;d3d12.lib;dxgi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)Shared\External\dxc\lib\x64;$(SolutionDir)Shared\External\assimp\lib\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Shared\External\dxc\lib\x64;$(SolutionDir)Shared\External\assimp\lib\Release\;$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\address-model-64\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy $(SolutionDir)Shared\External\assimp\bin\Release\ $(TargetDir) /s /d &amp; xcopy $(SolutionDir)Shared\External\dxc\bin\x64\ $(TargetDir) /s /d</Command>
@@ -165,6 +165,7 @@
     <Import Project="..\packages\directxtk12_desktop_2019.2022.5.10.1\build\native\directxtk12_desktop_2019.targets" Condition="Exists('..\packages\directxtk12_desktop_2019.2022.5.10.1\build\native\directxtk12_desktop_2019.targets')" />
     <Import Project="..\packages\fmt.7.0.1\build\fmt.targets" Condition="Exists('..\packages\fmt.7.0.1\build\fmt.targets')" />
     <Import Project="..\packages\Microsoft.Direct3D.D3D12.1.602.4\build\native\Microsoft.Direct3D.D3D12.targets" Condition="Exists('..\packages\Microsoft.Direct3D.D3D12.1.602.4\build\native\Microsoft.Direct3D.D3D12.targets')" />
+    <Import Project="..\packages\VisualLeakDetector.2.5.0.0\build\native\VisualLeakDetector.targets" Condition="Exists('..\packages\VisualLeakDetector.2.5.0.0\build\native\VisualLeakDetector.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -174,5 +175,6 @@
     <Error Condition="!Exists('..\packages\fmt.7.0.1\build\fmt.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\fmt.7.0.1\build\fmt.targets'))" />
     <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.602.4\build\native\Microsoft.Direct3D.D3D12.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.602.4\build\native\Microsoft.Direct3D.D3D12.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.602.4\build\native\Microsoft.Direct3D.D3D12.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.602.4\build\native\Microsoft.Direct3D.D3D12.targets'))" />
+    <Error Condition="!Exists('..\packages\VisualLeakDetector.2.5.0.0\build\native\VisualLeakDetector.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\VisualLeakDetector.2.5.0.0\build\native\VisualLeakDetector.targets'))" />
   </Target>
 </Project>

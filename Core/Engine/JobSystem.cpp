@@ -147,6 +147,11 @@ namespace nv::jobs
         return gJobSystem->Enqueue(std::move(job));
     }
 
+    Handle<Job> Execute(void(*fn)(void*), void* args)
+    {
+        return gJobSystem->Enqueue({fn, args});
+    }
+
     void Wait(Handle<Job> handle)
     {
         gJobSystem->Wait(handle);

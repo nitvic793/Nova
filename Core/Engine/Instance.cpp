@@ -7,7 +7,7 @@
 #include <Renderer/Window.h>
 #include <Engine/JobSystem.h>
 #include <Engine/Job.h>
-
+#include <thread>
 namespace nv
 { 
     bool Instance::sError = false;
@@ -21,11 +21,14 @@ namespace nv
         nv::InitContext(this);
         graphics::InitGraphics();
 
-        jobs::Execute(nv::jobs::Job([](void*)
+        auto handle = jobs::Execute([](void*)
             {
-                while (true)
-                    log::Info("Test");
-            }));
+                std::chrono::milliseconds dura(2000);
+                std::this_thread::sleep_for(dura);
+                log::Info("Test");
+            });
+
+        jobs::Wait(handle);
 
         return true;
     }
