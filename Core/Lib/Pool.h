@@ -139,9 +139,10 @@ namespace nv
             mSize = 0;
         }
 
-        constexpr size_t GetStrideSize() const { return sizeof(TDerived); }
-        constexpr uint32_t Size() const { return mSize; }
-        constexpr uint32_t Capacity() const { return mCapacity; }
+        constexpr bool      IsEmpty() const { return mFreeIndices.Size() == mSize; }
+        constexpr size_t    GetStrideSize() const { return sizeof(TDerived); }
+        constexpr uint32_t  Size() const { return mSize; }
+        constexpr uint32_t  Capacity() const { return mCapacity; }
         constexpr TDerived* Data() const { return mBuffer; }
 
     private:

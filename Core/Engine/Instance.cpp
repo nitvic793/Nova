@@ -5,6 +5,8 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/Device.h>
 #include <Renderer/Window.h>
+#include <Engine/JobSystem.h>
+#include <Engine/Job.h>
 
 namespace nv
 { 
@@ -18,6 +20,13 @@ namespace nv
         log::Error("Error Log Test");
         nv::InitContext(this);
         graphics::InitGraphics();
+
+        jobs::Execute(nv::jobs::Job([](void*)
+            {
+                while (true)
+                    log::Info("Test");
+            }));
+
         return true;
     }
     

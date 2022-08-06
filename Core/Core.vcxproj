@@ -179,6 +179,7 @@
     <ClCompile Include="Context.cpp" />
     <ClCompile Include="Debug\Error.cpp" />
     <ClCompile Include="Engine\Instance.cpp" />
+    <ClCompile Include="Engine\JobSystem.cpp" />
     <ClCompile Include="Engine\System.cpp" />
     <ClCompile Include="IO\Utility.cpp" />
     <ClCompile Include="Memory\Allocator.cpp" />
@@ -194,6 +195,7 @@
     <Natvis Include="Natvis\Lib.natvis" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Engine\Job.h" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
