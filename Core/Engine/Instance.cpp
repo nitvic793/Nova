@@ -22,11 +22,11 @@ namespace nv
         graphics::InitGraphics();
 
         auto handle = jobs::Execute([](void*)
-            {
-                std::chrono::milliseconds dura(2000);
-                std::this_thread::sleep_for(dura);
-                log::Info("Test");
-            });
+        {
+            std::chrono::milliseconds dura(2000);
+            std::this_thread::sleep_for(dura);
+            log::Info("Test");
+        });
 
         jobs::Wait(handle);
 

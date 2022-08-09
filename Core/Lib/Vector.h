@@ -8,65 +8,14 @@
 #include <cstdint>
 #include <cstring>
 #include <utility>
+#include <Lib/Array.h>
 
 namespace nv
 {
 	constexpr uint32_t kMinVectorSize = 4;
 	constexpr uint32_t kVectorGrowthMultiplier = 2;
 
-	template<typename T>
-	struct Span
-	{
-	public:
-		T*			mData;
-		size_t		mSize;
 
-	public:
-		constexpr Span() = default;
-		constexpr Span(T* data, size_t size) :
-			mData(data),
-			mSize(size)
-		{}
-
-		constexpr Span(std::initializer_list<T> items):
-			mData(const_cast<T*>(items.begin())),
-			mSize(items.size())
-		{}
-
-		constexpr Span(T items[]):
-			mData(items),
-			mSize(_countof(items))
-		{}
-
-		static constexpr Span<T> Create(std::initializer_list<T> items)
-		{
-			return { items.begin(), items.size() };
-		}
-
-		constexpr Span<T> Slice(size_t start, size_t end) const
-		{
-			assert(start >= 0 && start < Size());
-			assert(end < Size() && end >= start);
-			return { mData + start, end - start + 1 };
-		}
-
-		constexpr T* begin() const
-		{
-			return mData;
-		}
-
-		constexpr T* end() const
-		{
-			return mData + mSize;
-		}
-
-		constexpr T& operator[](size_t index) const noexcept
-		{
-			return mData[index];
-		}
-
-		constexpr size_t Size() const { return mSize; }
-	};
 
 	template<typename T, bool TGrowDynamic = true, uint32_t TSize = kMinVectorSize>
 	class Vector
