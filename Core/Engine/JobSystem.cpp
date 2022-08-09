@@ -40,8 +40,18 @@ namespace nv::jobs
 
         virtual void Wait(Handle<Job> handle) override
         {
-            Job* job = mJobs.Get(handle);
-            while (!job->IsFinished())
+            if (!mJobs.IsValid(handle)) 
+                return;
+
+            while (mJobs.IsValid(handle))
+            {
+                std::this_thread::yield();
+            }
+        }
+
+        virtual void Wait() override
+        {
+            while (!mQueue.IsEmpty())
             {
                 std::this_thread::yield();
             }
@@ -49,8 +59,7 @@ namespace nv::jobs
 
         virtual bool IsFinished(Handle<Job> handle) override
         {
-            Job* job = mJobs.Get(handle);
-            return job->IsFinished();
+            return !mJobs.IsValid(handle);
         }
 
         void Stop()
@@ -58,6 +67,12 @@ namespace nv::jobs
             mIsRunning = false;
             mConditionVar.notify_all(); // Unblock all threads and stop
             mJobs.Clear();
+        }
+
+        void Remove(Handle<Job> handle)
+        {
+            std::unique_lock<std::mutex> lock(mMutex);
+            mJobs.Remove(handle);
         }
 
         void Start()
@@ -83,12 +98,14 @@ namespace nv::jobs
                     {
                         auto jobHandle = mQueue.Pop();
                         auto job = mJobs.Get(jobHandle);
-                        job->Invoke();
-                        job->mIsFinished.store(true);
-
+                        if (job)
                         {
-                            std::unique_lock<std::mutex> lock(mMutex);
-                            mJobs.Remove(jobHandle);
+                            job->Invoke();
+                            job->mIsFinished.store(true);
+                            {
+                                std::unique_lock<std::mutex> lock(mMutex);
+                                mJobs.Remove(jobHandle);
+                            }
                         }
                     }
                 }
@@ -115,6 +132,7 @@ namespace nv::jobs
 
         ~JobSystem()
         {
+            Wait();
             mJobs.Destroy();
         }
 
@@ -155,6 +173,11 @@ namespace nv::jobs
     void Wait(Handle<Job> handle)
     {
         gJobSystem->Wait(handle);
+    }
+
+    void Wait()
+    {
+        gJobSystem->Wait();
     }
 
     bool IsFinished(Handle<Job> handle)

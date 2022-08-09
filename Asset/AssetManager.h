@@ -1,6 +1,25 @@
 #pragma once
 
+#include <Lib/Handle.h>
+
 namespace nv::asset
 {
+    class Asset;
+    struct AssetID;
 
+    class IAssetManager
+    {
+    public:
+        virtual void Init(const char* assetPath) = 0;
+        virtual Asset* GetAsset(AssetID id) const = 0;
+        virtual Handle<Asset> LoadAsset(AssetID id) const = 0;
+
+        virtual ~IAssetManager() {}
+    };
+
+    extern IAssetManager* gpAssetManager;
+
+    void            InitAssetManager(const char* assetPath);
+    void            DestroyAssetManager();
+    IAssetManager*  GetAssetManager();
 }

@@ -139,6 +139,11 @@ namespace nv
             mSize = 0;
         }
 
+        constexpr TDerived* GetIndex(uint32_t index) const
+        {
+            return (TDerived*)((Byte*)mBuffer + index * sizeof(TDerived));
+        }
+
         constexpr bool      IsEmpty() const { return mFreeIndices.Size() == mSize; }
         constexpr size_t    GetStrideSize() const { return sizeof(TDerived); }
         constexpr uint32_t  Size() const { return mSize; }
@@ -165,11 +170,6 @@ namespace nv
         constexpr TDerived* GetIndex(Handle<T> handle) const
         {
             return GetIndex(handle.mIndex);
-        }
-
-        constexpr TDerived* GetIndex(uint32_t index) const
-        {
-            return (TDerived*)((Byte*)mBuffer + index * sizeof(TDerived));
         }
 
     private:

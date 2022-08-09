@@ -4,6 +4,7 @@
 #include "Memory/Allocator.h"
 #include <Engine/System.h>
 #include <Engine/JobSystem.h>
+#include <AssetManager.h>
 
 using namespace nv;
 
@@ -21,6 +22,8 @@ namespace nv
         pContext->mpInstance = pInstance;
         pContext->mpSystemManager = &gSystemManager;
         jobs::InitJobSystem(NV_JOB_WORKER_THREAD_COUNT);
+        asset::InitAssetManager("Assets");
+        pContext->mpAssetManager = asset::GetAssetManager();
     }
 
     void DestroyContext(Context* pContext)
@@ -29,6 +32,7 @@ namespace nv
         MemTracker::gPtr = nullptr;
         pContext->mpInstance = nullptr;
         jobs::DestroyJobSystem();
+        asset::DestroyAssetManager();
     }
 
     void ApplyContext(Context* pContext)

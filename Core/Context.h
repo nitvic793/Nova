@@ -11,13 +11,19 @@ namespace nv
         class IJobSystem;
     }
 
+    namespace asset
+    {
+        class IAssetManager;
+    }
+
     struct Context
     {
-        MemTracker*         mpMemTracker;
-        SystemManager*      mpSystemManager;
-        Instance*           mpInstance;
-        jobs::IJobSystem*   mpJobSystem;
-        static Context*     gPtr;
+        MemTracker*             mpMemTracker;
+        SystemManager*          mpSystemManager;
+        Instance*               mpInstance;
+        jobs::IJobSystem*       mpJobSystem;
+        asset::IAssetManager*   mpAssetManager;
+        static Context*         gPtr;
     };
 
     extern Context gContext;

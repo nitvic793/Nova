@@ -10,12 +10,13 @@ namespace nv
     class ConcurrentQueue
     {
     public:
-        void    Push(T&& val);
-        void    Push(const T& val);
-        void    Push(T& val);
+        void        Push(T&& val);
+        void        Push(const T& val);
+        void        Push(T& val);
 
-        T       Pop();
-        void    Pop(T& val);
+        T           Pop();
+        void        Pop(T& val);
+        const T&    Peek();
 
         bool    IsEmpty() const;
     private:
@@ -86,6 +87,12 @@ namespace nv
         val = mQueue.front();
         mQueue.pop();
         return val;
+    }
+
+    template<typename T>
+    inline const T& ConcurrentQueue<T>::Peek()
+    {
+        return mQueue.front();
     }
 
     template<typename T>
