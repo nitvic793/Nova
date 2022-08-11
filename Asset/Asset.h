@@ -54,6 +54,13 @@ namespace nv::asset
         AssetDataArray  mAssetDataArray;
     };
 
+    template <typename T>
+    concept Serializable =
+        requires(T& t, const AssetData& data) 
+         {
+             { t.Serialize(data) } -> std::same_as<void>;
+         };
+
     class Asset 
     {
     public:
@@ -69,6 +76,12 @@ namespace nv::asset
         constexpr void      Set(AssetID id, const AssetData& data) { mId = id; mData = data; }
         constexpr void      SetState(LoadState state) { mState = state; }
         constexpr void      SetBuffer(void* pBuffer, size_t size) { mData.mData = (uint8_t*)pBuffer; mData.mSize = size; }
+
+        template<Serializable TSerializable>
+        constexpr void      SerializeTo(TSerializable& type)
+        {
+            type.Serialize(mData);
+        }
 
     protected:
         AssetID     mId     = { 0 };

@@ -7,6 +7,7 @@
 #include <Engine/JobSystem.h>
 #include <Engine/Log.h>
 #include <IO/Utility.h>
+#include <Types/MeshAsset.h>
 
 #include <filesystem>
 #include <mutex>
@@ -122,7 +123,8 @@ namespace nv::asset
                         else
                             log::Error("[Asset] Load {}: ERROR", path.c_str());
 #endif
-                        
+                        MeshAsset mesh;
+                        asset->SerializeTo(mesh);
                     });
                 }
 
