@@ -83,6 +83,14 @@ namespace nv::asset
             type.Serialize(mData);
         }
 
+        template<Serializable TSerializable>
+        constexpr TSerializable SerializeTo()
+        {
+            TSerializable type;
+            type.Serialize(mData);
+            return type;
+        }
+
     protected:
         AssetID     mId     = { 0 };
         AssetData   mData   = { 0, nullptr  };

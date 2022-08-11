@@ -125,6 +125,7 @@ namespace nv::asset
 #endif
                         MeshAsset mesh;
                         asset->SerializeTo(mesh);
+                        asset->SerializeTo<MeshAsset>();
                     });
                 }
 
