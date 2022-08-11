@@ -150,6 +150,7 @@
   <ItemGroup>
     <ClInclude Include="Debug\Error.h" />
     <ClInclude Include="Engine\JobSystem.h" />
+    <ClInclude Include="IO\File.h" />
     <ClInclude Include="IO\Utility.h" />
     <ClInclude Include="Lib\Array.h" />
     <ClInclude Include="Lib\ConcurrentQueue.h" />

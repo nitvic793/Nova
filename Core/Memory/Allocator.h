@@ -67,7 +67,7 @@ namespace nv
         IAllocator*     mAllocator;
     };
 
-    class LinearAllocator : public ArenaAllocator {};
+    using LinearAllocator = ArenaAllocator;
 
     class StackAllocator : public ArenaAllocator
     {

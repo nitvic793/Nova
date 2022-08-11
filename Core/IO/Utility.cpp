@@ -12,7 +12,7 @@ namespace nv::io
         return size;
     }
 
-    bool ReadFile(const char* filename, Byte* pOutBuffer, uint32_t readSize)
+    bool ReadFile(const char* filename, Byte*& pOutBuffer, uint32_t readSize)
     {
         pOutBuffer = nullptr;
         std::ifstream is(filename, std::ios::binary);

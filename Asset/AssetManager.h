@@ -12,7 +12,9 @@ namespace nv::asset
     public:
         virtual void Init(const char* assetPath) = 0;
         virtual Asset* GetAsset(AssetID id) const = 0;
-        virtual Handle<Asset> LoadAsset(AssetID id) const = 0;
+        virtual Asset* GetAsset(Handle<Asset> asset) const = 0;
+        virtual Handle<Asset> LoadAsset(AssetID id) = 0;
+        virtual void UnloadAsset(Handle<Asset> asset) = 0;
 
         virtual ~IAssetManager() {}
     };

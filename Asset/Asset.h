@@ -13,10 +13,12 @@ namespace nv::asset
         ASSET_TEXTURE
     };
 
-    enum AssetChunkMarker : uint32_t
+    enum LoadState : uint8_t
     {
-        ASSET_CHUNK_START = 0x0,
-        ASSET_CHUNK_END = 0xFFFFFFFF
+        STATE_UNLOADED,
+        STATE_LOADING,
+        STATE_LOADED,
+        STATE_ERROR
     };
 
     struct AssetID
@@ -31,6 +33,8 @@ namespace nv::asset
 
             uint64_t mId;
         };
+
+        constexpr operator uint64_t() const { return mId; }
     };
 
     struct Header
@@ -40,14 +44,9 @@ namespace nv::asset
         size_t  mOffset;
     };
 
-    struct HeaderBlock
-    {
-        uint32_t    mHeaderSize;
-        Header*     mpHeaders;
-    };
-
-    using AssetData         = Array<uint8_t>;
-    using AssetDataArray    = Array<AssetData>;
+    using HeaderBlock = Array<Header>;
+    using AssetData = Array<uint8_t>;
+    using AssetDataArray = Array<AssetData>;
 
     struct AssetChunk
     {
@@ -55,17 +54,26 @@ namespace nv::asset
         AssetDataArray  mAssetDataArray;
     };
 
-    class Asset
+    class Asset 
     {
     public:
-        constexpr AssetType GetType() const { return (AssetType)mId.mType; }
-        constexpr uint32_t  GetHash() const { return mId.mHash; }
-        constexpr uint64_t  GetID()   const { return mId.mId; }
-        constexpr uint8_t*  GetData() const { return mData.mData; }
-        constexpr size_t    Size()    const { return mData.mSize; }
+        constexpr AssetType GetType()   const { return (AssetType)mId.mType; }
+        constexpr uint32_t  GetHash()   const { return mId.mHash; }
+        constexpr uint64_t  GetID()     const { return mId.mId; }
+        constexpr uint8_t*  GetData()   const { return mData.mData; }
+        constexpr size_t    Size()      const { return mData.mSize; }
+        constexpr LoadState GetState()  const { return mState; }
+
+        constexpr void      Set(AssetID id, const AssetData& data) { mId = id; mData = data; }
+        constexpr void      SetState(LoadState state) { mState = state; }
+        constexpr void      SetBuffer(void* pBuffer, size_t size) { mData.mData = (uint8_t*)pBuffer; mData.mSize = size; }
 
     protected:
-        AssetID     mId;
-        AssetData   mData;
+        AssetID     mId     = { 0 };
+        AssetData   mData   = { 0, nullptr  };
+        LoadState   mState  = STATE_UNLOADED;
     };
+
+    void Serialize(const Array<Asset>& assets, Array<uint8_t>& outBuffer, IAllocator* pAllocator = SystemAllocator::gPtr);
+    void Deserialize(const Array<uint8_t>& buffer, Array<Asset>& outAssets, IAllocator* pAllocator = SystemAllocator::gPtr);
 }

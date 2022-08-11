@@ -340,6 +340,7 @@ ASALocalRun/
 healthchecksdb
 
 !Assets/Models/*.obj
+!Data/Mesh/*.obj
 !external/PhysX-4.1/**/
 !external/rpclib/**/
 !external/wren/**
