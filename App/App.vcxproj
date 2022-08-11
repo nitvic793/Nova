@@ -116,7 +116,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)Shared\External\dxc\lib\x64;$(SolutionDir)Shared\External\assimp\lib\Release\;$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\address-model-64\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(SolutionDir)Shared\External\assimp\bin\Release\ $(TargetDir) /s /d &amp; xcopy $(SolutionDir)Shared\External\dxc\bin\x64\ $(TargetDir) /s /d</Command>
+      <Command>xcopy $(SolutionDir)Shared\External\assimp\bin\Release\ $(TargetDir) /s /d &amp; xcopy $(SolutionDir)Shared\External\dxc\bin\x64\ $(TargetDir) /s /d &amp; xcopy $(SolutionDir)Data $(TargetDir)Data\ /s /d /I</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -140,7 +140,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)Shared\External\dxc\lib\x64;$(SolutionDir)Shared\External\assimp\lib\Release\;$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\address-model-64\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(SolutionDir)Shared\External\assimp\bin\Release\ $(TargetDir) /s /d &amp; xcopy $(SolutionDir)Shared\External\dxc\bin\x64\ $(TargetDir) /s /d</Command>
+      <Command>xcopy $(SolutionDir)Shared\External\assimp\bin\Release\ $(TargetDir) /s /d &amp; xcopy $(SolutionDir)Shared\External\dxc\bin\x64\ $(TargetDir) /s /d &amp; xcopy $(SolutionDir)Data $(TargetDir)Data\ /s /d /I</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

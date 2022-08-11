@@ -14,7 +14,6 @@ namespace nv::io
 
     bool ReadFile(const char* filename, Byte*& pOutBuffer, uint32_t readSize)
     {
-        pOutBuffer = nullptr;
         std::ifstream is(filename, std::ios::binary);
         is.seekg(0, std::ios_base::end);
         size_t size = is.tellg();

@@ -36,15 +36,29 @@ namespace nv::asset
         return ASSET_INVALID;
     }
 
+    constexpr std::string GetNormalizedPath(const std::string& path)
+    {
+        std::string outPath = path;
+        std::replace(outPath.begin(), outPath.end(), '\\', '/');
+        return outPath;
+    }
+
     class AssetManager : public IAssetManager
     {
     public:
         virtual void Init(const char* assetPath) override
         {
-            for (const auto& entry : fs::directory_iterator(assetPath))
+            mAssets.Init();
+            fs::path path = fs::current_path().string() + assetPath;
+            for (const auto& entry : fs::recursive_directory_iterator(path))
             {
-                const char* path = entry.path().string().c_str();
-                const AssetID id = { GetAssetType(path), ID(path) };
+                if (!fs::is_regular_file(entry.path()))
+                    continue;
+
+                auto path = entry.path().string();
+                auto relative = GetNormalizedPath(fs::relative(path, fs::current_path()).string());
+
+                const AssetID id = { GetAssetType(relative.c_str()), ID(relative.c_str())};
                 auto handle = mAssets.Create();
                 Asset* asset = mAssets.Get(handle);
                 asset->Set(id, {});
@@ -85,7 +99,7 @@ namespace nv::asset
                     auto path = mAssetPathMap[id.mId];
                     struct Payload
                     {
-                        const char* mPath;
+                        std::string mPath;
                         Asset*      mpAsset;
                         std::mutex& mMutex;
                         AssetData   mBuffer;
@@ -95,18 +109,20 @@ namespace nv::asset
                     size_t size = io::GetFileSize(path.c_str());
                     Byte* pBuffer = (Byte*)Alloc(size);
 
-                    Payload payload = { path.c_str(), asset, mMutex, { size, pBuffer }, id.mId };
+                    Payload payload = { path, asset, mMutex, { size, pBuffer }, id.mId };
 
-                    jobs::Execute([](void* ctx)
+                    auto handle = jobs::Execute([](void* ctx)
                     {
                         auto payload = (Payload*)ctx;
                         assert(payload);
                         payload->mpAsset->SetState(STATE_LOADING); // TODO: Set state atomic for assets
-                        bool result = io::ReadFile(payload->mPath, payload->mBuffer.mData, (uint32_t)payload->mBuffer.mSize);
+                        bool result = io::ReadFile(payload->mPath.c_str(), payload->mBuffer.mData, (uint32_t)payload->mBuffer.mSize);
                         payload->mpAsset->Set({ .mId = payload->mId }, payload->mBuffer);
                         payload->mpAsset->SetState(result ? STATE_LOADED : STATE_ERROR);
 
                     }, &payload);
+
+                    jobs::Wait(handle);
                 }
 
                 return it->second;
@@ -118,6 +134,11 @@ namespace nv::asset
         virtual void UnloadAsset(Handle<Asset> asset) override
         {
 
+        }
+
+        ~AssetManager()
+        {
+            mAssets.Destroy();
         }
 
     protected:

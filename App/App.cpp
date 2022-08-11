@@ -8,11 +8,27 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 
+//#ifndef WIN32_LEAN_AND_MEAN
+//#define WIN32_LEAN_AND_MEAN
+//#endif
+
+#include <windows.h>
 
 int main()
 {
     // Enabled memory leak detection
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    // Ensure "Current Directory" (relative path) is always the .exe's folder
+    {
+        char currentDir[1024] = {};
+        GetModuleFileNameA(0, currentDir, 1024);
+        char* lastSlash = strrchr(currentDir, '\\');
+        if (lastSlash)
+        {
+            *lastSlash = 0;
+            SetCurrentDirectoryA(currentDir);
+        }
+    }
 
     using namespace nv;
     nv::Instance instance("Test");
