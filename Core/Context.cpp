@@ -23,11 +23,12 @@ namespace nv
         pContext->mpMemTracker = GetMemoryTracker();
         pContext->mpInstance = pInstance;
         pContext->mpSystemManager = &gSystemManager;
+
         jobs::InitJobSystem(NV_JOB_WORKER_THREAD_COUNT);
         asset::InitAssetManager(NV_DATA_PATH);
+
         pContext->mpAssetManager = asset::GetAssetManager();
-        
-        pContext->mpAssetManager->LoadAsset({ asset::ASSET_MESH, ID("Data/Mesh/cube.obj") });
+        pContext->mpAssetManager->LoadAsset({ asset::ASSET_MESH, ID("Mesh/cube.obj") });
     }
 
     void DestroyContext(Context* pContext)

@@ -2,41 +2,42 @@
 
 #include <Lib/Vector.h>
 #include <atomic>
+#include <functional>
 
 namespace nv::jobs
 {
     class Job
     {
     public:
-        using Fn = void(*)(void*);
+        using Fn = std::function<void(void*)>;
 
-        constexpr Job(Fn func) :
+        Job(Fn func) :
             mFunction(func),
             mArgs(nullptr)
         {}
 
-        constexpr Job(Fn&& func) :
+        Job(Fn&& func) :
             mFunction(func),
             mArgs(nullptr)
         {}
 
-        constexpr Job(Fn func, void* args) :
+        Job(Fn func, void* args) :
             mFunction(func),
             mArgs(args)
         {}
 
-        constexpr Job(const Job& job)
+        Job(const Job& job)
         {
             mFunction = job.mFunction;
             mArgs = job.mArgs;
         }
 
-        constexpr Job() :
+        Job() :
             mFunction(nullptr),
             mArgs(nullptr)
         {}
 
-        constexpr Job& operator=(const Fn& fn)
+        Job& operator=(const Fn& fn)
         {
             mFunction = fn;
             return *this;
@@ -51,7 +52,7 @@ namespace nv::jobs
             return *this;
         }
 
-        constexpr void Invoke()
+        void Invoke()
         {
             if(mFunction)
                 mFunction(mArgs);
@@ -62,7 +63,7 @@ namespace nv::jobs
             return mIsFinished.load();
         }
 
-        constexpr void SetFunction(Fn fn)
+        void SetFunction(Fn fn)
         {
             mFunction = fn;
         }

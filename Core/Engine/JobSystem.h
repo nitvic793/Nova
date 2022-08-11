@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Lib/Vector.h>
+#include <Engine/Job.h>
 
 namespace nv::jobs
 {
@@ -22,8 +23,7 @@ namespace nv::jobs
     void InitJobSystem(uint32_t threads);
     void DestroyJobSystem();
 
-    Handle<Job> Execute(Job&& job);
-    Handle<Job> Execute(void (*fn)(void*), void* args = nullptr);
+    Handle<Job> Execute(Job::Fn&& job);
     void        Wait(Handle<Job> handle);
     void        Wait();
     bool        IsFinished(Handle<Job> handle);

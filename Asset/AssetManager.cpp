@@ -5,6 +5,7 @@
 #include <Lib/Pool.h>
 #include <Lib/StringHash.h>
 #include <Engine/JobSystem.h>
+#include <Engine/Log.h>
 #include <IO/Utility.h>
 
 #include <filesystem>
@@ -15,7 +16,8 @@ namespace fs = std::filesystem;
 #define NV_ASSET_DEBUG_LOADER 1
 
 namespace nv::asset
-{ 
+{
+    static const char* gpDataPath = nullptr;
     IAssetManager* gpAssetManager = nullptr;
 
     constexpr const char MESH_PATH[] = "Mesh";
@@ -38,7 +40,13 @@ namespace nv::asset
 
     constexpr std::string GetNormalizedPath(const std::string& path)
     {
+        const char* replaceEmpty = "";
+        std::string_view dataPath = gpDataPath;
+        dataPath.remove_prefix(1);
         std::string outPath = path;
+        auto pos = outPath.find(dataPath);
+        if(pos != std::string::npos)
+            outPath = outPath.replace(pos, dataPath.size() + 1, "");
         std::replace(outPath.begin(), outPath.end(), '\\', '/');
         return outPath;
     }
@@ -55,8 +63,8 @@ namespace nv::asset
                 if (!fs::is_regular_file(entry.path()))
                     continue;
 
-                auto path = entry.path().string();
-                auto relative = GetNormalizedPath(fs::relative(path, fs::current_path()).string());
+                const auto path = entry.path().string();
+                const auto relative = GetNormalizedPath(fs::relative(path, fs::current_path()).string());
 
                 const AssetID id = { GetAssetType(relative.c_str()), ID(relative.c_str())};
                 auto handle = mAssets.Create();
@@ -97,32 +105,25 @@ namespace nv::asset
                 if (asset->GetState() != STATE_LOADED && asset->GetState() != STATE_ERROR)
                 {
                     auto path = mAssetPathMap[id.mId];
-                    struct Payload
-                    {
-                        std::string mPath;
-                        Asset*      mpAsset;
-                        std::mutex& mMutex;
-                        AssetData   mBuffer;
-                        uint64_t    mId;
-                    };
-
                     size_t size = io::GetFileSize(path.c_str());
                     Byte* pBuffer = (Byte*)Alloc(size);
 
-                    Payload payload = { path, asset, mMutex, { size, pBuffer }, id.mId };
-
-                    auto handle = jobs::Execute([](void* ctx)
+                    auto handle = jobs::Execute([=](void* ctx)
                     {
-                        auto payload = (Payload*)ctx;
-                        assert(payload);
-                        payload->mpAsset->SetState(STATE_LOADING); // TODO: Set state atomic for assets
-                        bool result = io::ReadFile(payload->mPath.c_str(), payload->mBuffer.mData, (uint32_t)payload->mBuffer.mSize);
-                        payload->mpAsset->Set({ .mId = payload->mId }, payload->mBuffer);
-                        payload->mpAsset->SetState(result ? STATE_LOADED : STATE_ERROR);
+                        asset->SetState(STATE_LOADING); // TODO: Set state atomic for assets
+                        AssetData data = { size, pBuffer };
+                        bool result = io::ReadFile(path.c_str(), data.mData, (uint32_t)size);
+                        asset->Set(id, data);
+                        asset->SetState(result ? STATE_LOADED : STATE_ERROR);
 
-                    }, &payload);
-
-                    jobs::Wait(handle);
+#if _DEBUG
+                        if (result)
+                            log::Info("[Asset] Load {}: OK", path.c_str());
+                        else
+                            log::Error("[Asset] Load {}: ERROR", path.c_str());
+#endif
+                        
+                    });
                 }
 
                 return it->second;
@@ -133,11 +134,35 @@ namespace nv::asset
 
         virtual void UnloadAsset(Handle<Asset> asset) override
         {
+            Asset* pAsset = mAssets.Get(asset);
+            if (pAsset)
+            {
+                if (pAsset->GetState() == STATE_LOADED)
+                {
+                    Free(pAsset->GetData());
+                    pAsset->SetData({ 0, nullptr });
+                    return;
+                }
+            }
 
+            assert(false);
+            const auto& assetPath = mAssetPathMap[pAsset->GetID()];
+            log::Error("[Asset] Error unloading asset {}", assetPath.c_str());
+        }
+
+        void CleanUp()
+        {
+            for (auto& item : mAssetMap)
+            {
+                Asset* asset = mAssets.Get(item.second);
+                if (asset)
+                    Free(asset->GetData());
+            }
         }
 
         ~AssetManager()
         {
+            CleanUp();
             mAssets.Destroy();
         }
 
@@ -153,6 +178,7 @@ namespace nv::asset
     void InitAssetManager(const char* assetPath)
     {
         gpAssetManager = Alloc<AssetManager>();
+        gpDataPath = assetPath;
         gpAssetManager->Init(assetPath);
     }
 

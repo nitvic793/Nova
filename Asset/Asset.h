@@ -57,13 +57,15 @@ namespace nv::asset
     class Asset 
     {
     public:
-        constexpr AssetType GetType()   const { return (AssetType)mId.mType; }
-        constexpr uint32_t  GetHash()   const { return mId.mHash; }
-        constexpr uint64_t  GetID()     const { return mId.mId; }
-        constexpr uint8_t*  GetData()   const { return mData.mData; }
-        constexpr size_t    Size()      const { return mData.mSize; }
-        constexpr LoadState GetState()  const { return mState; }
+        constexpr AssetType GetType()    const { return (AssetType)mId.mType; }
+        constexpr uint32_t  GetHash()    const { return mId.mHash; }
+        constexpr uint64_t  GetID()      const { return mId.mId; }
+        constexpr uint8_t*  GetData()    const { return mData.mData; }
+        constexpr size_t    Size()       const { return mData.mSize; }
+        constexpr LoadState GetState()   const { return mState; }
+        constexpr AssetID   GetAssetID() const { return mId; }
 
+        constexpr void      SetData(const AssetData& data) { mData = data; }
         constexpr void      Set(AssetID id, const AssetData& data) { mId = id; mData = data; }
         constexpr void      SetState(LoadState state) { mState = state; }
         constexpr void      SetBuffer(void* pBuffer, size_t size) { mData.mData = (uint8_t*)pBuffer; mData.mSize = size; }

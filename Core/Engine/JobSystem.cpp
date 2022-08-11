@@ -66,7 +66,6 @@ namespace nv::jobs
         {
             mIsRunning = false;
             mConditionVar.notify_all(); // Unblock all threads and stop
-            mJobs.Clear();
         }
 
         void Remove(Handle<Job> handle)
@@ -125,14 +124,15 @@ namespace nv::jobs
 
                 HRESULT hr = SetThreadDescription(handle, L"Nova-Worker");
 #endif // _WIN32
-
-                mThreads[i].detach();
             }
         }
 
         ~JobSystem()
         {
+            Stop();
             Wait();
+            for (auto& thread : mThreads)
+                thread.join();
             mJobs.Destroy();
         }
 
@@ -160,14 +160,9 @@ namespace nv::jobs
         Free<JobSystem>(jobSystem);
     }
 
-    Handle<Job> Execute(Job&& job)
+    Handle<Job> Execute(Job::Fn&& job)
     {
-        return gJobSystem->Enqueue(std::move(job));
-    }
-
-    Handle<Job> Execute(void(*fn)(void*), void* args)
-    {
-        return gJobSystem->Enqueue({fn, args});
+        return gJobSystem->Enqueue(job);
     }
 
     void Wait(Handle<Job> handle)

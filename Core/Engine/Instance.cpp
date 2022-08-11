@@ -8,6 +8,7 @@
 #include <Engine/JobSystem.h>
 #include <Engine/Job.h>
 #include <thread>
+
 namespace nv
 { 
     bool Instance::sError = false;
@@ -16,19 +17,8 @@ namespace nv
     bool Instance::Init()
     {
         log::Info("Init Nova App: {}", mAppName);
-        log::Warn("Warn Log Test");
-        log::Error("Error Log Test");
         nv::InitContext(this);
         graphics::InitGraphics();
-
-        auto handle = jobs::Execute([](void*)
-        {
-            std::chrono::milliseconds dura(2000);
-            std::this_thread::sleep_for(dura);
-            log::Info("Test");
-        });
-
-        jobs::Wait(handle);
 
         return true;
     }
