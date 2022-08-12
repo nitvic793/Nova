@@ -30,6 +30,9 @@
     <ClInclude Include="Types\MeshAsset.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Types\Serializers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Asset.cpp">

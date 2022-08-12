@@ -10,9 +10,9 @@ namespace nv::graphics
     struct Vertex
     {
         float3 mPosition;
-        float3 mUV;
         float3 mNormal;
         float3 mTangent;
+        float2 mUV;
     };
 #ifdef __cplusplus
 }

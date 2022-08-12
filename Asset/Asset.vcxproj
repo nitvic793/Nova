@@ -150,6 +150,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Types\MeshAsset.h" />
+    <ClInclude Include="Types\Serializers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Asset.cpp" />

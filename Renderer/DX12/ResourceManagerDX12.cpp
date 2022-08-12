@@ -173,7 +173,7 @@ namespace nv::graphics
         return handle;
     }
 
-    Handle<Mesh> ResourceManagerDX12::CreateMesh(const TextureDesc& desc)
+    Handle<Mesh> ResourceManagerDX12::CreateMesh(const MeshDesc& desc)
     {
         return Handle<Mesh>();
     }

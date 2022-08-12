@@ -13,13 +13,13 @@ namespace nv::graphics
 
     struct MeshDesc
     {
-        uint32_t    mVertexCount;
-        uint32_t    mIndexCount;
-        uint32_t    mMeshEntryCount;
+        uint32_t    mVertexCount    = 0;
+        uint32_t    mIndexCount     = 0;
+        uint32_t    mMeshEntryCount = 0;
 
-        Vertex*     mpVertices;
-        uint32_t*   mpIndices;
-        MeshEntry*  mpMeshEntries;
+        Vertex*     mpVertices      = nullptr;
+        uint32_t*   mpIndices       = nullptr;
+        MeshEntry*  mpMeshEntries   = nullptr;
     };
 
     class Mesh

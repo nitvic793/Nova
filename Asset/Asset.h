@@ -7,10 +7,10 @@ namespace nv::asset
 {
     enum AssetType : uint32_t
     {
-        ASSET_INVALID = 0,
-        ASSET_MESH,
-        ASSET_SHADER,
-        ASSET_TEXTURE
+        ASSET_INVALID   = 0,
+        ASSET_MESH      = ID("Mesh"),
+        ASSET_SHADER    = ID("Shader"),
+        ASSET_TEXTURE   = ID("Texture")
     };
 
     enum LoadState : uint8_t
