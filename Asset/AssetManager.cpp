@@ -124,8 +124,7 @@ namespace nv::asset
                             log::Error("[Asset] Load {}: ERROR", path.c_str());
 #endif
                         MeshAsset mesh;
-                        asset->SerializeTo(mesh);
-                        asset->SerializeTo<MeshAsset>();
+                        asset->DeserializeTo(mesh);
                     });
                 }
 

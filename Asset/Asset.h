@@ -56,9 +56,10 @@ namespace nv::asset
 
     template <typename T>
     concept Serializable =
-        requires(T& t, const AssetData& data) 
+        requires(T& t, AssetData& data) 
          {
              { t.Serialize(data) } -> std::same_as<void>;
+             { t.Deserialize(data) } -> std::same_as<void>;
          };
 
     class Asset 
@@ -78,16 +79,22 @@ namespace nv::asset
         constexpr void      SetBuffer(void* pBuffer, size_t size) { mData.mData = (uint8_t*)pBuffer; mData.mSize = size; }
 
         template<Serializable TSerializable>
-        constexpr void      SerializeTo(TSerializable& type)
+        constexpr void      Serialize(TSerializable& type)
         {
             type.Serialize(mData);
         }
 
         template<Serializable TSerializable>
-        constexpr TSerializable SerializeTo()
+        constexpr void      DeserializeTo(TSerializable& type)
+        {
+            type.Deserialize(mData);
+        }
+
+        template<Serializable TSerializable>
+        constexpr TSerializable DeserializeTo()
         {
             TSerializable type;
-            type.Serialize(mData);
+            type.Deserialize(mData);
             return type;
         }
 
