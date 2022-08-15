@@ -73,6 +73,8 @@ namespace nv::asset
         constexpr LoadState GetState()   const { return mState; }
         constexpr AssetID   GetAssetID() const { return mId; }
 
+        constexpr const AssetData& GetAssetData() const { return mData; }
+
         constexpr void      SetData(const AssetData& data) { mData = data; }
         constexpr void      Set(AssetID id, const AssetData& data) { mId = id; mData = data; }
         constexpr void      SetState(LoadState state) { mState = state; }

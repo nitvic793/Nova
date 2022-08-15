@@ -28,7 +28,8 @@ namespace nv
         asset::InitAssetManager(NV_DATA_PATH);
 
         pContext->mpAssetManager = asset::GetAssetManager();
-        pContext->mpAssetManager->LoadAsset({ asset::ASSET_MESH, ID("Mesh/cube.obj") });
+        auto handle = pContext->mpAssetManager->ExportAssets(".\\Build\\Assets.novapkg");
+        jobs::Wait(handle);
     }
 
     void DestroyContext(Context* pContext)

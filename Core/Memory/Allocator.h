@@ -67,6 +67,34 @@ namespace nv
         IAllocator*     mAllocator;
     };
 
+    class LocalAllocator : public IAllocator
+    {
+    public:
+        LocalAllocator(Byte* pBuffer, size_t capacity) :
+            mBuffer(pBuffer),
+            mCurrent(nullptr),
+            mCapacity(capacity)
+        {
+            assert(mBuffer);
+            mCurrent = mBuffer;
+        }
+
+        constexpr virtual void* Allocate(size_t size) override
+        {
+            assert((mCurrent - mBuffer) + size <= mCapacity);
+            auto buffer = mCurrent;
+            mCurrent += size;
+            return buffer;
+        }
+
+        virtual void Free(void* ptr) override {}
+
+    protected:
+        Byte* mBuffer;
+        Byte* mCurrent;
+        size_t mCapacity;
+    };
+
     using LinearAllocator = ArenaAllocator;
 
     class StackAllocator : public ArenaAllocator

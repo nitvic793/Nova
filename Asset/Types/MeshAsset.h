@@ -3,6 +3,7 @@
 #include <Lib/ScopedPtr.h>
 #include <Renderer/Mesh.h>
 #include <Asset.h>
+#include <ostream>
 
 namespace nv::asset
 {
@@ -13,13 +14,13 @@ namespace nv::asset
     public:
         void Serialize(AssetData& data);
         void Deserialize(const AssetData& data);
-        void Export(const AssetData& data);
+        void Export(const AssetData& data, std::ostream& ostream);
 
         const MeshDesc& GetData() const { return mData; }
         ~MeshAsset();
 
     private:
-        MeshDesc mData = {};
-        
+        ScopedPtr<Byte, true>   mpBuffer;
+        MeshDesc                mData = {};
     };
 }

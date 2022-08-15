@@ -2,6 +2,11 @@
 
 #include <Lib/Handle.h>
 
+namespace nv::jobs
+{
+    class Job;
+}
+
 namespace nv::asset
 {
     class Asset;
@@ -15,6 +20,7 @@ namespace nv::asset
         virtual Asset* GetAsset(Handle<Asset> asset) const = 0;
         virtual Handle<Asset> LoadAsset(AssetID id) = 0;
         virtual void UnloadAsset(Handle<Asset> asset) = 0;
+        virtual Handle<jobs::Job> ExportAssets(const char* exportPath) = 0;
 
         virtual ~IAssetManager() {}
     };

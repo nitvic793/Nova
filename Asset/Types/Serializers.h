@@ -1,11 +1,16 @@
 #pragma once
 
 #include <Renderer/Mesh.h>
+#include <Asset.h>
 
-namespace nv::math
+namespace cereal
 {
+    using namespace nv::math;
+    using namespace nv::graphics;
+    using namespace nv::asset;
+
     template<class Archive>
-    void serialize(Archive& archive, float3 const& m)
+    void serialize(Archive& archive, float3 & m)
     {
         archive(m.x);
         archive(m.y);
@@ -13,17 +18,14 @@ namespace nv::math
     }
 
     template<class Archive>
-    void serialize(Archive& archive, float2 const& m)
+    void serialize(Archive& archive, float2 & m)
     {
         archive(m.x);
         archive(m.y);
     }
-}
 
-namespace nv::graphics
-{
     template<class Archive>
-    void serialize(Archive& archive, MeshEntry const& m)
+    void serialize(Archive& archive, MeshEntry & m)
     {
         archive(m.mBaseIndex);
         archive(m.mBaseVertex);
@@ -31,7 +33,7 @@ namespace nv::graphics
     }
 
     template<class Archive>
-    void serialize(Archive& archive, Vertex const& v)
+    void serialize(Archive& archive, Vertex & v)
     {
         archive(v.mPosition);
         archive(v.mNormal);
@@ -40,48 +42,18 @@ namespace nv::graphics
     }
 
     template<class Archive>
-    void save(Archive& archive, MeshDesc const& m)
+    void serialize(Archive& archive, MeshDesc & m)
     {
-        archive(m.mIndexCount);
-        archive(m.mVertexCount);
-        archive(m.mMeshEntryCount);
-
-        for (uint32_t i = 0; i < m.mMeshEntryCount; ++i)
-        {
-            archive(m.mpMeshEntries[i]);
-        }
-
-        for (uint32_t i = 0; i < m.mVertexCount; ++i)
-        {
-            archive(m.mpVertices[i]);
-        }
-
-        for (uint32_t i = 0; i < m.mIndexCount; ++i)
-        {
-            archive(m.mpIndices[i]);
-        }
+        archive(m.mMeshEntries);
+        archive(m.mVertices);
+        archive(m.mIndices);
     }
 
     template<class Archive>
-    void load(Archive& archive, MeshDesc& m)
+    void serialize(Archive& archive, Header& h)
     {
-        archive(m.mIndexCount);
-        archive(m.mVertexCount);
-        archive(m.mMeshEntryCount);
-
-        for (uint32_t i = 0; i < m.mMeshEntryCount; ++i)
-        {
-            archive(m.mpMeshEntries[i]);
-        }
-
-        for (uint32_t i = 0; i < m.mVertexCount; ++i)
-        {
-            archive(m.mpVertices[i]);
-        }
-
-        for (uint32_t i = 0; i < m.mIndexCount; ++i)
-        {
-            archive(m.mpIndices[i]);
-        }
+        archive(h.mAssetId.mId);
+        archive(h.mOffset);
+        archive(h.mSizeBytes);
     }
 }

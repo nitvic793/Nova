@@ -8,9 +8,13 @@
 #include <Engine/Log.h>
 #include <IO/Utility.h>
 #include <Types/MeshAsset.h>
+#include <Types/Serializers.h>
+#include <fstream>
 
 #include <filesystem>
 #include <mutex>
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/string.hpp>
 
 namespace fs = std::filesystem;
 
@@ -93,6 +97,20 @@ namespace nv::asset
             return mAssets.Get(asset);
         }
 
+        bool LoadAssetFromFile(Asset* asset)
+        {
+            const auto& path = mAssetPathMap[asset->GetID()];
+            size_t size = io::GetFileSize(path.c_str());
+            Byte* pBuffer = (Byte*)Alloc(size);
+
+            asset->SetState(STATE_LOADING); 
+            AssetData data = { size, pBuffer };
+            bool result = io::ReadFile(path.c_str(), data.mData, (uint32_t)size);
+            asset->SetData(data);
+            asset->SetState(result ? STATE_LOADED : STATE_ERROR);
+            return result;
+        }
+
         virtual Handle<Asset> LoadAsset(AssetID id) override
         {
 #if NV_ASSET_DEBUG_LOADER
@@ -105,7 +123,7 @@ namespace nv::asset
 
                 if (asset->GetState() != STATE_LOADED && asset->GetState() != STATE_ERROR)
                 {
-                    auto path = mAssetPathMap[id.mId];
+                    const auto& path = mAssetPathMap[id.mId];
                     size_t size = io::GetFileSize(path.c_str());
                     Byte* pBuffer = (Byte*)Alloc(size);
 
@@ -152,6 +170,32 @@ namespace nv::asset
             log::Error("[Asset] Error unloading asset {}", assetPath.c_str());
         }
 
+        virtual Handle<jobs::Job> ExportAssets(const char* exportPath) override
+        {
+            auto handle = jobs::Execute([&](void* ctx) 
+            {
+                std::ofstream file(exportPath, std::ios::binary | std::ios::trunc);
+                if (!file.is_open() || file.bad())
+                {
+                    log::Error("[Asset] Unable to open file to export assets.");
+                    return;
+                }
+
+                for (auto item : mAssetMap)
+                {
+                    Asset* asset = mAssets.Get(item.second);
+                    if (asset)
+                    {
+                        LoadAssetFromFile(asset);
+                        ExportAsset(asset, file); // TODO: Export to file. 
+                        UnloadAsset(item.second);
+                    }
+                }
+            });
+
+            return handle;
+        }
+
         void CleanUp()
         {
             for (auto& item : mAssetMap)
@@ -166,6 +210,26 @@ namespace nv::asset
         {
             CleanUp();
             mAssets.Destroy();
+        }
+
+    protected:
+        void ExportAsset(Asset* asset, std::ostream& ostream)
+        {
+            cereal::BinaryOutputArchive archive(ostream);
+
+            switch (asset->GetType())
+            {
+            case ASSET_MESH:
+            {
+                MeshAsset mesh;
+                Header header = {};
+                header.mAssetId = asset->GetAssetID();
+                archive(header);
+                archive(mAssetPathMap[asset->GetID()]);
+                
+                mesh.Export(asset->GetAssetData(), ostream);
+            }
+            }
         }
 
     protected:
