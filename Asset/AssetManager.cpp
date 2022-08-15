@@ -25,9 +25,10 @@ namespace nv::asset
     static const char* gpDataPath = nullptr;
     IAssetManager* gpAssetManager = nullptr;
 
-    constexpr const char MESH_PATH[] = "Mesh";
-    constexpr const char TEXTURES_PATH[] = "Textures";
-    constexpr const char SHADERS_PATH[] = "Shaders";
+    constexpr const char MESH_PATH[]            = "Mesh";
+    constexpr const char TEXTURES_PATH[]        = "Textures";
+    constexpr const char SHADERS_PATH[]         = "Shaders";
+    constexpr const char PACKAGE_EXTENSION[]    = ".novapkg";
 
     constexpr bool StringContains(const std::string& str, const std::string& inString) 
     {
@@ -71,6 +72,13 @@ namespace nv::asset
                 const auto path = entry.path().string();
                 const auto relative = GetNormalizedPath(fs::relative(path, fs::current_path()).string());
 
+                if (path.find(PACKAGE_EXTENSION) != std::string::npos)
+                {
+                    mPackageFiles.push_back(path);
+                    LoadPackageFile(path.c_str());
+                    continue;
+                }
+
                 const AssetID id = { GetAssetType(relative.c_str()), ID(relative.c_str())};
                 auto handle = mAssets.Create();
                 Asset* asset = mAssets.Get(handle);
@@ -95,6 +103,37 @@ namespace nv::asset
         virtual Asset* GetAsset(Handle<Asset> asset) const override
         {
             return mAssets.Get(asset);
+        }
+
+        void LoadPackageFile(const char* path)
+        {
+            std::ifstream file(path, std::ios::binary);
+            uint32_t assetCount = 0;
+            uint32_t assetsLoaded = 0;
+            {
+                cereal::BinaryInputArchive archive(file);
+                archive(assetCount);
+            }
+
+            while (!file.eof() && file.good())
+            {
+                Handle<Asset> handle;
+                auto asset = mAssets.CreateInstance(handle);
+                auto bytesRead = ImportAsset(file, asset);
+                if (asset->GetState() == STATE_LOADED)
+                {
+                    mAssetMap[asset->GetID()] = handle;
+                }
+                else
+                {
+                    log::Error("[Asset] Unable to load asset package file");
+                    return;
+                }
+
+                assetsLoaded++;
+                if (assetsLoaded == assetCount)
+                    break;
+            }
         }
 
         bool LoadAssetFromFile(Asset* asset)
@@ -181,6 +220,12 @@ namespace nv::asset
                     return;
                 }
 
+                {
+                    cereal::BinaryOutputArchive archive(file);
+                    uint32_t assetCount = mAssets.Size();
+                    archive(assetCount);
+                }
+
                 for (auto item : mAssetMap)
                 {
                     Asset* asset = mAssets.Get(item.second);
@@ -216,20 +261,44 @@ namespace nv::asset
         void ExportAsset(Asset* asset, std::ostream& ostream)
         {
             cereal::BinaryOutputArchive archive(ostream);
-
+            std::ostringstream sstream;
             switch (asset->GetType())
             {
             case ASSET_MESH:
             {
                 MeshAsset mesh;
-                Header header = {};
-                header.mAssetId = asset->GetAssetID();
-                archive(header);
-                archive(mAssetPathMap[asset->GetID()]);
+                mesh.Export(asset->GetAssetData(), sstream);
                 
-                mesh.Export(asset->GetAssetData(), ostream);
+                Header header = { .mAssetId = asset->GetAssetID(), .mSizeBytes = (size_t)sstream.tellp() };
+                archive(header);
+                auto path = GetNormalizedPath(fs::relative(mAssetPathMap[asset->GetID()], fs::current_path()).string());
+                archive(path);
+                ostream.write(sstream.str().c_str(), sstream.str().size());
             }
             }
+        }
+
+        size_t ImportAsset(std::istream& istream, Asset* pAsset)
+        {
+            cereal::BinaryInputArchive archive(istream);
+            Header header = {};
+            archive(header);
+            std::string name;
+            archive(name);
+            log::Info("[Asset] Loaded from package: {}", name.c_str());
+            void* pBuffer = Alloc(header.mSizeBytes);
+            istream.read((char*)pBuffer, header.mSizeBytes);
+            pAsset->Set(header.mAssetId, { header.mSizeBytes, (uint8_t*)pBuffer });
+            pAsset->SetState(STATE_LOADED);
+#if _DEBUG // Test Mesh Deserializer
+            if (pAsset->GetType() == ASSET_MESH)
+            {
+                MeshAsset mesh;
+                pAsset->DeserializeTo(mesh); 
+            }
+#endif
+
+            return header.mSizeBytes;
         }
 
     protected:
@@ -239,6 +308,7 @@ namespace nv::asset
         HashMap<uint64_t, std::string>      mAssetPathMap;
 #endif
         std::mutex                          mMutex;
+        std::vector<std::string>            mPackageFiles;
     };
 
     void InitAssetManager(const char* assetPath)
