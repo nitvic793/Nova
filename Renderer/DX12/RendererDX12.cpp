@@ -240,6 +240,10 @@ namespace nv::graphics
         TransitionToPresent();
         context->End();
         Submit(context);
+
+        uint32_t idx = (GetBackBufferIndex() + 1) % FRAMEBUFFER_COUNT;
+        auto pCmdAllocator = mCommandAllocators[idx];
+        pCmdAllocator->Reset();
     }
 
     uint32_t RendererDX12::GetBackBufferIndex() const

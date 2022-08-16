@@ -33,6 +33,7 @@ namespace nv::graphics
         virtual void StartFrame() = 0;
         virtual void EndFrame() = 0;
         virtual ~IRenderer() {}
+        virtual Context* GetContext() const = 0;
 
         Device* GetDevice() const;
 

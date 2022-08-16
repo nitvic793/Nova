@@ -30,13 +30,16 @@ namespace nv::graphics
         virtual void TransitionToPresent() override;
         virtual void StartFrame() override;
         virtual void EndFrame() override;
+
+        virtual Context* GetContext() const override;
+
         ~RendererDX12();
 
     public:
 
         uint32_t GetBackBufferIndex() const;
         ID3D12CommandAllocator* GetAllocator() const;
-        Context* GetContext() const;
+
 
     private:
         template<typename T>
