@@ -120,6 +120,11 @@ namespace nv::graphics
 		return mGpuAllocator.Get();
 	}
 
+	Microsoft::WRL::ComPtr<ID3D12CommandQueue> DeviceDX12::GetCommandQueue() const
+	{
+		return mCommandQueue;
+	}
+
 	bool DeviceDX12::InitSwapChain(const Window& window, const format::SurfaceFormat format)
 	{
 		const auto dxgiFormat = GetFormat(format);

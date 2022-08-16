@@ -12,7 +12,7 @@ using namespace nv;
 namespace nv
 {
     constexpr uint32_t  NV_JOB_WORKER_THREAD_COUNT = 4;
-    constexpr char      NV_DATA_PATH[] = "\\Data";
+    constexpr char      NV_DATA_PATH[] = "\\Build";
 
     Context gContext;
     Context* Context::gPtr = &gContext;
@@ -28,8 +28,8 @@ namespace nv
         asset::InitAssetManager(NV_DATA_PATH);
 
         pContext->mpAssetManager = asset::GetAssetManager();
-        auto handle = pContext->mpAssetManager->ExportAssets(".\\Build\\Assets.novapkg");
-        jobs::Wait(handle);
+        //auto handle = pContext->mpAssetManager->ExportAssets(".\\Build\\Assets.novapkg");
+        //jobs::Wait(handle);
     }
 
     void DestroyContext(Context* pContext)

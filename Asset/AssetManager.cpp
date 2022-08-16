@@ -211,6 +211,10 @@ namespace nv::asset
 
         virtual Handle<jobs::Job> ExportAssets(const char* exportPath) override
         {
+            auto folder = fs::path(exportPath).parent_path();
+            if (!fs::is_directory(folder))
+                fs::create_directory(folder);
+
             auto handle = jobs::Execute([&](void* ctx) 
             {
                 std::ofstream file(exportPath, std::ios::binary | std::ios::trunc);
@@ -274,6 +278,7 @@ namespace nv::asset
                 auto path = GetNormalizedPath(fs::relative(mAssetPathMap[asset->GetID()], fs::current_path()).string());
                 archive(path);
                 ostream.write(sstream.str().c_str(), sstream.str().size());
+                log::Info("[Asset] Exported : {}", path.c_str());
             }
             }
         }
@@ -285,7 +290,6 @@ namespace nv::asset
             archive(header);
             std::string name;
             archive(name);
-            log::Info("[Asset] Loaded from package: {}", name.c_str());
             void* pBuffer = Alloc(header.mSizeBytes);
             istream.read((char*)pBuffer, header.mSizeBytes);
             pAsset->Set(header.mAssetId, { header.mSizeBytes, (uint8_t*)pBuffer });
@@ -297,7 +301,7 @@ namespace nv::asset
                 pAsset->DeserializeTo(mesh); 
             }
 #endif
-
+            log::Info("[Asset] Loaded from package: {}", name.c_str());
             return header.mSizeBytes;
         }
 

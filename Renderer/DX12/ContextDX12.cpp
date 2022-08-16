@@ -19,6 +19,11 @@ namespace nv::graphics
         {
             return ((GPUResourceDX12*)gResourceManager->GetGPUResource(handle))->GetResource().Get();
         }
+
+        static ID3D12Resource* GetResource(Handle<Texture> handle)
+        {
+            return ((TextureDX12*)gResourceManager->GetTexture(handle))->GetResource();
+        }
     }
 
     bool ContextDX12::Init(ID3D12Device* pDevice, ID3D12CommandAllocator* pCommandAllocator)
@@ -103,4 +108,25 @@ namespace nv::graphics
         ::UpdateSubresources(mCommandList.Get(), pDest, pStaging, desc.mIntermediateOffset, desc.mFirstSubresource, desc.mNumSubresources, &subData);
     }
 
+    void ContextDX12::ClearRenderTarget(Handle<Texture> renderTarget, float color[4], uint32_t numRects, Rect* pRects)
+    {
+        auto texture = (TextureDX12*)gResourceManager->GetTexture(renderTarget);
+        mCommandList->ClearRenderTargetView(texture->GetCPUHandle(), color, numRects, (D3D12_RECT*)pRects);
+    }
+
+    void ContextDX12::ClearDepthStencil(Handle<Texture> depthStencil, float depth, uint8_t stencil, uint32_t numRects, Rect* pRects)
+    {
+        auto texture = (TextureDX12*)gResourceManager->GetTexture(depthStencil);
+        mCommandList->ClearDepthStencilView(texture->GetCPUHandle(), D3D12_CLEAR_FLAG_DEPTH, depth, stencil, numRects, (D3D12_RECT*)pRects);
+    }
+
+    void ContextDX12::SetViewports(uint32_t numViewports, Viewport* pViewports)
+    {
+        mCommandList->RSSetViewports(numViewports, (D3D12_VIEWPORT*)pViewports);
+    }
+
+    void ContextDX12::SetScissorRect(uint32_t numRect, Rect* pRects)
+    {
+        mCommandList->RSSetScissorRects(numRect, (D3D12_RECT*)pRects);
+    }
 }

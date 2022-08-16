@@ -25,6 +25,9 @@ namespace nv::graphics
 
     class DeviceDX12 : public Device
     {
+        template<typename T>
+        using ComPtr = Microsoft::WRL::ComPtr<T>;
+
     public:
         bool Init(Window& window) override;
         void Present() override;
@@ -34,11 +37,9 @@ namespace nv::graphics
 
         ID3D12Device* GetDevice() const;
         D3D12MA::Allocator* GetAllocator() const;
+        ComPtr<ID3D12CommandQueue>  GetCommandQueue() const;
 
     private:
-        template<typename T>
-        using ComPtr = Microsoft::WRL::ComPtr<T>;
-
         ComPtr<IDXGIFactory4>       mDxgiFactory;
         ComPtr<ID3D12Device>        mDevice;
         ComPtr<IDXGISwapChain4>     mSwapChain;

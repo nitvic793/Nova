@@ -182,10 +182,6 @@ namespace nv::graphics
     {
         Handle<Context> handle;
         auto context = (ContextDX12*)mContexts.CreateInstance(handle, desc);
-        auto renderer = (RendererDX12*)gRenderer;
-
-        if (!context->Init(renderer->mDevice.As<DeviceDX12>()->GetDevice(), renderer->GetAllocator()))
-            log::Error("Unable to create renderer context.");
         return handle;
     }
 

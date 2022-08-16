@@ -11,6 +11,10 @@ namespace nv::graphics
 
     void RenderSystem::Update(float deltaTime, float totalTime)
     {
+        gRenderer->Wait();
+        gRenderer->StartFrame();
+
+        gRenderer->EndFrame();
         gRenderer->Present();
     }
 

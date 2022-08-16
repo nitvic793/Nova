@@ -14,6 +14,9 @@ namespace nv::graphics
         void Update(float deltaTime, float totalTime) override;
         void Destroy() override;
         void OnReload() override;
+
+    private:
+        
     };
 }
 

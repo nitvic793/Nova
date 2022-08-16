@@ -43,6 +43,10 @@ namespace nv::graphics
         virtual void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation, uint32_t baseVertexLocation, uint32_t startInstanceLocation) = 0;
         virtual void ResourceBarrier(Span<TransitionBarrier> barriers) = 0;
         virtual void UpdateSubresources(Handle<GPUResource> dest, Handle<GPUResource> staging, const SubResourceDesc& desc) = 0;
+        virtual void ClearRenderTarget(Handle<Texture> renderTarget, float color[4], uint32_t numRects, Rect* pRects) = 0;
+        virtual void ClearDepthStencil(Handle<Texture> depthStencil, float depth, uint8_t stencil, uint32_t numRects, Rect* pRects) = 0;
+        virtual void SetViewports(uint32_t numViewports, Viewport* pViewports) = 0;
+        virtual void SetScissorRect(uint32_t numRect, Rect* pRects) = 0;
 
     protected:
         ContextDesc mDesc;

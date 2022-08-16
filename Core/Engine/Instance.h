@@ -21,6 +21,9 @@ namespace nv
         static const char* GetErrorReason() { return spErrorReason; }
 
     protected:
+        bool UpdateSystemState() const;
+
+    protected:
         const char* mAppName;
 
     protected:

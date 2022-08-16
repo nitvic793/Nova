@@ -207,7 +207,11 @@ namespace nv::graphics
             case B4G4R4A4_UNORM             :   return DXGI_FORMAT_B4G4R4A4_UNORM            ;
             default                         :   return DXGI_FORMAT_UNKNOWN                   ;
         }
+    }
 
+    constexpr D3D12_RECT GetRect(const Rect& rect)
+    {
+        return D3D12_RECT{ .left = rect.mLeft, .top = rect.mTop, .right = rect.mRight, .bottom = rect.mBottom };
     }
 }
 

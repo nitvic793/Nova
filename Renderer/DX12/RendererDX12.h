@@ -6,10 +6,13 @@
 
 struct ID3D12CommandAllocator;
 struct ID3D12CommandQueue;
+struct ID3D12Fence;
+using HANDLE = void*;
 
 namespace nv::graphics
 {
     class DescriptorHeapDX12;
+    class Context;
 
     class RendererDX12 : public IRenderer
     {
@@ -20,10 +23,20 @@ namespace nv::graphics
         virtual void Present() override;
         virtual void InitFrameBuffers(const Window& window, const format::SurfaceFormat format) override;
         virtual void Submit(Context* pContext) override;
+        virtual void Wait() override;
+        virtual void ClearBackBuffers() override;
+
+        virtual void TransitionToRenderTarget() override;
+        virtual void TransitionToPresent() override;
+        virtual void StartFrame() override;
+        virtual void EndFrame() override;
         ~RendererDX12();
 
     public:
+
+        uint32_t GetBackBufferIndex() const;
         ID3D12CommandAllocator* GetAllocator() const;
+        Context* GetContext() const;
 
     private:
         template<typename T>
@@ -35,8 +48,13 @@ namespace nv::graphics
         Handle<DescriptorHeap>                      mGpuHeap;
         Handle<DescriptorHeap>                      mTextureHeap;
         Handle<DescriptorHeap>                      mConstantBufferHeap;
+        Handle<Context>                             mContexts[FRAMEBUFFER_COUNT];
         ComPtr<ID3D12CommandAllocator>              mCommandAllocators[FRAMEBUFFER_COUNT];
         ComPtr<ID3D12CommandQueue>                  mCommandQueue;
+
+        ComPtr<ID3D12Fence>                         mFences[FRAMEBUFFER_COUNT];
+        uint64_t                                    mFenceValues[FRAMEBUFFER_COUNT];
+        HANDLE                                      mFenceEvents[FRAMEBUFFER_COUNT];
 
         friend class ResourceManagerDX12;
     };

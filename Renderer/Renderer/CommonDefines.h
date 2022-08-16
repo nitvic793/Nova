@@ -82,4 +82,22 @@ namespace nv::graphics
             STATE_PRESENT
         };
     }
+
+    struct Rect
+    {
+        int32_t mLeft;
+        int32_t mTop;
+        int32_t mRight;
+        int32_t mBottom;
+    };
+
+    struct Viewport
+    {
+        float mTopLeftX;
+        float mTopLeftY;
+        float mWidth;
+        float mHeight;
+        float mMinDepth;
+        float mMaxDepth;
+    };
 }
