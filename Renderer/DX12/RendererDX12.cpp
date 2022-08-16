@@ -61,6 +61,18 @@ namespace nv::graphics
     void RendererDX12::Destroy()
     {
         mDescriptorHeapPool.Destroy();
+
+        for (int i = 0; i < FRAMEBUFFER_COUNT; ++i)
+        {
+            uint32_t backBufferIndex = i;
+            mCommandQueue->Signal(mFences[backBufferIndex].Get(), mFenceValues[backBufferIndex]);
+            if (mFences[backBufferIndex]->GetCompletedValue() < mFenceValues[backBufferIndex])
+            {
+                auto hr = mFences[backBufferIndex]->SetEventOnCompletion(mFenceValues[backBufferIndex], mFenceEvents[backBufferIndex]);
+                WaitForSingleObjectEx(mFenceEvents[backBufferIndex], INFINITE, FALSE);
+            }
+            CloseHandle(mFenceEvents[i]);
+        }
     }
 
     void RendererDX12::Present()

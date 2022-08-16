@@ -65,20 +65,25 @@ namespace nv::graphics
             clearValue = CD3DX12_CLEAR_VALUE(GetFormat(desc.mClearValue.mFormat), desc.mClearValue.mColor[0], desc.mClearValue.mStencil);
         else
             clearValue = CD3DX12_CLEAR_VALUE(GetFormat(desc.mClearValue.mFormat), desc.mClearValue.mColor);
-
+       
+        std::wstring resourceName;
         switch (desc.mType)
         {
         case buffer::TYPE_BUFFER:
             bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(desc.mWidth);
+            resourceName = L"Buffer";
             break;
         case buffer::TYPE_TEXTURE_2D: 
             bufferDesc = CD3DX12_RESOURCE_DESC::Tex2D(format, desc.mWidth, desc.mHeight, desc.mArraySize, desc.mMipLevels, desc.mSampleCount, desc.mSampleQuality, flags);
+            resourceName = L"Texture2D";
             break;
         }
 
         D3D12MA::Allocation* allocation = nullptr;
         auto hr = pAllocator->CreateResource(&allocationDesc, &bufferDesc, initResourceState, &clearValue, &allocation, IID_NULL, nullptr);
         resource->SetResource(allocation);
+
+        allocation->GetResource()->SetName(resourceName.c_str());
         
         if (!SUCCEEDED(hr)) return Null<GPUResource>();
 

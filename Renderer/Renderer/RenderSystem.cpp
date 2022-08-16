@@ -20,6 +20,7 @@ namespace nv::graphics
 
     void RenderSystem::Destroy()
     {
+        gRenderer->Wait();
     }
 
     void RenderSystem::OnReload()
