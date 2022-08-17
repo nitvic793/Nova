@@ -2,6 +2,9 @@
 
 namespace nv
 {
+    constexpr uint32_t  NV_JOB_WORKER_THREAD_COUNT = 4;
+    constexpr char      NV_DATA_PATH[] = "\\Build";
+
     class MemTracker;
     class SystemAllocator;
     class SystemManager;
@@ -28,7 +31,7 @@ namespace nv
 
     extern Context gContext;
 
-    void InitContext(Instance* pInstance, Context* pContext = Context::gPtr);
+    void InitContext(Instance* pInstance, const char* pDataPath = NV_DATA_PATH, Context* pContext = Context::gPtr);
     void DestroyContext(Context* pContext = Context::gPtr);
 
     void ApplyContext(Context* pContext);

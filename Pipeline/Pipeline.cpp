@@ -1,20 +1,50 @@
-// Pipeline.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
 
-#include <iostream>
+//#include <vld.h>
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+
+#include <NovaCore.h>
+#include "Memory/Memory.h"
+#include <Memory/Allocator.h>
+#include <Engine/System.h>
+#include <Engine/JobSystem.h>
+#include <Asset.h>
+#include <AssetManager.h>
+#include <Engine/Log.h>
+#include <Math/Math.h>
+#include <Renderer/Renderer.h>
+#include <Renderer/Device.h>
+#include <Renderer/Window.h>
+#include <Engine/JobSystem.h>
+#include <Engine/Job.h>
+#include <Engine/System.h>
+#include <Engine/Timer.h>
+
+#include <thread>
+#include <Windows.h>
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    // Enabled memory leak detection
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    // Ensure "Current Directory" (relative path) is always the .exe's folder
+    {
+        char currentDir[1024] = {};
+        GetModuleFileNameA(0, currentDir, 1024);
+        char* lastSlash = strrchr(currentDir, '\\');
+        if (lastSlash)
+        {
+            *lastSlash = 0;
+            SetCurrentDirectoryA(currentDir);
+        }
+    }
+
+    nv::InitContext(nullptr, "\\Data");
+    auto assetManager = nv::asset::GetAssetManager();
+    assetManager->ExportAssets("\\Build\\Assets.novapkg");
+    nv::DestroyContext();
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file

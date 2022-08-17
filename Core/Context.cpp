@@ -11,13 +11,10 @@ using namespace nv;
 
 namespace nv
 {
-    constexpr uint32_t  NV_JOB_WORKER_THREAD_COUNT = 4;
-    constexpr char      NV_DATA_PATH[] = "\\Build";
-
     Context gContext;
     Context* Context::gPtr = &gContext;
 
-    void InitContext(Instance* pInstance, Context* pContext)
+    void InitContext(Instance* pInstance, const char* pDataPath, Context* pContext)
     {
         InitMemoryTracker();
         pContext->mpMemTracker = GetMemoryTracker();
@@ -25,7 +22,7 @@ namespace nv
         pContext->mpSystemManager = &gSystemManager;
 
         jobs::InitJobSystem(NV_JOB_WORKER_THREAD_COUNT);
-        asset::InitAssetManager(NV_DATA_PATH);
+        asset::InitAssetManager(pDataPath);
 
         pContext->mpAssetManager = asset::GetAssetManager();
         //auto handle = pContext->mpAssetManager->ExportAssets(".\\Build\\Assets.novapkg");
