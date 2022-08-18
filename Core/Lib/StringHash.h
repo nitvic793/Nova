@@ -105,6 +105,13 @@ namespace nv
         return FNV1A_32(s, count);
     }
 
+    template <class T>
+    constexpr void HashCombine(std::size_t& s, const T& v)
+    {
+        std::hash<T> h;
+        s ^= h(v) + 0x9e3779b9 + (s << 6) + (s >> 2);
+    }
+
     //https://stackoverflow.com/questions/81870/is-it-possible-to-print-a-variables-type-in-standard-c/58331141#58331141
 
     template <typename T>

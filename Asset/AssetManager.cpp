@@ -109,6 +109,8 @@ namespace nv::asset
         {
             std::ifstream file(path, std::ios::binary);
             uint32_t assetCount = 0;
+            auto fileSize = io::GetFileSize(path);
+            uint64_t totalBytesRead = 0;
             uint32_t assetsLoaded = 0;
             {
                 cereal::BinaryInputArchive archive(file);
@@ -119,7 +121,7 @@ namespace nv::asset
             {
                 Handle<Asset> handle;
                 auto asset = mAssets.CreateInstance(handle);
-                auto bytesRead = ImportAsset(file, asset);
+                totalBytesRead += ImportAsset(file, asset);
                 if (asset->GetState() == STATE_LOADED)
                 {
                     mAssetMap[asset->GetID()] = handle;
@@ -285,6 +287,7 @@ namespace nv::asset
 
         size_t ImportAsset(std::istream& istream, Asset* pAsset)
         {
+            auto curPos = istream.tellg();
             cereal::BinaryInputArchive archive(istream);
             Header header = {};
             archive(header);
@@ -302,7 +305,8 @@ namespace nv::asset
             }
 #endif
             log::Info("[Asset] Loaded from package: {}", name.c_str());
-            return header.mSizeBytes;
+            auto size = istream.tellg() - curPos;
+            return size;
         }
 
     protected:
