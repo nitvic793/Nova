@@ -33,6 +33,9 @@
     <ClInclude Include="Types\Serializers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Types\TextureAsset.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Asset.cpp">
@@ -45,6 +48,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Types\MeshAsset.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Types\TextureAsset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

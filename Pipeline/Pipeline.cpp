@@ -45,6 +45,6 @@ int main()
 
     nv::InitContext(nullptr, "\\Data");
     auto assetManager = nv::asset::GetAssetManager();
-    assetManager->ExportAssets("\\Build\\Assets.novapkg");
+    assetManager->ExportAssets(".\\Build\\Assets.novapkg");
     nv::DestroyContext();
 }

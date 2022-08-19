@@ -78,11 +78,6 @@ namespace nv::asset
 		}
     }
 
-    void MeshAsset::Serialize(AssetData& data)
-    {
-        // No Need?
-    }
-
     void MeshAsset::Deserialize(const AssetData& data)
     {
 		nv::io::MemoryStream istream((char*)data.mData, data.mSize);
