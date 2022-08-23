@@ -52,6 +52,7 @@ namespace nv
     MemTracker*&    GetMemoryTracker();
     void            DestroyMemoryTracker(MemTracker*& memTracker = GetMemoryTracker());
     void            SetMemoryTracker(MemTracker* memTracker);
+    void            EnableLeakDetection();
     
     size_t          GetCurrentAllocatedBytes();
     size_t          GetSystemAllocatedBytes();

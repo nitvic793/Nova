@@ -259,6 +259,10 @@ namespace nv::graphics
         return mCommandAllocators[idx].Get();
     }
 
+    void RendererDX12::Draw()
+    {
+    }
+
     Context* RendererDX12::GetContext() const
     {
         return gResourceManager->GetContext(mContexts[GetBackBufferIndex()]);

@@ -21,8 +21,8 @@ namespace nv::graphics
         virtual void Init(Window& window) = 0;
         virtual void InitFrameBuffers(const Window& window, const format::SurfaceFormat format) = 0;
 
-        virtual void Draw() {}
-        virtual void Present() {}
+        virtual void Draw() = 0;
+        virtual void Present() = 0;
         virtual void Destroy() = 0;
         virtual void Submit(Context* pContext) = 0;
         virtual void Wait() = 0;

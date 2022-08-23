@@ -16,8 +16,8 @@
 
 int main()
 {
-    // Enabled memory leak detection
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    nv::EnableLeakDetection();
+
     // Ensure "Current Directory" (relative path) is always the .exe's folder
     {
         char currentDir[1024] = {};

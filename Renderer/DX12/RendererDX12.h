@@ -25,6 +25,7 @@ namespace nv::graphics
         virtual void Submit(Context* pContext) override;
         virtual void Wait() override;
         virtual void ClearBackBuffers() override;
+        virtual void Draw() override;
 
         virtual void TransitionToRenderTarget() override;
         virtual void TransitionToPresent() override;

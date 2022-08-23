@@ -1,9 +1,12 @@
 
-#include <cstdlib>
 #include <cstdint>
 #include "Memory.h"
 #include <cstdio>
 #include "Allocator.h"
+
+#define _CRTDBG_MAP_ALLOC
+#include <cstdlib>
+#include <crtdbg.h>
 
 ///
 /// Operator new and delete overrides to enable memory allocation tracking.
@@ -63,6 +66,12 @@ namespace nv
     void SetMemoryTracker(MemTracker* memTracker)
     {
         MemTracker::gPtr = memTracker;
+    }
+
+    void EnableLeakDetection()
+    {
+        // Enabled memory leak detection
+        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
     }
 
     MemTracker* &GetMemoryTracker()
