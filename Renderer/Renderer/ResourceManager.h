@@ -23,7 +23,7 @@ namespace nv::graphics
     public:
         virtual Handle<Shader>          CreateShader(const ShaderDesc& desc) = 0;
         virtual Handle<GPUResource>     CreateResource(const GPUResourceDesc& desc) = 0;
-        virtual Handle<PipelineState>   CreatePipelineState(const PipelineState& desc) = 0;
+        virtual Handle<PipelineState>   CreatePipelineState(const PipelineStateDesc& desc) = 0;
         virtual Handle<Texture>         CreateTexture(const TextureDesc& desc) = 0;
         virtual Handle<Mesh>            CreateMesh(const MeshDesc& desc) = 0;
         virtual Handle<Context>         CreateContext(const ContextDesc& desc) = 0;

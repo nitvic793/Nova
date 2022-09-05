@@ -259,6 +259,11 @@ namespace nv::graphics
         return mCommandAllocators[idx].Get();
     }
 
+    ID3D12CommandQueue* RendererDX12::GetCommandQueue() const
+    {
+        return mCommandQueue.Get();
+    }
+
     void RendererDX12::Draw()
     {
     }

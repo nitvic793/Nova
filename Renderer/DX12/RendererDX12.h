@@ -38,9 +38,9 @@ namespace nv::graphics
 
     public:
 
-        uint32_t GetBackBufferIndex() const;
+        uint32_t                GetBackBufferIndex() const;
         ID3D12CommandAllocator* GetAllocator() const;
-
+        ID3D12CommandQueue*     GetCommandQueue() const;
 
     private:
         template<typename T>

@@ -22,6 +22,77 @@
 
 namespace nv::graphics
 {
+    // Useful to create a local context especially for copying workloads
+    // Not meant to be re-used during main rendering as the command allocator 
+    // is reset when after submit and wait. 
+    class AutoLocalContext
+    {
+        template<typename T>
+        using ComPtr = Microsoft::WRL::ComPtr<T>;
+
+    public:
+        AutoLocalContext(ID3D12Device* pDevice, ContextType contextType, ID3D12CommandQueue* pCmdQueue):
+            mpCommandQueue(pCmdQueue)
+        {
+            const D3D12_COMMAND_LIST_TYPE type = GetCommandListType(contextType);
+            auto hr = pDevice->CreateCommandAllocator(type, IID_PPV_ARGS(mCommandAllocator.ReleaseAndGetAddressOf()));
+            hr = pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(mFence.ReleaseAndGetAddressOf()));
+
+            mFenceValue = 1;
+            mFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+            mContext = ContextDX12({ .mType = contextType });
+            mContext.Init(pDevice, mCommandAllocator.Get());
+            //mContext.Begin(mCommandAllocator.Get());
+        }
+
+        ID3D12GraphicsCommandList4* GetCommandList() const 
+        { 
+            return mContext.GetCommandList(); 
+        }
+
+        ContextDX12* GetContext()
+        {
+            return &mContext;
+        }
+
+        void Reset()
+        {
+            mContext.Begin(mCommandAllocator.Get());
+        }
+
+        void SubmitAndWait()
+        {
+            mContext.End();
+            ID3D12CommandList* ppCommandLists[] = { mContext.GetCommandList() };
+            mpCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+            auto hr = mpCommandQueue->Signal(mFence.Get(), mFenceValue);
+            if (mFence->GetCompletedValue() < mFenceValue)
+            {
+                auto hr = mFence->SetEventOnCompletion(mFenceValue, mFenceEvent);
+                WaitForSingleObjectEx(mFenceEvent, INFINITE, FALSE);
+            }
+
+            mCommandAllocator->Reset();
+            mFenceValue++;
+        }
+
+        ~AutoLocalContext()
+        {
+            SubmitAndWait();
+            CloseHandle(mFenceEvent);
+        }
+
+    private:
+        ContextDX12                     mContext;
+        ComPtr<ID3D12CommandAllocator>  mCommandAllocator;
+        ComPtr<ID3D12Fence>             mFence;
+        uint64_t                        mFenceValue;
+        HANDLE                          mFenceEvent;
+        ID3D12CommandQueue*             mpCommandQueue;
+
+    };
+
     ResourceManagerDX12::ResourceManagerDX12()
     {
         mDevice = (DeviceDX12*)gRenderer->GetDevice();
@@ -65,6 +136,8 @@ namespace nv::graphics
             clearValue = CD3DX12_CLEAR_VALUE(GetFormat(desc.mClearValue.mFormat), desc.mClearValue.mColor[0], desc.mClearValue.mStencil);
         else
             clearValue = CD3DX12_CLEAR_VALUE(GetFormat(desc.mClearValue.mFormat), desc.mClearValue.mColor);
+
+        D3D12_CLEAR_VALUE* outClearValue = &clearValue;
        
         std::wstring resourceName;
         switch (desc.mType)
@@ -72,6 +145,7 @@ namespace nv::graphics
         case buffer::TYPE_BUFFER:
             bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(desc.mWidth);
             resourceName = L"Buffer";
+            outClearValue = nullptr;
             break;
         case buffer::TYPE_TEXTURE_2D: 
             bufferDesc = CD3DX12_RESOURCE_DESC::Tex2D(format, desc.mWidth, desc.mHeight, desc.mArraySize, desc.mMipLevels, desc.mSampleCount, desc.mSampleQuality, flags);
@@ -80,7 +154,7 @@ namespace nv::graphics
         }
 
         D3D12MA::Allocation* allocation = nullptr;
-        auto hr = pAllocator->CreateResource(&allocationDesc, &bufferDesc, initResourceState, &clearValue, &allocation, IID_NULL, nullptr);
+        auto hr = pAllocator->CreateResource(&allocationDesc, &bufferDesc, initResourceState, outClearValue, &allocation, IID_NULL, nullptr);
         resource->SetResource(allocation);
 
         allocation->GetResource()->SetName(resourceName.c_str());
@@ -90,7 +164,7 @@ namespace nv::graphics
         return handle;
     }
 
-    Handle<PipelineState> ResourceManagerDX12::CreatePipelineState(const PipelineState& desc)
+    Handle<PipelineState> ResourceManagerDX12::CreatePipelineState(const PipelineStateDesc& desc)
     {
         return Handle<PipelineState>();
     }
@@ -180,7 +254,57 @@ namespace nv::graphics
 
     Handle<Mesh> ResourceManagerDX12::CreateMesh(const MeshDesc& desc)
     {
-        return Handle<Mesh>();
+        Handle<Mesh> handle;
+        const uint32_t indexBufferSize = sizeof(uint32_t) * (uint32_t)desc.mIndices.size();
+        const uint32_t vertexBufferSize = sizeof(Vertex) * (uint32_t)desc.mVertices.size();
+
+        Handle<GPUResource> indexBuffer = CreateResource({ .mSize = indexBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_COPY_DEST});
+        Handle<GPUResource> indexBufferUpload = CreateResource({ .mSize = indexBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_GENERIC_READ, .mBufferMode = buffer::BUFFER_MODE_UPLOAD });
+
+        Handle<GPUResource> vertexBuffer = CreateResource({ .mSize = vertexBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_COPY_DEST });
+        Handle<GPUResource> vertexBufferUpload = CreateResource({ .mSize = vertexBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_GENERIC_READ, .mBufferMode = buffer::BUFFER_MODE_UPLOAD });
+
+        auto ibResource = (GPUResourceDX12*)this->GetGPUResource(indexBuffer);
+        auto vbResource = (GPUResourceDX12*)this->GetGPUResource(vertexBuffer);
+
+        auto ibUploadResource = (GPUResourceDX12*)this->GetGPUResource(indexBufferUpload);
+        auto vbUploadResource = (GPUResourceDX12*)this->GetGPUResource(vertexBufferUpload);
+
+        auto pDevice = ((DeviceDX12*)gRenderer->GetDevice())->GetDevice();
+        UploadData ibData = 
+        {
+            .mpData = reinterpret_cast<const BYTE*>(desc.mIndices.data()),
+            .mRowPitch = indexBufferSize,
+            .mSlicePitch = indexBufferSize
+        };
+
+        UploadData vbData =
+        {
+            .mpData = reinterpret_cast<const BYTE*>(desc.mVertices.data()),
+            .mRowPitch = vertexBufferSize,
+            .mSlicePitch = vertexBufferSize
+        };
+        
+        {
+            AutoLocalContext localContext(pDevice, ContextType::CONTEXT_GFX, ((RendererDX12*)(gRenderer))->GetCommandQueue());
+            ibResource->UploadResource(localContext.GetCommandList(), ibData, ibUploadResource->GetResource().Get());
+            vbResource->UploadResource(localContext.GetCommandList(), vbData, vbUploadResource->GetResource().Get());
+
+            auto ctx = localContext.GetContext();
+            TransitionBarrier barriers[] = 
+            {
+                {.mFrom = buffer::STATE_COPY_DEST, .mTo = buffer::STATE_INDEX_BUFFER, .mResource = indexBuffer },
+                {.mFrom = buffer::STATE_COPY_DEST, .mTo = buffer::STATE_VERTEX_BUFFER, .mResource = vertexBuffer }
+            };
+
+            ctx->ResourceBarrier({ barriers, _countof(barriers) });
+        }
+
+        mGpuResources.Remove(vertexBufferUpload);
+        mGpuResources.Remove(indexBufferUpload);
+
+        MeshDX12* mesh = mMeshes.CreateInstance(handle, desc, vertexBuffer, indexBuffer);
+        return handle;
     }
 
     Handle<Context> ResourceManagerDX12::CreateContext(const ContextDesc& desc)

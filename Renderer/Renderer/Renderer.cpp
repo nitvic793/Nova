@@ -5,6 +5,8 @@
 #include <Engine/System.h>
 #include <Renderer/ResourceManager.h>
 #include <Renderer/Format.h>
+#include <Types/MeshAsset.h>
+#include <AssetManager.h>
 
 #if NV_PLATFORM_WINDOWS && NV_RENDERER_DX12
 #include <DX12/WindowDX12.h>
@@ -36,7 +38,10 @@ namespace nv::graphics
         gSystemManager.CreateSystem<RenderSystem>();
 #endif
 
-        gResourceManager->CreateContext({ .mType = ContextType::CONTEXT_GFX });
+        auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ ID("Mesh"), ID("Mesh/cube.obj") });
+        asset::MeshAsset m;
+        asset->DeserializeTo(m);
+        gResourceManager->CreateMesh(m.GetData());
     }
 
     void DestroyGraphics()

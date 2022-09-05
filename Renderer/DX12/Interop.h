@@ -28,6 +28,7 @@ namespace nv::graphics
         case buffer::STATE_INDIRECT_ARG:            return D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
         case buffer::STATE_RENDER_TARGET:           return D3D12_RESOURCE_STATE_RENDER_TARGET;
         case buffer::STATE_PRESENT:                 return D3D12_RESOURCE_STATE_PRESENT;
+        case buffer::STATE_GENERIC_READ:            return D3D12_RESOURCE_STATE_GENERIC_READ;
         }
 
         return D3D12_RESOURCE_STATE_COMMON;

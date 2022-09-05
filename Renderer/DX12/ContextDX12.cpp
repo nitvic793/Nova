@@ -35,6 +35,11 @@ namespace nv::graphics
         return true;
     }
 
+    void ContextDX12::Begin(ID3D12CommandAllocator* pCommandAllocator)
+    {
+        mCommandList->Reset(pCommandAllocator, nullptr);
+    }
+
     void ContextDX12::Begin()
     {
         auto renderer = (RendererDX12*)gRenderer;

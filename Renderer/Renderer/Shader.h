@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Asset.h>
+
 namespace nv::graphics
 {
     namespace shader
@@ -14,7 +16,8 @@ namespace nv::graphics
 
     struct ShaderDesc
     {
-        shader::Type mType;
+        shader::Type    mType;
+        asset::AssetID  mShader;
     };
 
     class Shader

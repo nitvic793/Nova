@@ -79,7 +79,8 @@ namespace nv::graphics
             STATE_COPY_SOURCE,
             STATE_INDIRECT_ARG,
             STATE_RENDER_TARGET,
-            STATE_PRESENT
+            STATE_PRESENT,
+            STATE_GENERIC_READ
         };
     }
 

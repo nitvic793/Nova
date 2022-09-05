@@ -5,6 +5,7 @@
 #include <Lib/Map.h>
 
 struct ID3D12Resource;
+struct ID3D12GraphicsCommandList;
 
 namespace D3D12MA
 {
@@ -13,6 +14,17 @@ namespace D3D12MA
 
 namespace nv::graphics
 {
+    struct UploadData
+    {
+        const void* mpData = nullptr;
+        int64_t     mRowPitch = 0;
+        int64_t     mSlicePitch = 0;
+
+        uint64_t    mIntermediateOffset = 0;
+        uint32_t    mFirstSubresource = 0;
+        uint32_t    mNumSubResources = 1;
+    };
+
     class GPUResourceDX12 : public GPUResource
     {
     public:
@@ -27,6 +39,8 @@ namespace nv::graphics
         void                    SetResource(ID3D12Resource* pResource) noexcept;
         void                    SetResource(D3D12MA::Allocation* pAllocation, ID3D12Resource* pResource = nullptr) noexcept;
         ComPtr<ID3D12Resource>& GetResource() noexcept;
+
+        void                    UploadResource(ID3D12GraphicsCommandList* pCmdList, const UploadData& data, ID3D12Resource* pIntermediate);
 
     private:
         ComPtr<ID3D12Resource>      mResource;

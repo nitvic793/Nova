@@ -21,6 +21,13 @@ namespace nv::graphics
 
     class Mesh
     {
+    public:
+        Mesh(const MeshDesc& desc) :
+            mDesc(desc) {}
+        virtual ~Mesh() {}
+        constexpr const MeshDesc& GetDesc() const { return mDesc; }
 
+    protected:
+        MeshDesc mDesc;
     };
 }

@@ -170,7 +170,7 @@ namespace nv::asset
 
                     auto handle = jobs::Execute([=](void* ctx)
                     {
-                        asset->SetState(STATE_LOADING); // TODO: Set state atomic for assets
+                        asset->SetState(STATE_LOADING);
                         AssetData data = { size, pBuffer };
                         bool result = io::ReadFile(path.c_str(), data.mData, (uint32_t)size);
                         asset->Set(id, data);
@@ -182,8 +182,6 @@ namespace nv::asset
                         else
                             log::Error("[Asset] Load {}: ERROR", path.c_str());
 #endif
-                        MeshAsset mesh;
-                        asset->DeserializeTo(mesh);
                     });
                 }
 
@@ -267,20 +265,31 @@ namespace nv::asset
         void ExportAsset(Asset* asset, std::ostream& ostream)
         {
             cereal::BinaryOutputArchive archive(ostream);
-            std::ostringstream sstream;
+            auto path = GetNormalizedPath(fs::relative(mAssetPathMap[asset->GetID()], fs::current_path()).string());
+
+            const auto writeHeader = [asset, &archive, this, &path](size_t size)
+            {
+                Header header = { .mAssetId = asset->GetAssetID(), .mSizeBytes = size };
+                archive(header);
+                archive(path);
+            };
+
             switch (asset->GetType())
             {
             case ASSET_MESH:
             {
                 MeshAsset mesh;
+                std::ostringstream sstream;
                 mesh.Export(asset->GetAssetData(), sstream);
-                
-                Header header = { .mAssetId = asset->GetAssetID(), .mSizeBytes = (size_t)sstream.tellp() };
-                archive(header);
-                auto path = GetNormalizedPath(fs::relative(mAssetPathMap[asset->GetID()], fs::current_path()).string());
-                archive(path);
+                writeHeader((size_t)sstream.tellp());
                 ostream.write(sstream.str().c_str(), sstream.str().size());
                 log::Info("[Asset] Exported : {}", path.c_str());
+            }
+            case ASSET_SHADER:
+            {
+                const auto& data = asset->GetAssetData();
+                writeHeader(data.mSize);
+                //ostream.write()
             }
             }
         }
@@ -297,13 +306,6 @@ namespace nv::asset
             istream.read((char*)pBuffer, header.mSizeBytes);
             pAsset->Set(header.mAssetId, { header.mSizeBytes, (uint8_t*)pBuffer });
             pAsset->SetState(STATE_LOADED);
-#if _DEBUG // Test Mesh Deserializer
-            if (pAsset->GetType() == ASSET_MESH)
-            {
-                MeshAsset mesh;
-                pAsset->DeserializeTo(mesh); 
-            }
-#endif
             log::Info("[Asset] Loaded from package: {}", name.c_str());
             auto size = istream.tellg() - curPos;
             return size;

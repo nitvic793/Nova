@@ -1,4 +1,5 @@
 #include "pch.h"
+
 #include "GPUResourceDX12.h"
 #include "DirectXIncludes.h"
 #include <D3D12MemAlloc.h>
@@ -30,4 +31,18 @@ namespace nv::graphics
     {
         return mResource;
     }
+
+    void GPUResourceDX12::UploadResource(ID3D12GraphicsCommandList* pCmdList, const UploadData& data, ID3D12Resource* pIntermediate)
+    {
+        const D3D12_SUBRESOURCE_DATA subData =
+        {
+            .pData = data.mpData,
+            .RowPitch = data.mRowPitch,
+            .SlicePitch = data.mSlicePitch
+        };
+
+        ::UpdateSubresources(pCmdList, mResource.Get(), pIntermediate, data.mIntermediateOffset, data.mFirstSubresource, data.mNumSubResources, &subData);
+    }
+
+
 }

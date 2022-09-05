@@ -24,7 +24,11 @@ namespace nv::graphics
 
     struct GPUResourceDesc
     {
-        uint32_t                mWidth          = 0;
+        union 
+        {
+            uint32_t            mWidth = 0;
+            uint32_t            mSize;
+        };
         uint32_t                mHeight         = 0;
         format::SurfaceFormat   mFormat         = format::UNKNOWN;
         buffer::Type            mType           = buffer::TYPE_BUFFER;

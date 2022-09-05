@@ -18,6 +18,7 @@ namespace nv::graphics
             Context(desc) {}
 
         bool Init(ID3D12Device* pDevice, ID3D12CommandAllocator* pCommandAllocator);
+        void Begin(ID3D12CommandAllocator* pCommandAllocator);
 
         // Inherited via Context
         virtual void Begin() override;

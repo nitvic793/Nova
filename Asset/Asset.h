@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <Lib/Array.h>
+#include <atomic>
 
 namespace nv::asset
 {
@@ -69,15 +70,16 @@ namespace nv::asset
         constexpr uint64_t  GetID()      const { return mId.mId; }
         constexpr uint8_t*  GetData()    const { return mData.mData; }
         constexpr size_t    Size()       const { return mData.mSize; }
-        constexpr LoadState GetState()   const { return mState; }
         constexpr AssetID   GetAssetID() const { return mId; }
 
         constexpr const AssetData& GetAssetData() const { return mData; }
 
         constexpr void      SetData(const AssetData& data) { mData = data; }
         constexpr void      Set(AssetID id, const AssetData& data) { mId = id; mData = data; }
-        constexpr void      SetState(LoadState state) { mState = state; }
         constexpr void      SetBuffer(void* pBuffer, size_t size) { mData.mData = (uint8_t*)pBuffer; mData.mSize = size; }
+
+        LoadState           GetState() const { return mState.load(); }
+        void                SetState(LoadState state) { mState.store(state); }
 
 
         template<Serializable TSerializable>
@@ -95,9 +97,9 @@ namespace nv::asset
         }
 
     protected:
-        AssetID     mId     = { 0 };
-        AssetData   mData   = { 0, nullptr  };
-        LoadState   mState  = STATE_UNLOADED;
+        AssetID                 mId     = { 0 };
+        AssetData               mData   = { 0, nullptr  };
+        std::atomic<LoadState>  mState  = STATE_UNLOADED;
     };
 
     void Serialize(const Array<Asset>& assets, Array<uint8_t>& outBuffer, IAllocator* pAllocator = SystemAllocator::gPtr);
