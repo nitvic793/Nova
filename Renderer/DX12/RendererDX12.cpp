@@ -17,6 +17,8 @@
 #include <dxgidebug.h>
 #include <D3D12MemAlloc.h>
 
+#include <Debug/Profiler.h>
+
 namespace nv::graphics
 {
     void RendererDX12::Init(Window& window)
@@ -49,6 +51,8 @@ namespace nv::graphics
         }
 
         mCommandQueue = mDevice.As<DeviceDX12>()->GetCommandQueue();
+
+        NV_GPU_INIT_D3D12(pDevice, mCommandQueue.GetAddressOf(), 1);
 
         for (int i = 0; i < FRAMEBUFFER_COUNT; i++)
         {

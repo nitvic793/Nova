@@ -7,6 +7,8 @@
 #include <DX12/Interop.h>
 #include <D3D12MemAlloc.h>
 
+#include <Debug/Profiler.h>
+
 namespace nv::graphics
 {
     bool DeviceDX12::Init(Window& window)
@@ -97,6 +99,7 @@ namespace nv::graphics
 
 	void DeviceDX12::Present()
 	{
+		NV_GPU_FLIP(mSwapChain.Get());
 		mSwapChain->Present(1, 0);
 	}
 

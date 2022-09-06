@@ -115,7 +115,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
     </ClCompile>
     <Link>
@@ -134,7 +134,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
@@ -149,12 +149,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Debug\Error.h" />
+    <ClInclude Include="Debug\Profiler.h" />
     <ClInclude Include="Engine\JobSystem.h" />
     <ClInclude Include="Engine\Timer.h" />
     <ClInclude Include="IO\File.h" />
     <ClInclude Include="IO\Utility.h" />
     <ClInclude Include="Lib\Array.h" />
     <ClInclude Include="Lib\ConcurrentQueue.h" />
+    <ClInclude Include="Lib\Format.h" />
     <ClInclude Include="Lib\Util.h" />
     <ClInclude Include="NovaConfig.h" />
     <ClInclude Include="Context.h" />

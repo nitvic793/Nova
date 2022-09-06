@@ -5,6 +5,11 @@
 
 #include <Engine/System.h>
 
+namespace nv::jobs
+{
+    class Job;
+}
+
 namespace nv::graphics
 {
     class RenderSystem : public ISystem
@@ -15,8 +20,9 @@ namespace nv::graphics
         void Destroy() override;
         void OnReload() override;
 
+        void RenderThreadJob(void* ctx);
     private:
-        
+        Handle<jobs::Job> mRenderJobHandle;
     };
 }
 

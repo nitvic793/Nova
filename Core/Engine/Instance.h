@@ -5,6 +5,13 @@
 
 namespace nv
 {
+    enum InstanceState
+    {
+        INSTANCE_STATE_STOPPED = 0,
+        INSTANCE_STATE_RUNNING,
+        INSTANCE_STATE_ERROR
+    };
+
     class Instance
     {
     public:
@@ -16,6 +23,8 @@ namespace nv
         void Reload();
 
     public:
+        static InstanceState GetInstanceState();
+        static void SetInstanceState(InstanceState state);
         static void SetError(bool isError, const char* pReason);
         static bool HasError() { return sError; }
         static const char* GetErrorReason() { return spErrorReason; }

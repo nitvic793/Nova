@@ -5,6 +5,9 @@
 
 #include <Lib/Pool.h>
 #include <Lib/ConcurrentQueue.h>
+#include <Lib/Format.h>
+
+#include <Debug/Profiler.h>
 
 #include <Windows.h>
 
@@ -80,6 +83,9 @@ namespace nv::jobs
 
             auto worker = [&]()
             {
+                const auto threadId = std::hash<std::thread::id>{}(std::this_thread::get_id());
+                const auto jobThreadName = nv::Format("NovaWorker-{}", threadId);
+                NV_THREAD(jobThreadName.c_str());
                 while (mIsRunning)
                 {
                     {

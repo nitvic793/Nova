@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "System.h"
+#include <Debug/Profiler.h>
+#include <Lib/Format.h>
 
 namespace nv
 {
@@ -10,6 +12,8 @@ namespace nv
     {
         for (auto& system : mSystems)
         {
+            const auto event = nv::Format("System/Init/{}", GetSystemName(system.first));
+            NV_EVENT(event.c_str());
             system.second->Init();
         }
     }
@@ -18,6 +22,8 @@ namespace nv
     {
         for (auto& system : mSystems)
         {
+            const auto event = nv::Format("System/Update/{}", GetSystemName(system.first));
+            NV_EVENT(event.c_str());
             system.second->Update(deltaTime, totalTime);
         }
     }
@@ -26,6 +32,8 @@ namespace nv
     {
         for (auto& system : mSystems)
         {
+            const auto event = nv::Format("System/Destroy/{}", GetSystemName(system.first));
+            NV_EVENT(event.c_str());
             system.second->Destroy();
         }
     }
@@ -34,6 +42,8 @@ namespace nv
     {
         for (auto& system : mSystems)
         {
+            const auto event = nv::Format("System/Reload/{}", GetSystemName(system.first));
+            NV_EVENT(event.c_str());
             system.second->OnReload();
         }
     }

@@ -10,6 +10,13 @@
 
 namespace nv
 {
+#if _DEBUG || NV_ENABLE_PROFILING
+#define NV_ENABLE_SYSTEM_NAMES 1
+    constexpr bool ENABLE_SYSTEM_NAMES = true;
+#else
+    constexpr bool ENABLE_SYSTEM_NAMES = false;
+#endif
+
     class ISystem
     {
     public:
@@ -62,6 +69,18 @@ namespace nv
         void DestroySystems();
         void ReloadSystems();
 
+        void SetSystemName(StringID id, const std::string_view& name)
+        {
+            if constexpr (ENABLE_SYSTEM_NAMES)
+                mSystemNames[id] = name;
+        }
+
+        const char* GetSystemName(StringID id)
+        {
+            if constexpr (ENABLE_SYSTEM_NAMES)
+                return mSystemNames[id].c_str();
+        }
+
         ~SystemManager() 
         { 
             mAllocator->Reset(); 
@@ -71,6 +90,10 @@ namespace nv
 
     private:
         OrderedMap<StringID, ScopedPtr<ISystem, true>> mSystems;
+#if NV_ENABLE_SYSTEM_NAMES
+        OrderedMap<StringID, std::string> mSystemNames;
+#endif
+
         IAllocator* mAllocator;
     };
 
@@ -81,6 +104,7 @@ namespace nv
     {
         TSystem* buffer = (TSystem*)mAllocator->Allocate(sizeof(TSystem));
         new (buffer) TSystem(std::forward<Args>(args)...);
+        constexpr auto typeName = nv::TypeName<TSystem>();
         constexpr StringID typeId = nv::TypeNameID<TSystem>();
         mSystems[typeId] = ScopedPtr<ISystem, true>((ISystem*)buffer);
         return (ISystem*)buffer;

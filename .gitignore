@@ -347,3 +347,5 @@ healthchecksdb
 !external/wren/lib/**
 !Shared/External/assimp/**
 !Shared/External/dxc/**
+!Shared/External/Optick/**
+!Shared/External/Optick/lib/**
