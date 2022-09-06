@@ -53,9 +53,9 @@ namespace nv
     bool Instance::Destroy()
     {
         gSystemManager.DestroySystems();
+        NV_SHUTDOWN();
         graphics::DestroyGraphics();
         nv::DestroyContext();
-        NV_SHUTDOWN();
         return true;
     }
 

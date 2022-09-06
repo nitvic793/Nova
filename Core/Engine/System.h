@@ -107,6 +107,7 @@ namespace nv
         constexpr auto typeName = nv::TypeName<TSystem>();
         constexpr StringID typeId = nv::TypeNameID<TSystem>();
         mSystems[typeId] = ScopedPtr<ISystem, true>((ISystem*)buffer);
+        SetSystemName(typeId, typeName);
         return (ISystem*)buffer;
     }
 }

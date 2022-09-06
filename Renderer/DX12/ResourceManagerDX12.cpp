@@ -22,7 +22,7 @@
 
 namespace nv::graphics
 {
-    // Useful to create a local context especially for copying workloads
+    // Creates a context with RAII. Useful to create a local context especially for copy workloads
     // Not meant to be re-used during main rendering as the command allocator 
     // is reset when after submit and wait. 
     class AutoLocalContext
@@ -351,8 +351,8 @@ namespace nv::graphics
 
     ResourceManagerDX12::~ResourceManagerDX12()
     {
-        mGpuResources.Destroy();
         mMeshes.Destroy();
+        mGpuResources.Destroy();
         mPipelineStates.Destroy();
         mShaders.Destroy();
         mTextures.Destroy();

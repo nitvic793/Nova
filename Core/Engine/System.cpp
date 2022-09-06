@@ -10,40 +10,36 @@ namespace nv
 
     void SystemManager::InitSystems()
     {
+        NV_EVENT("Systems/Init");
         for (auto& system : mSystems)
         {
-            const auto event = nv::Format("System/Init/{}", GetSystemName(system.first));
-            NV_EVENT(event.c_str());
             system.second->Init();
         }
     }
 
     void SystemManager::UpdateSystems(float deltaTime, float totalTime)
     {
+        NV_EVENT("Systems/Update");
         for (auto& system : mSystems)
         {
-            const auto event = nv::Format("System/Update/{}", GetSystemName(system.first));
-            NV_EVENT(event.c_str());
             system.second->Update(deltaTime, totalTime);
         }
     }
 
     void SystemManager::DestroySystems()
     {
+        NV_EVENT("Systems/Destroy");
         for (auto& system : mSystems)
         {
-            const auto event = nv::Format("System/Destroy/{}", GetSystemName(system.first));
-            NV_EVENT(event.c_str());
             system.second->Destroy();
         }
     }
 
     void SystemManager::ReloadSystems()
     {
+        NV_EVENT("Systems/Reload");
         for (auto& system : mSystems)
         {
-            const auto event = nv::Format("System/Reload/{}", GetSystemName(system.first));
-            NV_EVENT(event.c_str());
             system.second->OnReload();
         }
     }

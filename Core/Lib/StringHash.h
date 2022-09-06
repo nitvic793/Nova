@@ -128,18 +128,18 @@ namespace nv
         suffix = "]";
 #elif defined(_MSC_VER)
         name = __FUNCSIG__;
-        prefix = "auto __cdecl type_name<";
+        prefix = "auto __cdecl nv::TypeName<";
         suffix = ">(void) noexcept";
 #endif
-        name.remove_prefix(prefix.size() - 1);
+        name.remove_prefix(prefix.size());
         name.remove_suffix(suffix.size());
-        return name.data();
+        return name;
     }
 
     template <typename T>
     constexpr nv::StringID TypeNameID() noexcept
     {
-        return ID(TypeName<T>());
+        return ID(TypeName<T>().data());
     }
 
 }
