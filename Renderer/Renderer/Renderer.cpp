@@ -38,7 +38,7 @@ namespace nv::graphics
         gSystemManager.CreateSystem<RenderSystem>();
 #endif
 
-        auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ ID("Mesh"), ID("Mesh/cube.obj") });
+        auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_MESH, ID("Mesh/cube.obj") });
         asset::MeshAsset m;
         asset->DeserializeTo(m);
         gResourceManager->CreateMesh(m.GetData());

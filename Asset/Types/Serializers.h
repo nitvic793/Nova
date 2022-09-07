@@ -2,6 +2,9 @@
 
 #include <Renderer/Mesh.h>
 #include <Asset.h>
+#include <Lib/Vector.h>
+
+#include <cereal/cereal.hpp>
 
 namespace cereal
 {
@@ -15,6 +18,44 @@ namespace cereal
         archive(m.x);
         archive(m.y);
         archive(m.z);
+    }
+
+    template<class Archive, typename T>
+    typename std::enable_if<traits::is_input_serializable<BinaryData<T>, Archive>::value
+        && std::is_arithmetic<T>::value && !std::is_same<T, bool>::value, void>::type
+    serialize(Archive& archive, nv::Vector<T>& v)
+    {
+        archive(make_size_tag(static_cast<size_type>(v.Size())));
+        archive(binary_data(v.Data(), static_cast<std::size_t>(v.Size()) * sizeof(T)));
+    }
+
+    template<class Archive, typename T>
+    typename std::enable_if<traits::is_input_serializable<BinaryData<T>, Archive>::value
+        && std::is_arithmetic<T>::value && !std::is_same<T, bool>::value, void>::type
+    serialize(Archive& archive, const nv::Vector<T>& v)
+    {
+        archive(make_size_tag(static_cast<size_type>(v.Size())));
+        archive(binary_data(v.Data(), static_cast<std::size_t>(v.Size()) * sizeof(T)));
+    }
+
+    template<class Archive, typename T>
+    typename std::enable_if<(!traits::is_output_serializable<BinaryData<T>, Archive>::value
+        || !std::is_arithmetic<T>::value) && !std::is_same<T, bool>::value, void>::type
+    serialize(Archive& archive, const nv::Vector<T>& v)
+    {
+        archive(make_size_tag(static_cast<size_type>(v.Size())));
+        for (auto&& val : v)
+            archive(val);
+    }
+
+    template<class Archive, typename T>
+    typename std::enable_if<(!traits::is_output_serializable<BinaryData<T>, Archive>::value
+        || !std::is_arithmetic<T>::value) && !std::is_same<T, bool>::value, void>::type
+    serialize(Archive& archive, nv::Vector<T>& v)
+    {
+        archive(make_size_tag(static_cast<size_type>(v.Size())));
+        for (auto&& val : v)
+            archive(val);
     }
 
     template<class Archive>

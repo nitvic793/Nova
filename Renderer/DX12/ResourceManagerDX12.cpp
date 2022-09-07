@@ -287,6 +287,7 @@ namespace nv::graphics
         
         {
             AutoLocalContext localContext(pDevice, ContextType::CONTEXT_GFX, ((RendererDX12*)(gRenderer))->GetCommandQueue());
+            
             ibResource->UploadResource(localContext.GetCommandList(), ibData, ibUploadResource->GetResource().Get());
             vbResource->UploadResource(localContext.GetCommandList(), vbData, vbUploadResource->GetResource().Get());
 
