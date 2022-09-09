@@ -12,6 +12,13 @@ namespace nv::graphics
             PIXEL,
             COMPUTE
         };
+
+        enum ShaderModel : uint8_t
+        {
+            SM_6_5,
+            SM_6_6,
+            SM_6_7
+        };
     }
 
     struct ShaderDesc

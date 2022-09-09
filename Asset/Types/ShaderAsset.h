@@ -6,6 +6,17 @@
 
 namespace nv::asset
 {
+    struct ShaderConfigData
+    {
+        graphics::shader::Type          mShaderType;
+        graphics::shader::ShaderModel   mShaderModel;
+    };
+
+    struct ShaderConfig
+    {
+        std::unordered_map<std::string, ShaderConfigData> mConfigMap;
+    };
+
     class ShaderAsset
     {
         using ShaderDesc = graphics::ShaderDesc;
