@@ -17,6 +17,9 @@ namespace nv::asset
         std::unordered_map<std::string, ShaderConfigData> mConfigMap;
     };
 
+    void LoadShaderConfigData(std::istream& i);
+    void ExportShaderConfigData(std::ostream& o);
+
     class ShaderAsset
     {
         using ShaderDesc = graphics::ShaderDesc;
@@ -31,4 +34,6 @@ namespace nv::asset
     private:
         ShaderDesc                mData = {};
     };
+
+    extern ShaderConfig gShaderConfig;
 }

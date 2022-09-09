@@ -7,7 +7,9 @@
 #include <Engine/JobSystem.h>
 #include <Engine/Log.h>
 #include <IO/Utility.h>
+#include <IO/File.h>
 #include <Types/MeshAsset.h>
+#include <Types/ShaderAsset.h>
 #include <Types/Serializers.h>
 #include <fstream>
 
@@ -28,6 +30,7 @@ namespace nv::asset
     constexpr const char MESH_PATH[]            = "Mesh";
     constexpr const char TEXTURES_PATH[]        = "Textures";
     constexpr const char SHADERS_PATH[]         = "Shaders";
+    constexpr const char CONFIGS_PATH[]         = "Configs";
     constexpr const char PACKAGE_EXTENSION[]    = ".novapkg";
 
     constexpr bool StringContains(const std::string& str, const std::string& inString) 
@@ -40,6 +43,7 @@ namespace nv::asset
         if (StringContains(MESH_PATH, pathString))      return ASSET_MESH;
         if (StringContains(TEXTURES_PATH, pathString))  return ASSET_TEXTURE;
         if (StringContains(SHADERS_PATH, pathString))   return ASSET_SHADER;
+        if (StringContains(CONFIGS_PATH, pathString))   return ASSET_CONFIG;
 
         return ASSET_INVALID;
     }
@@ -230,9 +234,27 @@ namespace nv::asset
                     archive(assetCount);
                 }
 
+                // Export configs first
                 for (auto item : mAssetMap)
                 {
                     Asset* asset = mAssets.Get(item.second);
+                    if (asset->GetType() == ASSET_CONFIG)
+                    {
+                        if (asset)
+                        {
+                            LoadAssetFromFile(asset);
+                            ExportAsset(asset, file); // TODO: Export to file. 
+                            UnloadAsset(item.second);
+                        }
+                    }
+                }
+
+                for (auto item : mAssetMap)
+                {
+                    Asset* asset = mAssets.Get(item.second);
+                    if (asset->GetType() == ASSET_CONFIG)
+                        continue;
+
                     if (asset)
                     {
                         LoadAssetFromFile(asset);
@@ -283,15 +305,30 @@ namespace nv::asset
                 mesh.Export(asset->GetAssetData(), sstream);
                 writeHeader((size_t)sstream.tellp());
                 ostream.write(sstream.str().c_str(), sstream.str().size());
-                log::Info("[Asset] Exported : {}", path.c_str());
             }
             case ASSET_SHADER:
             {
                 const auto& data = asset->GetAssetData();
-                writeHeader(data.mSize);
+                //writeHeader(data.mSize);
                 //ostream.write()
             }
+            case ASSET_CONFIG:
+            {
+                std::ostringstream sstream;
+                if (path.find("ShaderConfig") != std::string::npos)
+                {
+                    auto data = asset->GetAssetData();
+                    nv::io::MemoryStream stream((const char*)data.mData, data.mSize);
+                    LoadShaderConfigData(stream);
+                    ExportShaderConfigData(sstream);
+                }
+
+                writeHeader((size_t)sstream.tellp());
+                ostream.write(sstream.str().c_str(), sstream.str().size());
             }
+            }
+
+            log::Info("[Asset] Exported : {}", path.c_str());
         }
 
         size_t ImportAsset(std::istream& istream, Asset* pAsset)

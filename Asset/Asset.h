@@ -11,7 +11,8 @@ namespace nv::asset
         ASSET_INVALID   = 0,
         ASSET_MESH      = ID("Mesh"),
         ASSET_SHADER    = ID("Shader"),
-        ASSET_TEXTURE   = ID("Texture")
+        ASSET_TEXTURE   = ID("Texture"),
+        ASSET_CONFIG    = ID("Config")
     };
 
     enum LoadState : uint8_t

@@ -2,6 +2,8 @@
 #include "ShaderAsset.h"
 
 #include <cereal/cereal.hpp>
+#include <cereal/archives/binary.hpp>
+#include <cereal/archives/json.hpp>
 #include <cereal/types/string.hpp>
 #include <cereal/types/unordered_map.hpp>
 
@@ -44,38 +46,23 @@ namespace cereal
     using namespace nv::asset;
 
     template<class Archive>
-    void save(Archive& archive, shader::Type const& type)
+    void save(Archive& archive, ShaderConfigData const& h)
     {
-        archive(nv::sgShaderTypeMap[type]);
+        archive(make_nvp("Type", nv::sgShaderTypeMap.at(h.mShaderType)));
+        archive(make_nvp("ShaderModel", nv::sgShaderModelMap.at(h.mShaderModel)));
     }
 
     template<class Archive>
-    void load(Archive& archive, shader::Type& type)
-    {
-        std::string shaderType;
-        archive(shaderType);
-        type = nv::sgShaderTypeMapStr[shaderType];
-    }
-
-    template<class Archive>
-    void save(Archive& archive, shader::ShaderModel const& sm)
-    {
-        archive(nv::sgShaderModelMap[sm]);
-    }
-
-    template<class Archive>
-    void load(Archive& archive, shader::ShaderModel& sm)
+    void load(Archive& archive, ShaderConfigData& config)
     {
         std::string shaderModel;
-        archive(shaderModel);
-        sm = nv::sgShaderModelMapStr[shaderModel];
-    }
+        std::string shaderType;
 
-    template<class Archive>
-    void serialize(Archive& archive, ShaderConfigData& h)
-    {
-        archive(make_nvp("Type", h.mShaderType));
-        archive(make_nvp("ShaderModel", h.mShaderModel));
+        archive(make_nvp("Type", shaderType));
+        archive(make_nvp("ShaderModel", shaderModel));
+
+        config.mShaderModel = nv::sgShaderModelMapStr.at(shaderModel);
+        config.mShaderType = nv::sgShaderTypeMapStr.at(shaderType);
     }
 
     template<class Archive>
@@ -87,12 +74,26 @@ namespace cereal
 
 namespace nv::asset
 {
+    ShaderConfig gShaderConfig;
+
     void ShaderAsset::Deserialize(const AssetData& data)
     {
         
     }
     void ShaderAsset::Export(const AssetData& data, std::ostream& ostream)
     {
+    }
+
+    void asset::LoadShaderConfigData(std::istream& i)
+    {
+        cereal::JSONInputArchive archive(i);
+        archive(gShaderConfig);
+    }
+
+    void asset::ExportShaderConfigData(std::ostream& o)
+    {
+        cereal::BinaryOutputArchive archive(o);
+        archive(gShaderConfig);
     }
 }
 
