@@ -19,7 +19,7 @@ namespace nv::asset
 
     void LoadShaderConfigData(std::istream& i);
     void LoadShaderConfigDataBinary(std::istream& i);
-    void ExportShaderConfigData(std::ostream& o);
+    void ExportShaderConfigDataBinary(std::ostream& o);
 
     class ShaderAsset
     {

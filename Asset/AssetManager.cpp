@@ -337,7 +337,7 @@ namespace nv::asset
                     auto data = asset->GetAssetData();
                     nv::io::MemoryStream stream((const char*)data.mData, data.mSize);
                     LoadShaderConfigData(stream);
-                    ExportShaderConfigData(sstream);
+                    ExportShaderConfigDataBinary(sstream);
                 }
 
                 writeHeader((size_t)sstream.tellp());

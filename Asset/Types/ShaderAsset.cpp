@@ -111,10 +111,10 @@ namespace nv::asset
         {
             static CComPtr<IDxcUtils> pUtils;
             static CComPtr<IDxcIncludeHandler> pDefaultIncludeHandler;
-            CComPtr<IDxcLibrary> library;
-            CComPtr<IDxcCompiler> compiler;
+            static CComPtr<IDxcLibrary> library;
+            static CComPtr<IDxcCompiler> compiler;
 
-            struct CustomIncludeHandler : public IDxcIncludeHandler
+            class CustomIncludeHandler : public IDxcIncludeHandler
             {
             public:
                 HRESULT STDMETHODCALLTYPE LoadSource(_In_ LPCWSTR pFilename, _COM_Outptr_result_maybenull_ IDxcBlob** ppIncludeSource) override
@@ -133,7 +133,7 @@ namespace nv::asset
 
                     const auto& data = asset->GetAssetData();
 
-                    if (IncludedFiles.find(path) != IncludedFiles.end())
+                    if (mIncludedFiles.find(path) != mIncludedFiles.end())
                     {
                         // Return empty string blob if this file has been included before
                         static const char nullStr[] = " ";
@@ -145,7 +145,7 @@ namespace nv::asset
                     auto hr = pUtils->CreateBlobFromPinned(data.mData, (UINT)data.mSize, CP_UTF8, &pEncoding);
                     if (SUCCEEDED(hr))
                     {
-                        IncludedFiles.insert(path);
+                        mIncludedFiles.insert(path);
                         *ppIncludeSource = pEncoding.Detach();
                     }
                     else
@@ -163,18 +163,21 @@ namespace nv::asset
                 ULONG STDMETHODCALLTYPE AddRef(void) override { return 0; }
                 ULONG STDMETHODCALLTYPE Release(void) override { return 0; }
 
-                std::unordered_set<std::string> IncludedFiles;
-            } includeHandler;
+            private:
+                std::unordered_set<std::string> mIncludedFiles;
 
+            };
+
+            CustomIncludeHandler includeHandler;
+
+            HRESULT hr;
             if (!pUtils)
             {
                 DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&pUtils));
                 pUtils->CreateDefaultIncludeHandler(&pDefaultIncludeHandler);
+                hr = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&library));
+                hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler));
             }
-
-            HRESULT hr = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&library));
-           
-            hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler));
 
             uint32_t codePage = CP_UTF8;
             CComPtr<IDxcBlobEncoding> sourceBlob;
@@ -254,7 +257,7 @@ namespace nv::asset
         archive(gShaderConfig.mConfigMap);
     }
 
-    void asset::ExportShaderConfigData(std::ostream& o)
+    void asset::ExportShaderConfigDataBinary(std::ostream& o)
     {
         cereal::BinaryOutputArchive archive(o);
         archive(cereal::make_nvp("Shaders", gShaderConfig.mConfigMap));
