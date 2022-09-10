@@ -95,6 +95,15 @@ inline Matrix MatrixLookToLH(Vector eyePos, Vector eyeDir, Vector upDir) noexcep
 }
 
 // TODO: Matrix View and Projection functions + Utilities
+inline Vector QuaternionRotationRollPitchYawFromVector(Vector vec) noexcept
+{
+    return DirectX::XMQuaternionRotationRollPitchYawFromVector(vec);
+}
+
+inline Vector VectorSet(float x, float y, float z, float w) noexcept
+{
+    return DirectX::XMVectorSet(x, y, z, w);
+}
 
 }
 

@@ -27,6 +27,7 @@ namespace nv::math
 
     using Vector = DirectX::XMVECTOR;
     using Matrix = DirectX::XMMATRIX;
+    constexpr auto PI = DirectX::XM_PI;
 }
 
 #endif // NV_USE_DIRECTXMATH

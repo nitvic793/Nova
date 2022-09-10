@@ -6,6 +6,9 @@
 #include <DX12/TextureDX12.h>
 #include <DX12/ResourceManagerDX12.h>
 #include <DX12/GPUResourceDX12.h>
+#include <DX12/MeshDX12.h>
+#include <DX12/PipelineStateDX12.h>
+
 #include <D3D12MemAlloc.h>
 #include <d3d12.h>
 #include "d3dx12.h"
@@ -57,11 +60,17 @@ namespace nv::graphics
     void ContextDX12::SetMesh(Handle<Mesh> mesh)
     {
         auto dxMesh = (MeshDX12*)gResourceManager->GetMesh(mesh);
+        const auto& ibv = dxMesh->GetIndexBufferView();
+        const auto& vbv = dxMesh->GetVertexBufferView();
+
+        mCommandList->IASetIndexBuffer(&ibv);
+        mCommandList->IASetVertexBuffers(0, 1, &vbv);
     }
 
     void ContextDX12::SetPipeline(Handle<PipelineState> pipeline)
     {
-        auto pipeState = (PipelineStateDX12*)gResourceManager->GetPipelineState(pipeline);
+        auto pso = (PipelineStateDX12*)gResourceManager->GetPipelineState(pipeline);
+        mCommandList->SetPipelineState(pso->GetPSO());
     }
 
     void ContextDX12::SetRenderTarget(Span<Handle<Texture>> renderTargets, Handle<Texture> dsvHandle, bool singleRTV)
