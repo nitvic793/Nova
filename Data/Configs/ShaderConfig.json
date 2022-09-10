@@ -1,0 +1,18 @@
+{
+  "Shaders": [
+      {
+          "key": "Shaders/DefaultPS.hlsl",
+          "value": {
+              "Type": "PixelShader",
+              "ShaderModel": "6_6"
+          }
+      },
+      {
+          "key": "Shaders/DefaultVS.hlsl",
+          "value": {
+              "Type": "VertexShader",
+              "ShaderModel": "6_6"
+          }
+      }
+  ]
+}

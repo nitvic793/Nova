@@ -129,6 +129,15 @@ namespace nv::asset
                 if (asset->GetState() == STATE_LOADED)
                 {
                     mAssetMap[asset->GetID()] = handle;
+                    if (asset->GetType() == ASSET_CONFIG)
+                    {
+                        if (asset->GetHash() == ID("Configs/ShaderConfig.json"))
+                        {
+                            auto data = asset->GetAssetData();
+                            nv::io::MemoryStream stream((const char*)data.mData, data.mSize);
+                            LoadShaderConfigDataBinary(stream);
+                        }
+                    }
                 }
                 else
                 {
@@ -142,7 +151,7 @@ namespace nv::asset
             }
         }
 
-        bool LoadAssetFromFile(Asset* asset)
+        bool LoadAssetFromFile(Asset* asset, bool isTextFile = false)
         {
             const auto& path = mAssetPathMap[asset->GetID()];
             size_t size = io::GetFileSize(path.c_str());
@@ -305,12 +314,14 @@ namespace nv::asset
                 mesh.Export(asset->GetAssetData(), sstream);
                 writeHeader((size_t)sstream.tellp());
                 ostream.write(sstream.str().c_str(), sstream.str().size());
+                break;
             }
             case ASSET_SHADER:
             {
                 const auto& data = asset->GetAssetData();
-                //writeHeader(data.mSize);
-                //ostream.write()
+                writeHeader(data.mSize);
+                ostream.write((const char*)asset->GetData(), asset->Size());
+                break;
             }
             case ASSET_CONFIG:
             {
@@ -336,15 +347,22 @@ namespace nv::asset
             auto curPos = istream.tellg();
             cereal::BinaryInputArchive archive(istream);
             Header header = {};
-            archive(header);
             std::string name;
+            size_t size = 0;
+
+            archive(header);
             archive(name);
-            void* pBuffer = Alloc(header.mSizeBytes);
-            istream.read((char*)pBuffer, header.mSizeBytes);
-            pAsset->Set(header.mAssetId, { header.mSizeBytes, (uint8_t*)pBuffer });
-            pAsset->SetState(STATE_LOADED);
-            log::Info("[Asset] Loaded from package: {}", name.c_str());
-            auto size = istream.tellg() - curPos;
+           
+            if (header.mSizeBytes != 0)
+            {
+                void* pBuffer = Alloc(header.mSizeBytes);
+                istream.read((char*)pBuffer, header.mSizeBytes);
+                pAsset->Set(header.mAssetId, { header.mSizeBytes, (uint8_t*)pBuffer });
+                pAsset->SetState(STATE_LOADED);
+                log::Info("[Asset] Loaded from package: {}", name.c_str());
+                mAssetPathMap[pAsset->GetID()] = name;
+                size = istream.tellg() - curPos;
+            }
             return size;
         }
 

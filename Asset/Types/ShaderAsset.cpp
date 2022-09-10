@@ -64,12 +64,6 @@ namespace cereal
         config.mShaderModel = nv::sgShaderModelMapStr.at(shaderModel);
         config.mShaderType = nv::sgShaderTypeMapStr.at(shaderType);
     }
-
-    template<class Archive>
-    void serialize(Archive& archive, ShaderConfig& h)
-    {
-        archive(make_nvp("Shaders", h.mConfigMap));
-    }
 }
 
 namespace nv::asset
@@ -87,13 +81,19 @@ namespace nv::asset
     void asset::LoadShaderConfigData(std::istream& i)
     {
         cereal::JSONInputArchive archive(i);
-        archive(gShaderConfig);
+        archive(gShaderConfig.mConfigMap);
+    }
+
+    void asset::LoadShaderConfigDataBinary(std::istream& i)
+    {
+        cereal::BinaryInputArchive archive(i);
+        archive(gShaderConfig.mConfigMap);
     }
 
     void asset::ExportShaderConfigData(std::ostream& o)
     {
         cereal::BinaryOutputArchive archive(o);
-        archive(gShaderConfig);
+        archive(cereal::make_nvp("Shaders", gShaderConfig.mConfigMap));
     }
 }
 

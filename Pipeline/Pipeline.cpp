@@ -14,6 +14,7 @@
 #include <Engine/JobSystem.h>
 #include <Asset.h>
 #include <AssetManager.h>
+#include <Types/ShaderAsset.h>
 #include <Engine/Log.h>
 #include <Math/Math.h>
 #include <Renderer/Renderer.h>
@@ -26,6 +27,7 @@
 
 #include <thread>
 #include <Windows.h>
+#include <fstream>
 
 int main()
 {

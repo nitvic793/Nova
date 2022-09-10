@@ -14,6 +14,17 @@ namespace nv::graphics
         float3 mTangent;
         float2 mUV;
     };
+
+    struct ObjectData
+    {
+        float4x4 World;
+    };
+    
+    struct FrameData
+    {
+        float4x4 View;
+        float4x4 Projection;
+    };
 #ifdef __cplusplus
 }
 #endif

@@ -29,8 +29,8 @@ namespace nv::asset
         {
             struct 
             {
-                uint32_t mType;
-                uint32_t mHash;
+                AssetType   mType;
+                uint32_t    mHash;
             };
 
             uint64_t mId;

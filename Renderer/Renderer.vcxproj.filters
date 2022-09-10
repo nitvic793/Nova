@@ -114,9 +114,6 @@
     <ClInclude Include="DX12\D3D12MemoryAllocator\include\D3D12MemAlloc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\ShaderInteropTypes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DX12\InputLayout.h">
       <Filter>Header Files</Filter>
     </ClInclude>

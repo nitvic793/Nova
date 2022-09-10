@@ -4,10 +4,12 @@
 
 namespace nv::io
 {
-    size_t GetFileSize(const char* filename)
+    size_t GetFileSize(const char* filename, bool isTextFile /*= false*/)
     {
         std::ifstream is(filename, std::ios::binary);
-        is.seekg(0, std::ios_base::end);
+        if (!is.is_open())
+            return 0;
+        is.seekg(0, std::ios_base::end); 
         size_t size = is.tellg();
         return size;
     }
