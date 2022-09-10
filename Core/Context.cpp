@@ -6,6 +6,7 @@
 #include <Engine/JobSystem.h>
 #include <Asset.h>
 #include <AssetManager.h>
+#include <AssetSystem.h>
 
 using namespace nv;
 
@@ -25,6 +26,8 @@ namespace nv
         asset::InitAssetManager(pDataPath);
 
         pContext->mpAssetManager = asset::GetAssetManager();
+
+        gSystemManager.CreateSystem<asset::AssetSystem>();
         //auto handle = pContext->mpAssetManager->ExportAssets(".\\Build\\Assets.novapkg");
         //jobs::Wait(handle);
     }
