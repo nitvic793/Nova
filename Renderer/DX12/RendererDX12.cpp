@@ -63,6 +63,8 @@ namespace nv::graphics
             mFenceValues[i] = i == 0 ? 1 : 0;
             mFenceEvents[i] = CreateEvent(nullptr, FALSE, FALSE, nullptr);
         }
+
+        CreateRootSignature();
     }
 
     void RendererDX12::Destroy()
@@ -91,6 +93,8 @@ namespace nv::graphics
     void RendererDX12::InitFrameBuffers(const Window& window, const format::SurfaceFormat format)
     {
         assert(gResourceManager);
+        mBackbufferFormat = format;
+        mDsvFormat = format::D32_FLOAT;
         const auto dxgiFormat = GetFormat(format);
         if (!mDevice->InitSwapChain(window, format))
             return;
@@ -141,22 +145,20 @@ namespace nv::graphics
             TextureDesc rtvDesc = { .mUsage = tex::USAGE_RENDER_TARGET, .mFormat = format,.mBuffer = mpBackBuffers[i] };
             mRenderTargets[i] = gResourceManager->CreateTexture(rtvDesc);
         }
-
-        const auto dsvFormat = format::D32_FLOAT;
         
         auto depthResource = gResourceManager->CreateResource(
             {
                 .mWidth = gWindow->GetWidth(),
                 .mHeight = gWindow->GetHeight(),
-                .mFormat = dsvFormat,
+                .mFormat = mDsvFormat,
                 .mType = buffer::TYPE_TEXTURE_2D,
                 .mFlags = buffer::FLAG_ALLOW_DEPTH,
                 .mInitialState = buffer::STATE_DEPTH_WRITE,
-                .mClearValue = {.mFormat = dsvFormat,.mColor = {1.f,0,0,0} , .mStencil = 0, .mIsDepth = true}
+                .mClearValue = {.mFormat = mDsvFormat,.mColor = {1.f,0,0,0} , .mStencil = 0, .mIsDepth = true}
             }
         );
 
-        mDepthStencil = gResourceManager->CreateTexture({ .mUsage = tex::USAGE_DEPTH_STENCIL, .mFormat = dsvFormat, .mBuffer = depthResource, .mType = tex::TEXTURE_2D });
+        mDepthStencil = gResourceManager->CreateTexture({ .mUsage = tex::USAGE_DEPTH_STENCIL, .mFormat = mDsvFormat, .mBuffer = depthResource, .mType = tex::TEXTURE_2D });
     }
 
     void RendererDX12::Submit(Context* pContext)
@@ -269,6 +271,89 @@ namespace nv::graphics
     ID3D12CommandQueue* RendererDX12::GetCommandQueue() const
     {
         return mCommandQueue.Get();
+    }
+
+    void RendererDX12::CreateRootSignature()
+    {
+        enum RootParameterSlot 
+        {
+            RootSigCBVertex0 = 0,
+            RootSigComputeCB = 0,
+            RootSigCBPixel0,
+            RootSigComputeUAV = 1,
+            RootSigSRVPixel1,
+            RootSigComputeSRV = 2,
+            RootSigSRVPixel2,
+            RootSigCBAll1,
+            RootSigCBAll2,
+            RootSigIBL,
+            RootSigUAV0,
+            RootSigParamCount
+        };
+
+        auto device = mDevice.As<DeviceDX12>()->GetDevice();
+        CD3DX12_DESCRIPTOR_RANGE range[RootSigParamCount] = {};
+        //view dependent CBV
+        range[RootSigCBVertex0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+        //light dependent CBV
+        range[RootSigCBPixel0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+        //G-Buffer inputs
+        range[RootSigSRVPixel1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 8, 0);
+        //Extra Textures
+        range[RootSigSRVPixel2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 8, 8);
+        //per frame CBV
+        range[RootSigCBAll1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        //per bone 
+        range[RootSigCBAll2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
+        //IBL Textures
+        range[RootSigIBL].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 16);
+        // UAV textures
+        range[RootSigUAV0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 4, 0);
+
+        CD3DX12_ROOT_PARAMETER rootParameters[RootSigParamCount] = {};
+        rootParameters[RootSigCBVertex0].InitAsDescriptorTable(1, &range[RootSigCBVertex0], D3D12_SHADER_VISIBILITY_VERTEX);
+        rootParameters[RootSigCBPixel0].InitAsDescriptorTable(1, &range[RootSigCBPixel0], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[RootSigSRVPixel1].InitAsDescriptorTable(1, &range[RootSigSRVPixel1], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[RootSigSRVPixel2].InitAsDescriptorTable(1, &range[RootSigSRVPixel2], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[RootSigCBAll1].InitAsDescriptorTable(1, &range[RootSigCBAll1], D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[RootSigCBAll2].InitAsDescriptorTable(1, &range[RootSigCBAll2], D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[RootSigIBL].InitAsDescriptorTable(1, &range[RootSigIBL], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[RootSigUAV0].InitAsDescriptorTable(1, &range[RootSigUAV0], D3D12_SHADER_VISIBILITY_ALL);
+
+        CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
+        descRootSignature.Init(RootSigParamCount, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | // we can deny shader stages here for better performance
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS);
+
+        CD3DX12_STATIC_SAMPLER_DESC staticSamplers[5] = {};
+        //Base Sampler
+        staticSamplers[0].Init(0, D3D12_FILTER_ANISOTROPIC, D3D12_TEXTURE_ADDRESS_MODE_WRAP, D3D12_TEXTURE_ADDRESS_MODE_WRAP, D3D12_TEXTURE_ADDRESS_MODE_WRAP, 0.f, 4);
+        //Shadow Sampler
+        staticSamplers[1].Init(1, D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
+            D3D12_TEXTURE_ADDRESS_MODE_BORDER,
+            D3D12_TEXTURE_ADDRESS_MODE_BORDER,
+            D3D12_TEXTURE_ADDRESS_MODE_BORDER,
+            0.f, 16u, D3D12_COMPARISON_FUNC_LESS_EQUAL);
+
+        staticSamplers[2].Init(2, D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+            D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+            D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+            D3D12_TEXTURE_ADDRESS_MODE_WRAP);
+
+        staticSamplers[3].Init(3, D3D12_FILTER_MIN_MAG_MIP_POINT,
+            D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
+            D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
+            D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
+
+        staticSamplers[4].Init(4, D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+            D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
+            D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
+            D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
+
+        Microsoft::WRL::ComPtr<ID3DBlob> rootSigBlob;
+        Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+        D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &rootSigBlob, &errorBlob);
+        device->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(), IID_PPV_ARGS(mRootSignature.ReleaseAndGetAddressOf()));
     }
 
     void RendererDX12::Draw()

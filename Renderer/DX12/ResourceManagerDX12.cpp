@@ -13,6 +13,7 @@
 #include <DX12/Interop.h>
 #include <DX12/DescriptorHeapDX12.h>
 #include <DX12/ContextDX12.h>
+#include <DX12/InputLayout.h>
 
 #include <d3d12.h>
 #include <D3D12MemAlloc.h>
@@ -106,7 +107,10 @@ namespace nv::graphics
 
     Handle<Shader> ResourceManagerDX12::CreateShader(const ShaderDesc& desc)
     {
-        return Handle<Shader>();
+        Handle<Shader> handle;
+        auto shader = mShaders.CreateInstance(handle, desc);
+        shader->Load();
+        return handle;
     }
 
     Handle<GPUResource> ResourceManagerDX12::CreateResource(const GPUResourceDesc& desc)
@@ -166,7 +170,39 @@ namespace nv::graphics
 
     Handle<PipelineState> ResourceManagerDX12::CreatePipelineState(const PipelineStateDesc& desc)
     {
-        return Handle<PipelineState>();
+        auto pDevice = mDevice->GetDevice();
+        auto renderer = (RendererDX12*)gRenderer;
+        auto ps = mShaders.GetAsDerived(desc.mPS);
+        auto vs = mShaders.GetAsDerived(desc.mVS);
+
+        DXGI_SAMPLE_DESC sampleDesc = {};
+        sampleDesc.Count = 1;
+
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+
+        psoDesc.InputLayout.pInputElementDescs = dx12::DefaultLayout;
+        psoDesc.InputLayout.NumElements = _countof(dx12::DefaultLayout);
+        psoDesc.pRootSignature = renderer->mRootSignature.Get();
+
+        psoDesc.VS = ps->GetByteCode();
+        psoDesc.PS = vs->GetByteCode();
+
+        psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+
+        psoDesc.NumRenderTargets = 1;
+        psoDesc.DSVFormat = GetFormat(renderer->mDsvFormat);
+        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        psoDesc.RTVFormats[0] = GetFormat(renderer->mBackbufferFormat);
+        psoDesc.SampleDesc = sampleDesc;
+        psoDesc.SampleMask = 0xffffffff;
+
+        Handle<PipelineState> handle;
+        auto pso = mPipelineStates.CreateInstance(handle, desc);
+        pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pso->GetPipelineCom().ReleaseAndGetAddressOf()));
+
+        return handle;
     }
 
     Handle<Texture> ResourceManagerDX12::CreateTexture(const TextureDesc& desc)

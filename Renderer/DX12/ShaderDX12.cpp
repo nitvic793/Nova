@@ -12,7 +12,7 @@ namespace nv::graphics
 
     void ShaderDX12::LoadFromCompiledFile(const wchar_t* filename)
     {
-        D3DReadFileToBlob(filename, &mBlob);
+        //D3DReadFileToBlob(filename, &mBlob);
     }
 
     void ShaderDX12::Load()

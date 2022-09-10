@@ -1,9 +1,9 @@
 struct VertexInput
 {
 	float3 Position : POSITION;
+    float2 UV		: TEXCOORD;
 	float3 Normal	: NORMAL;
 	float3 Tangent	: TANGENT0;
-    float2 UV		: TEXCOORD;
 };
 
 struct PixelInput

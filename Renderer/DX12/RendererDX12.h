@@ -2,8 +2,10 @@
 
 #include <Lib/Pool.h>
 #include <Renderer/Renderer.h>
+#include <Renderer/Format.h>
 #include <wrl/client.h>
 
+struct ID3D12RootSignature;
 struct ID3D12CommandAllocator;
 struct ID3D12CommandQueue;
 struct ID3D12Fence;
@@ -43,6 +45,9 @@ namespace nv::graphics
         ID3D12CommandQueue*     GetCommandQueue() const;
 
     private:
+        void                    CreateRootSignature();
+
+    private:
         template<typename T>
         using ComPtr = Microsoft::WRL::ComPtr<T>;
 
@@ -55,10 +60,14 @@ namespace nv::graphics
         Handle<Context>                             mContexts[FRAMEBUFFER_COUNT];
         ComPtr<ID3D12CommandAllocator>              mCommandAllocators[FRAMEBUFFER_COUNT];
         ComPtr<ID3D12CommandQueue>                  mCommandQueue;
+        ComPtr<ID3D12RootSignature>                 mRootSignature;
 
         ComPtr<ID3D12Fence>                         mFences[FRAMEBUFFER_COUNT];
         uint64_t                                    mFenceValues[FRAMEBUFFER_COUNT];
         HANDLE                                      mFenceEvents[FRAMEBUFFER_COUNT];
+
+        format::SurfaceFormat                       mDsvFormat;
+        format::SurfaceFormat                       mBackbufferFormat;
 
         friend class ResourceManagerDX12;
     };

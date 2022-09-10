@@ -10,16 +10,16 @@ namespace nv::graphics
     struct Vertex
     {
         float3 mPosition;
+        float2 mUV;
         float3 mNormal;
         float3 mTangent;
-        float2 mUV;
     };
 
     struct ObjectData
     {
         float4x4 World;
     };
-    
+
     struct FrameData
     {
         float4x4 View;

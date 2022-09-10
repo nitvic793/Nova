@@ -23,6 +23,13 @@ namespace nv::graphics
 
     class PipelineState
     {
+    public:
+        PipelineState(const PipelineStateDesc& desc) :
+            mDesc(desc) {}
+        virtual ~PipelineState() {}
+        constexpr const PipelineStateDesc& GetDesc() const { return mDesc; }
 
+    protected:
+        PipelineStateDesc mDesc;
     };
 }
