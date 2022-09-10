@@ -165,7 +165,7 @@ namespace nv::asset
             return result;
         }
 
-        virtual Handle<Asset> LoadAsset(AssetID id) override
+        virtual Handle<Asset> LoadAsset(AssetID id, bool wait) override
         {
 #if NV_ASSET_DEBUG_LOADER
             auto it = mAssetMap.find(id.mId);
@@ -181,21 +181,23 @@ namespace nv::asset
                     size_t size = io::GetFileSize(path.c_str());
                     Byte* pBuffer = (Byte*)Alloc(size);
 
-                    auto handle = jobs::Execute([=](void* ctx)
+                    auto loadAsset = [=](void* ctx)
                     {
                         asset->SetState(STATE_LOADING);
                         AssetData data = { size, pBuffer };
                         bool result = io::ReadFile(path.c_str(), data.mData, (uint32_t)size);
                         asset->Set(id, data);
                         asset->SetState(result ? STATE_LOADED : STATE_ERROR);
-
-#if _DEBUG
                         if (result)
                             log::Info("[Asset] Load {}: OK", path.c_str());
                         else
                             log::Error("[Asset] Load {}: ERROR", path.c_str());
-#endif
-                    });
+                    };
+
+                    if (wait)
+                        loadAsset(nullptr);
+                    else
+                        jobs::Execute(loadAsset);
                 }
 
                 return it->second;
@@ -213,6 +215,7 @@ namespace nv::asset
                 {
                     Free(pAsset->GetData());
                     pAsset->SetData({ 0, nullptr });
+                    pAsset->SetState(STATE_UNLOADED);
                     return;
                 }
             }
@@ -319,8 +322,11 @@ namespace nv::asset
             case ASSET_SHADER:
             {
                 const auto& data = asset->GetAssetData();
-                writeHeader(data.mSize);
-                ostream.write((const char*)asset->GetData(), asset->Size());
+                std::ostringstream sstream;
+                ShaderAsset shader;
+                shader.Export(data, path.c_str(), sstream); // Depends on shader config which should be loaded first.
+                writeHeader((size_t)sstream.tellp());
+                ostream.write(sstream.str().c_str(), sstream.str().size());
                 break;
             }
             case ASSET_CONFIG:

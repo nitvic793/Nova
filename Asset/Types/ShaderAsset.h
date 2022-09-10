@@ -27,7 +27,7 @@ namespace nv::asset
 
     public:
         void Deserialize(const AssetData& data);
-        void Export(const AssetData& data, std::ostream& ostream);
+        void Export(const AssetData& data, const char* name, std::ostream& ostream);
 
         const ShaderDesc& GetData() const { return mData; }
         ~ShaderAsset() {};
