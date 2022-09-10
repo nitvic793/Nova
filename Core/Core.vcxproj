@@ -155,6 +155,7 @@
     <ClInclude Include="Engine\Camera.h" />
     <ClInclude Include="Engine\JobSystem.h" />
     <ClInclude Include="Engine\Timer.h" />
+    <ClInclude Include="Engine\Transform.h" />
     <ClInclude Include="IO\File.h" />
     <ClInclude Include="IO\Utility.h" />
     <ClInclude Include="Lib\Array.h" />
@@ -191,6 +192,7 @@
     <ClCompile Include="Engine\JobSystem.cpp" />
     <ClCompile Include="Engine\System.cpp" />
     <ClCompile Include="Engine\Timer.cpp" />
+    <ClCompile Include="Engine\Transform.cpp" />
     <ClCompile Include="IO\Utility.cpp" />
     <ClCompile Include="Lib\Util.cpp" />
     <ClCompile Include="Memory\Allocator.cpp" />

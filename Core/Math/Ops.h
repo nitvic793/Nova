@@ -73,6 +73,11 @@ DEFINE_OP_SINGLE_MATRIX_FROM_FLOAT(RotationRollPitchYaw)
 DEFINE_OP_SINGLE_MATRIX_FROM_FLOAT(Scaling)
 DEFINE_OP_SINGLE_MATRIX_FROM_FLOAT(Translation)
 
+inline Matrix MatrixRotationQuaternion(Vector quat) noexcept
+{
+    return DirectX::XMMatrixRotationQuaternion(quat);
+}
+
 inline Matrix MatrixInverse(Matrix matrix, Vector* pDeterminant = nullptr) noexcept
 {
     using namespace DirectX;
