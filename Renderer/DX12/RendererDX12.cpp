@@ -26,12 +26,12 @@ extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\
 namespace nv::graphics
 {
     constexpr uint64_t MAX_CONST_BUFFER_SIZE = 1024 * 256; // 256KB
+    constexpr uint32_t kDefaultDescriptorCount = 32;
+    constexpr uint32_t kDefaultFrameDescriptorCount = 1024;
+    constexpr uint32_t kDefaultGPUDescriptorCount = kDefaultFrameDescriptorCount * 3;
 
     void RendererDX12::Init(Window& window)
     {
-        constexpr uint32_t kDefaultDescriptorCount = 32;
-        constexpr uint32_t kDefaultGPUDescriptorCount = 1024;
-
         mDescriptorHeapPool.Init();
         mDevice = ScopedPtr<Device, true>((Device*)Alloc<DeviceDX12>());
         mDevice->Init(window);
@@ -245,6 +245,9 @@ namespace nv::graphics
         auto pCmdAllocator = GetAllocator();
         //pCmdAllocator->Reset();
 
+        mGpuHeapState.Reset();
+        CopyDescriptorsToGPU();
+
         context->Begin();
         TransitionToRenderTarget();
         ClearBackBuffers();
@@ -383,6 +386,26 @@ namespace nv::graphics
         Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
         D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &rootSigBlob, &errorBlob);
         device->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(), IID_PPV_ARGS(mRootSignature.ReleaseAndGetAddressOf()));
+    }
+
+    void RendererDX12::CopyDescriptorsToGPU()
+    {
+        auto pDevice = mDevice.As<DeviceDX12>()->GetDevice();
+        auto gpuHeap = mDescriptorHeapPool.GetAsDerived(mGpuHeap);
+        const uint32_t frameOffset = GetBackBufferIndex() * kDefaultFrameDescriptorCount;
+        auto copyDescriptors = [&](Handle<DescriptorHeap> handle)
+        {
+            auto heap = mDescriptorHeapPool.GetAsDerived(handle);
+            constexpr auto descriptorType = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+            const uint32_t size = heap->GetSize();
+            const uint32_t offset = frameOffset + mGpuHeapState.mCurrentCount;
+            pDevice->CopyDescriptorsSimple(size, gpuHeap->HandleCPU(offset), heap->HandleCPU(0), descriptorType);
+            mGpuHeapState.mCurrentCount += size;
+            return offset;
+        };
+
+        mGpuHeapState.mConstBufferOffset = copyDescriptors(mConstantBufferHeap);
+        mGpuHeapState.mTextureOffset = copyDescriptors(mTextureHeap);
     }
 
     void RendererDX12::Draw()

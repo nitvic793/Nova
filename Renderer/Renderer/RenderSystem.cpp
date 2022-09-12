@@ -74,6 +74,7 @@ namespace nv::graphics
             UploadDrawData();
             gRenderer->Wait();
             gRenderer->StartFrame();
+
             // TODO:
             // Copy descriptors (Constant Buffers/Textures/etc) to GPU Heap 
             // Set Viewport/Scissor Rect. 

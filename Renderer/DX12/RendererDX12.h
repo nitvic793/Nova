@@ -23,6 +23,20 @@ namespace nv::graphics
         uint32_t mCurrentCount          = 0;
     };
 
+    struct GpuHeapState
+    {
+        uint32_t mCurrentCount      = 0;
+        uint32_t mConstBufferOffset = 0;
+        uint32_t mTextureOffset     = 0;
+
+        constexpr void Reset()
+        {
+            mCurrentCount = 0;
+            mConstBufferOffset = 0;
+            mTextureOffset = 0;
+        }
+    };
+
     class RendererDX12 : public IRenderer
     {
     public:
@@ -55,6 +69,7 @@ namespace nv::graphics
 
     private:
         void                    CreateRootSignature();
+        void                    CopyDescriptorsToGPU();
 
     private:
         template<typename T>
@@ -78,6 +93,7 @@ namespace nv::graphics
         format::SurfaceFormat                       mDsvFormat;
         format::SurfaceFormat                       mBackbufferFormat;
 
+        GpuHeapState                                mGpuHeapState;
         ConstantBufferState                         mCbState;
         GPUConstantBuffer*                          mConstantBuffer;
 

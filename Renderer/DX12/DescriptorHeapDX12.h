@@ -76,6 +76,8 @@ namespace nv::graphics
 			return mSize - 1;  
 		}
 
+		constexpr uint32_t GetSize() const { return mSize; }
+
 		D3D12_CPU_DESCRIPTOR_HANDLE PushCPU()
 		{
 			if (mFreeIndices.IsEmpty())
