@@ -42,8 +42,14 @@ namespace nv::graphics
 
         void                    UploadResource(ID3D12GraphicsCommandList* pCmdList, const UploadData& data, ID3D12Resource* pIntermediate);
 
+        // Inherited via GPUResource
+        virtual void            MapMemory();
+        virtual void            UploadMapped(uint8_t* bytes, size_t size, size_t offset = 0Ui64);
+
     private:
         ComPtr<ID3D12Resource>      mResource;
         ComPtr<D3D12MA::Allocation> mAllocation;
+
+
     };
 }

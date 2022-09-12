@@ -26,7 +26,7 @@ namespace nv::graphics
     {
         union 
         {
-            uint32_t            mWidth = 0;
+            uint32_t            mWidth          = 0;
             uint32_t            mSize;
         };
         uint32_t                mHeight         = 0;
@@ -40,17 +40,36 @@ namespace nv::graphics
         uint32_t                mSampleQuality  = 0;
         ResourceClearValue      mClearValue     = {};
         buffer::BufferMode      mBufferMode     = buffer::BUFFER_MODE_DEFAULT;
+
+        static GPUResourceDesc UploadConstBuffer(uint32_t size)
+        {
+            return 
+            {
+                .mSize = size,
+                .mType = buffer::TYPE_BUFFER,
+                .mInitialState = buffer::STATE_GENERIC_READ,
+                .mBufferMode = buffer::BUFFER_MODE_UPLOAD
+            };
+        }
     };
 
     class GPUResource
     {
     public:
         GPUResource(const GPUResourceDesc& desc) :
-            mDesc(desc) {}
+            mDesc(desc),
+            mMappedAddress(nullptr)
+        {}
         virtual ~GPUResource() {}
-        constexpr const GPUResourceDesc& GetDesc() const { return mDesc; }
+
+        constexpr const GPUResourceDesc&    GetDesc() const { return mDesc; }
+        constexpr uint8_t*                  GetMappedMemory() const { return mMappedAddress; };
+
+        virtual void                        MapMemory() = 0;
+        virtual void                        UploadMapped(uint8_t* bytes, size_t size, size_t offset = 0) = 0;
 
     protected:
         GPUResourceDesc mDesc;
+        uint8_t*        mMappedAddress;
     };
 }

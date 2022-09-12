@@ -44,5 +44,15 @@ namespace nv::graphics
         ::UpdateSubresources(pCmdList, mResource.Get(), pIntermediate, data.mIntermediateOffset, data.mFirstSubresource, data.mNumSubResources, &subData);
     }
 
+    void GPUResourceDX12::MapMemory()
+    {
+        CD3DX12_RANGE readRange(0, 0);
+        mResource->Map(0, &readRange, reinterpret_cast<void**>(&mMappedAddress));
+    }
 
+    void GPUResourceDX12::UploadMapped(uint8_t* bytes, size_t size, size_t offset)
+    {
+        char* ptr = reinterpret_cast<char*>(mMappedAddress) + offset;
+        memcpy(ptr, bytes, size);
+    }
 }

@@ -184,8 +184,8 @@ namespace nv::graphics
         psoDesc.InputLayout.NumElements = _countof(dx12::DefaultLayout);
         psoDesc.pRootSignature = renderer->mRootSignature.Get();
 
-        psoDesc.VS = ps->GetByteCode();
-        psoDesc.PS = vs->GetByteCode();
+        psoDesc.VS = vs->GetByteCode();
+        psoDesc.PS = ps->GetByteCode();
 
         psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);

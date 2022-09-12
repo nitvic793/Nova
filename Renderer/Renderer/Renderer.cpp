@@ -25,9 +25,12 @@ namespace nv::graphics
 
     void InitGraphics(void* context)
     {
+        uint32_t width = 1280;
+        uint32_t height = 720;
+
 #if NV_PLATFORM_WINDOWS && NV_RENDERER_DX12
         gWindow = Alloc<WindowDX12>(SystemAllocator::gPtr, (HWND)context);
-        gWindow->Init(1280, 720);
+        gWindow->Init(width, height);
 
         gRenderer = Alloc<RendererDX12>();
         gRenderer->Init(*gWindow);
@@ -35,13 +38,8 @@ namespace nv::graphics
         gResourceManager = Alloc<ResourceManagerDX12>();
         gRenderer->InitFrameBuffers(*gWindow, format::R8G8B8A8_UNORM); // Dependent on resource manager. 
 
-        gSystemManager.CreateSystem<RenderSystem>();
+        gSystemManager.CreateSystem<RenderSystem>(width, height);
 #endif
-
-        auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_MESH, ID("Mesh/cube.obj") });
-        asset::MeshAsset m;
-        asset->DeserializeTo(m);
-        gResourceManager->CreateMesh(m.GetData());
     }
 
     void DestroyGraphics()

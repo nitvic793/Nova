@@ -20,11 +20,11 @@ namespace nv::graphics
         const uint32_t indexBufferSize = sizeof(uint32_t) * (uint32_t)desc.mIndices.size();
         const uint32_t vertexBufferSize = sizeof(Vertex) * (uint32_t)desc.mVertices.size();
 
-        mVertexBufferView.BufferLocation = ib->GetResource()->GetGPUVirtualAddress();
+        mVertexBufferView.BufferLocation = vb->GetResource()->GetGPUVirtualAddress();
         mVertexBufferView.StrideInBytes = sizeof(Vertex);
         mVertexBufferView.SizeInBytes = vertexBufferSize;
 
-        mIndexBufferView.BufferLocation = vb->GetResource()->GetGPUVirtualAddress();
+        mIndexBufferView.BufferLocation = ib->GetResource()->GetGPUVirtualAddress();
         mIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
         mIndexBufferView.SizeInBytes = indexBufferSize;
     }

@@ -15,6 +15,13 @@ namespace nv::graphics
 {
     class DescriptorHeapDX12;
     class Context;
+    class GPUConstantBuffer;
+
+    struct ConstantBufferState
+    {
+        uint64_t mCurrentMemoryOffset   = 0;
+        uint32_t mCurrentCount          = 0;
+    };
 
     class RendererDX12 : public IRenderer
     {
@@ -35,7 +42,8 @@ namespace nv::graphics
         virtual void EndFrame() override;
 
         virtual Context* GetContext() const override;
-
+        virtual ConstantBufferView CreateConstantBuffer(uint32_t size) override;
+        virtual void UploadToConstantBuffer(ConstantBufferView view, uint8_t* data, uint32_t size) override;
         ~RendererDX12();
 
     public:
@@ -43,6 +51,7 @@ namespace nv::graphics
         uint32_t                GetBackBufferIndex() const;
         ID3D12CommandAllocator* GetAllocator() const;
         ID3D12CommandQueue*     GetCommandQueue() const;
+
 
     private:
         void                    CreateRootSignature();
@@ -68,6 +77,9 @@ namespace nv::graphics
 
         format::SurfaceFormat                       mDsvFormat;
         format::SurfaceFormat                       mBackbufferFormat;
+
+        ConstantBufferState                         mCbState;
+        GPUConstantBuffer*                          mConstantBuffer;
 
         friend class ResourceManagerDX12;
     };

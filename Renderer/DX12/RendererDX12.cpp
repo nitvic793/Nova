@@ -12,6 +12,7 @@
 #include <DX12/Interop.h>
 #include <DX12/TextureDX12.h>
 #include <DX12/ContextDX12.h>
+#include <DX12/ConstantBuffer.h>
 
 #include <DX12/DirectXIncludes.h>
 #include <dxgidebug.h>
@@ -24,6 +25,8 @@ extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\
 
 namespace nv::graphics
 {
+    constexpr uint64_t MAX_CONST_BUFFER_SIZE = 1024 * 256; // 256KB
+
     void RendererDX12::Init(Window& window)
     {
         constexpr uint32_t kDefaultDescriptorCount = 32;
@@ -159,6 +162,9 @@ namespace nv::graphics
         );
 
         mDepthStencil = gResourceManager->CreateTexture({ .mUsage = tex::USAGE_DEPTH_STENCIL, .mFormat = mDsvFormat, .mBuffer = depthResource, .mType = tex::TEXTURE_2D });
+
+        mConstantBuffer = Alloc<GPUConstantBuffer>();
+        mConstantBuffer->Initialize(MAX_CONST_BUFFER_SIZE);
     }
 
     void RendererDX12::Submit(Context* pContext)
@@ -172,6 +178,7 @@ namespace nv::graphics
 
     RendererDX12::~RendererDX12()
     {
+        Free(mConstantBuffer);
     }
 
     void RendererDX12::Wait()
@@ -271,6 +278,28 @@ namespace nv::graphics
     ID3D12CommandQueue* RendererDX12::GetCommandQueue() const
     {
         return mCommandQueue.Get();
+    }
+
+    ConstantBufferView RendererDX12::CreateConstantBuffer(uint32_t size)
+    {
+        auto heap = mDescriptorHeapPool.GetAsDerived(mConstantBufferHeap);
+        auto pDevice = mDevice.As<DeviceDX12>()->GetDevice();
+        const uint32_t bufferSize = (size + CONST_BUFFER_ALIGNMENT_SIZE - 1) & ~(CONST_BUFFER_ALIGNMENT_SIZE - 1);
+        const uint32_t cbIndex = mCbState.mCurrentCount;
+        const uint64_t cbMemOffset = mCbState.mCurrentMemoryOffset;
+
+        mCbState.mCurrentCount++;
+        mCbState.mCurrentMemoryOffset += bufferSize;
+
+        D3D12_CONSTANT_BUFFER_VIEW_DESC	desc = { .BufferLocation = mConstantBuffer->GetAddress() + cbMemOffset, .SizeInBytes = bufferSize };
+        pDevice->CreateConstantBufferView(&desc, heap->HandleCPU(cbIndex));
+
+        return ConstantBufferView{ cbMemOffset, cbIndex };
+    }
+
+    void RendererDX12::UploadToConstantBuffer(ConstantBufferView view, uint8_t* data, uint32_t size)
+    {
+        mConstantBuffer->CopyDataOffset((void*)data, size, view.mMemoryOffset);
     }
 
     void RendererDX12::CreateRootSignature()

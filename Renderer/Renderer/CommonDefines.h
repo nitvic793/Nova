@@ -6,6 +6,12 @@ namespace nv::graphics
 {
     static constexpr int FRAMEBUFFER_COUNT = 3;
 
+    struct ConstantBufferView
+    {
+        uint64_t mMemoryOffset = 0;
+        uint64_t mHeapIndex = 0;
+    };
+
     enum ContextType : uint8_t
     {
         CONTEXT_GFX = 0,

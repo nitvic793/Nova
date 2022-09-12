@@ -33,7 +33,10 @@ namespace nv::graphics
         virtual void StartFrame() = 0;
         virtual void EndFrame() = 0;
         virtual ~IRenderer() {}
+
         virtual Context* GetContext() const = 0;
+        virtual ConstantBufferView CreateConstantBuffer(uint32_t size) = 0;
+        virtual void UploadToConstantBuffer(ConstantBufferView view, uint8_t* data, uint32_t size) = 0;
 
         Device* GetDevice() const;
 

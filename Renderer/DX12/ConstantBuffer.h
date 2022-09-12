@@ -2,78 +2,77 @@
 
 #include <d3d12.h>
 #include "d3dx12.h"
+#include <DX12/GPUResourceDX12.h>
 #include <DX12/ResourceManagerDX12.h>
 
 namespace nv::graphics
 {
-	constexpr uint64_t ConstBufferAlignmentSize = 256;
+	constexpr uint64_t CONST_BUFFER_ALIGNMENT_SIZE = 256;
 
 	class GPUConstantBuffer
 	{
 	public:
-		GPUConstantBuffer() {};
-		void Initialize(ResourceManager* rm, const uint64_t cbSize, const uint32_t count)
+		void Initialize(const uint64_t cbSize, const uint32_t count)
 		{
-			constBufferSize = (cbSize + ConstBufferAlignmentSize - 1) & ~(ConstBufferAlignmentSize - 1);
-			bufferSize = constBufferSize * count;
-			//mResourceHandle = rm->CreateResource(
-			//	CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
-			//	nullptr,
-			//	D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_HEAP_FLAG_NONE,
-			//	CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD)
-			//);
-
-			//resource = rm->GetResource(mResourceHandle);
-			CD3DX12_RANGE readRange(0, 0);
-			resource->Map(0, &readRange, reinterpret_cast<void**>(&vAddressBegin));
+			mAlignedCBSize = (cbSize + CONST_BUFFER_ALIGNMENT_SIZE - 1) & ~(CONST_BUFFER_ALIGNMENT_SIZE - 1);
+			mBufferSize = mAlignedCBSize * count;
+			CreateResource((uint32_t)mBufferSize);
+			auto resource = GetResource();
+			resource->MapMemory();
 		}
 
-		void Initialize(ResourceManager* rm, const uint64_t bufferSize)
+		void Initialize(const uint32_t bufferSize)
 		{
-			constBufferSize = ConstBufferAlignmentSize;
-			this->bufferSize = bufferSize;
-			//mResourceHandle = rm->CreateResource(
-			//	CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
-			//	nullptr,
-			//	D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_HEAP_FLAG_NONE,
-			//	CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD)
-			//);
-
-			//resource = rm->GetResource(mResourceHandle);
-			CD3DX12_RANGE readRange(0, 0);
-			resource->Map(0, &readRange, reinterpret_cast<void**>(&vAddressBegin));
+			mAlignedCBSize = CONST_BUFFER_ALIGNMENT_SIZE;
+			mBufferSize = bufferSize;
+			CreateResource((uint32_t)mBufferSize);
+			auto resource = GetResource();
+			resource->MapMemory();
 		}
 
 		void CopyData(void* data, uint64_t size, uint32_t index) const
 		{
-			char* ptr = reinterpret_cast<char*>(vAddressBegin) + (size_t)constBufferSize * index;
-			memcpy(ptr, data, size);
+			uint8_t* ptr = reinterpret_cast<uint8_t*>(data);
+			GetResource()->UploadMapped(ptr, size, mAlignedCBSize * index);
 		}
 
-		void CopyData(void* data, uint64_t size, uint64_t offset) const
+		void CopyDataOffset(void* data, uint64_t size, uint64_t offset) const
 		{
-			char* ptr = reinterpret_cast<char*>(vAddressBegin) + offset;
-			memcpy(ptr, data, size);
+			uint8_t* ptr = reinterpret_cast<uint8_t*>(data);
+			GetResource()->UploadMapped(ptr, size, offset);
 		}
 
 		void CopyData(void* data, uint64_t size) const
 		{
-			memcpy(vAddressBegin, data, size);
+			uint8_t* ptr = reinterpret_cast<uint8_t*>(data);
+			GetResource()->UploadMapped(ptr, size);
 		}
 
 		D3D12_GPU_VIRTUAL_ADDRESS GetAddress(uint32_t index = 0) const
 		{
-			return resource->GetGPUVirtualAddress() + (size_t)constBufferSize * index;
+			auto resource = (GPUResourceDX12*)gResourceManager->GetGPUResource(mResourceHandle);
+			return resource->GetResource()->GetGPUVirtualAddress() + (size_t)mAlignedCBSize * index;
 		}
 
 		~GPUConstantBuffer() {}
 
 	private:
-		ID3D12Resource* resource;
-		Handle<GPUResource> mResourceHandle;
-		uint64_t constBufferSize;
-		uint64_t bufferSize;
-		char* vAddressBegin;
+		void CreateResource(uint32_t size)
+		{
+			GPUResourceDesc desc = GPUResourceDesc::UploadConstBuffer(size);
+			mResourceHandle = gResourceManager->CreateResource(desc);
+		}
+
+		inline GPUResource* GetResource() const
+		{
+			return gResourceManager->GetGPUResource(mResourceHandle);
+		}
+
+	private:
+		Handle<GPUResource> mResourceHandle = Null<GPUResource>();
+		uint64_t			mAlignedCBSize	= 0;
+		uint64_t			mBufferSize		= 0;
+		char*				mAddressBegin	= nullptr;
 	};
 }
 
