@@ -47,6 +47,21 @@ namespace nv::graphics
         return D3D12_UAV_DIMENSION_UNKNOWN;
     }
 
+    constexpr D3D_PRIMITIVE_TOPOLOGY GetPrimitiveTopology(PrimitiveTopology topology)
+    {
+        switch (topology)
+        {
+        case PRIMITIVE_TOPOLOGY_UNDEFINED     : return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED    ;
+        case PRIMITIVE_TOPOLOGY_POINTLIST     : return D3D_PRIMITIVE_TOPOLOGY_POINTLIST    ;
+        case PRIMITIVE_TOPOLOGY_LINELIST      : return D3D_PRIMITIVE_TOPOLOGY_LINELIST     ;
+        case PRIMITIVE_TOPOLOGY_LINESTRIP     : return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP    ;
+        case PRIMITIVE_TOPOLOGY_TRIANGLELIST  : return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST ;
+        case PRIMITIVE_TOPOLOGY_TRIANGLESTRIP : return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+        }
+
+        return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+    }
+
     static const D3D12_RESOURCE_FLAGS GetFlags(buffer::Flags bufferFlags)
     {
         D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE;

@@ -41,7 +41,8 @@ namespace nv::graphics
 			return hr;
 		}
 
-		operator ID3D12DescriptorHeap* () { return mpDescriptorHeap.Get(); }
+		operator ID3D12DescriptorHeap* () const { return mpDescriptorHeap.Get(); }
+		ID3D12DescriptorHeap* Get() const { return mpDescriptorHeap.Get(); }
 
 		UINT64 MakeOffsetted(UINT64 ptr, UINT index) const
 		{

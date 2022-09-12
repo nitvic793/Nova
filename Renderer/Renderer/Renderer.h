@@ -34,9 +34,12 @@ namespace nv::graphics
         virtual void EndFrame() = 0;
         virtual ~IRenderer() {}
 
-        virtual Context* GetContext() const = 0;
-        virtual ConstantBufferView CreateConstantBuffer(uint32_t size) = 0;
-        virtual void UploadToConstantBuffer(ConstantBufferView view, uint8_t* data, uint32_t size) = 0;
+        virtual Handle<Texture>         GetDefaultRenderTarget() const = 0; // Return current final default render target
+        virtual Handle<Texture>         GetDefaultDepthTarget() const = 0; // Return current final default depth target
+        virtual Handle<DescriptorHeap>  GetGPUDescriptorHeap() const = 0;
+        virtual Context*                GetContext() const = 0;
+        virtual ConstantBufferView      CreateConstantBuffer(uint32_t size) = 0;
+        virtual void                    UploadToConstantBuffer(ConstantBufferView view, uint8_t* data, uint32_t size) = 0;
 
         Device* GetDevice() const;
 

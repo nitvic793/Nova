@@ -45,7 +45,10 @@ namespace nv::graphics
         Handle<jobs::Job>   mRenderJobHandle;
         
         /*TEMP*/
+        Viewport            mViewport;
+        Rect                mRect;
         Camera              mCamera;
+
         ConstantBufferView  mFrameCB;
         DrawData            mObjectDrawData;
         Handle<Mesh>        mMesh;

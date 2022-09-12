@@ -55,9 +55,12 @@ namespace nv::graphics
         virtual void StartFrame() override;
         virtual void EndFrame() override;
 
-        virtual Context* GetContext() const override;
-        virtual ConstantBufferView CreateConstantBuffer(uint32_t size) override;
-        virtual void UploadToConstantBuffer(ConstantBufferView view, uint8_t* data, uint32_t size) override;
+        virtual Handle<Texture>         GetDefaultDepthTarget() const override;
+        virtual Handle<Texture>         GetDefaultRenderTarget() const override;
+        virtual Handle<DescriptorHeap>  GetGPUDescriptorHeap() const override;
+        virtual Context*                GetContext() const override;
+        virtual ConstantBufferView      CreateConstantBuffer(uint32_t size) override;
+        virtual void                    UploadToConstantBuffer(ConstantBufferView view, uint8_t* data, uint32_t size) override;
         ~RendererDX12();
 
     public:
@@ -98,6 +101,7 @@ namespace nv::graphics
         GPUConstantBuffer*                          mConstantBuffer;
 
         friend class ResourceManagerDX12;
+        friend class ContextDX12;
     };
 
     void ReportLeaksDX12();

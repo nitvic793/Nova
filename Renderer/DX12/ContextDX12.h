@@ -9,6 +9,8 @@ struct ID3D12Device;
 
 namespace nv::graphics
 {
+    class RendererDX12;
+
     class ContextDX12 : public Context
     {
     public:
@@ -33,6 +35,8 @@ namespace nv::graphics
         virtual void ClearDepthStencil(Handle<Texture> depthStencil, float depth, uint8_t stencil, uint32_t numRects, Rect* pRects) override;
         virtual void SetViewports(uint32_t numViewports, Viewport* pViewports) override;
         virtual void SetScissorRect(uint32_t numRect, Rect* pRects) override;
+        virtual void SetPrimitiveTopology(PrimitiveTopology topology) override;
+        virtual void SetDescriptorHeap(Span<Handle<DescriptorHeap>> heaps) override;
 
     public:
         ID3D12GraphicsCommandList4* GetCommandList() const { return mCommandList.Get(); }
@@ -42,5 +46,7 @@ namespace nv::graphics
         using ComPtr = Microsoft::WRL::ComPtr<T>;
 
         ComPtr<ID3D12GraphicsCommandList4>  mCommandList;
+
+        friend class RendererDX12;
     };
 }

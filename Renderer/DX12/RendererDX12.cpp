@@ -218,7 +218,7 @@ namespace nv::graphics
         rect.mRight = gWindow->GetWidth();
         rect.mBottom = gWindow->GetHeight();
         
-        float clearColor[4] = { 0.f ,0.f, 0.f,0.f };
+        float clearColor[4] = { 0.393f ,0.585f, 0.93f, 1.f };
         context->ClearRenderTarget(mRenderTargets[backbufferIndex], clearColor, 1, &rect);
         context->ClearDepthStencil(mDepthStencil, 1.f, 0, 1, &rect);
     }
@@ -410,6 +410,22 @@ namespace nv::graphics
 
     void RendererDX12::Draw()
     {
+    }
+
+    Handle<Texture> RendererDX12::GetDefaultDepthTarget() const
+    {
+        return mDepthStencil;
+    }
+
+    Handle<Texture> RendererDX12::GetDefaultRenderTarget() const
+    {
+        const auto idx = GetBackBufferIndex();
+        return mRenderTargets[idx];
+    }
+
+    Handle<DescriptorHeap> RendererDX12::GetGPUDescriptorHeap() const
+    {
+        return mGpuHeap;
     }
 
     Context* RendererDX12::GetContext() const

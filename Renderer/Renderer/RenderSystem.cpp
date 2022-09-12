@@ -16,6 +16,7 @@
 #include <Renderer/Context.h>
 #include <Renderer/PipelineState.h>
 #include <Renderer/Mesh.h>
+#include <Renderer/Window.h>
 
 #include <thread>
 #include <functional>
@@ -23,12 +24,26 @@
 namespace nv::graphics
 {
     RenderSystem::RenderSystem(uint32_t width, uint32_t height) :
-        mCamera(CameraDesc{ .mWidth = (float)width, .mHeight = (float)height })
+        mCamera(CameraDesc{ .mWidth = (float)width, .mHeight = (float)height }),
+        mRect(),
+        mViewport()
     {
     }
 
     void RenderSystem::Init()
     {
+        mViewport.mTopLeftX = 0;
+        mViewport.mTopLeftY = 0;
+        mViewport.mWidth = (float)gWindow->GetWidth();
+        mViewport.mHeight = (float)gWindow->GetHeight();
+        mViewport.mMinDepth = 0.0f;
+        mViewport.mMaxDepth = 1.0f;
+
+        mRect.mLeft = 0;
+        mRect.mTop = 0;
+        mRect.mRight = gWindow->GetWidth();
+        mRect.mBottom = gWindow->GetHeight();
+
         mFrameCB = gRenderer->CreateConstantBuffer(sizeof(FrameData));
         mObjectDrawData.mCBView = gRenderer->CreateConstantBuffer(sizeof(ObjectData));
 
@@ -76,22 +91,29 @@ namespace nv::graphics
             gRenderer->StartFrame();
 
             // TODO:
-            // Copy descriptors (Constant Buffers/Textures/etc) to GPU Heap 
-            // Set Viewport/Scissor Rect. 
-            // Set Render Target
-            // Set Descriptor Heap
-            // Set Prim Topology
             // Bind resources - Constant Buffer (Textures later) 
             // Draw call
 
+            const auto topology = PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+            const auto renderTarget = gRenderer->GetDefaultRenderTarget();
+            const auto depthTarget = gRenderer->GetDefaultDepthTarget();
+            const auto gpuHeap = gRenderer->GetGPUDescriptorHeap();
+            Handle<Texture> targets[] = { renderTarget };
+            Handle<DescriptorHeap> heaps[] = { gpuHeap };
+
             Context* ctx = gRenderer->GetContext();
+
+            ctx->SetScissorRect(1, &mRect);
+            ctx->SetViewports(1, &mViewport);
+            ctx->SetPrimitiveTopology(topology);
+            ctx->SetDescriptorHeap({ heaps, _countof(heaps) });
+
+            ctx->SetRenderTarget({ targets, _countof(targets) }, depthTarget);
             ctx->SetMesh(mMesh);
 
             gRenderer->EndFrame();
             gRenderer->Present();
         }
-
-        
     }
 
     void RenderSystem::UploadDrawData()

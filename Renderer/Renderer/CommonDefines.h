@@ -20,6 +20,16 @@ namespace nv::graphics
         CONTEXT_RAYTRACING
     };
 
+    enum PrimitiveTopology
+    {
+        PRIMITIVE_TOPOLOGY_UNDEFINED        = 0,
+        PRIMITIVE_TOPOLOGY_POINTLIST        = 1,
+        PRIMITIVE_TOPOLOGY_LINELIST         = 2,
+        PRIMITIVE_TOPOLOGY_LINESTRIP        = 3,
+        PRIMITIVE_TOPOLOGY_TRIANGLELIST     = 4,
+        PRIMITIVE_TOPOLOGY_TRIANGLESTRIP    = 5,
+    };
+
     namespace tex
     {
         enum Type : uint8_t

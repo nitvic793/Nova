@@ -8,6 +8,7 @@
 #include <DX12/GPUResourceDX12.h>
 #include <DX12/MeshDX12.h>
 #include <DX12/PipelineStateDX12.h>
+#include <DX12/DescriptorHeapDX12.h>
 
 #include <D3D12MemAlloc.h>
 #include <d3d12.h>
@@ -142,5 +143,24 @@ namespace nv::graphics
     void ContextDX12::SetScissorRect(uint32_t numRect, Rect* pRects)
     {
         mCommandList->RSSetScissorRects(numRect, (D3D12_RECT*)pRects);
+    }
+
+    void ContextDX12::SetPrimitiveTopology(PrimitiveTopology topology)
+    {
+        mCommandList->IASetPrimitiveTopology(GetPrimitiveTopology(topology));
+    }
+
+    void ContextDX12::SetDescriptorHeap(Span<Handle<DescriptorHeap>> heaps)
+    {
+        auto renderer = (RendererDX12*)gRenderer;
+        nv::Vector<ID3D12DescriptorHeap*> dxHeaps;
+        dxHeaps.Reserve((uint32_t)heaps.Size());
+        for (auto heap : heaps)
+        {
+            ID3D12DescriptorHeap* pHeap = renderer->mDescriptorHeapPool.GetAsDerived(heap)->Get();
+            dxHeaps.Push(pHeap);
+        }
+
+        mCommandList->SetDescriptorHeaps((UINT)dxHeaps.Size(), dxHeaps.Data());
     }
 }

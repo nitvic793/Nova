@@ -10,6 +10,7 @@ namespace nv::graphics
     class PipelineState;
     class Texture;
     class GPUResource;
+    class DescriptorHeap;
 
     struct TransitionBarrier;
 
@@ -47,6 +48,8 @@ namespace nv::graphics
         virtual void ClearDepthStencil(Handle<Texture> depthStencil, float depth, uint8_t stencil, uint32_t numRects, Rect* pRects) = 0;
         virtual void SetViewports(uint32_t numViewports, Viewport* pViewports) = 0;
         virtual void SetScissorRect(uint32_t numRect, Rect* pRects) = 0;
+        virtual void SetPrimitiveTopology(PrimitiveTopology topology) = 0;
+        virtual void SetDescriptorHeap(Span<Handle<DescriptorHeap>> heaps) = 0;
 
     protected:
         ContextDesc mDesc;
