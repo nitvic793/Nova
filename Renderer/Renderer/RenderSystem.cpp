@@ -74,6 +74,14 @@ namespace nv::graphics
             UploadDrawData();
             gRenderer->Wait();
             gRenderer->StartFrame();
+            // TODO:
+            // Copy descriptors (Constant Buffers/Textures/etc) to GPU Heap 
+            // Set Viewport/Scissor Rect. 
+            // Set Render Target
+            // Set Descriptor Heap
+            // Set Prim Topology
+            // Bind resources - Constant Buffer (Textures later) 
+            // Draw call
 
             Context* ctx = gRenderer->GetContext();
             ctx->SetMesh(mMesh);
