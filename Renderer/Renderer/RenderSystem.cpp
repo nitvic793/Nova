@@ -90,11 +90,6 @@ namespace nv::graphics
             gRenderer->Wait();
             gRenderer->StartFrame();
 
-            // TODO:
-            // Bind resources - Constant Buffer (Textures later) 
-            // Draw call
-            
-
             const auto topology = PRIMITIVE_TOPOLOGY_TRIANGLELIST;
             const auto renderTarget = gRenderer->GetDefaultRenderTarget();
             const auto depthTarget = gRenderer->GetDefaultDepthTarget();
@@ -111,8 +106,8 @@ namespace nv::graphics
 
             ctx->SetRenderTarget({ targets, _countof(targets) }, depthTarget);
             ctx->SetPipeline(mPso);
-            ctx->Bind(0, BIND_BUFFER, mObjectDrawData.mCBView.mHeapIndex);
-            ctx->Bind(4, BIND_BUFFER, mFrameCB.mHeapIndex);
+            ctx->Bind(0, BIND_BUFFER, (uint32_t)mObjectDrawData.mCBView.mHeapIndex);
+            ctx->Bind(4, BIND_BUFFER, (uint32_t)mFrameCB.mHeapIndex);
             ctx->SetMesh(mMesh);
             auto mesh = gResourceManager->GetMesh(mMesh);
             for (auto entry : mesh->GetDesc().mMeshEntries)
