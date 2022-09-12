@@ -241,7 +241,7 @@ namespace nv::graphics
 
     void RendererDX12::StartFrame()
     {
-        auto context = GetContext();
+        auto context = (ContextDX12*)GetContext();
         auto pCmdAllocator = GetAllocator();
         //pCmdAllocator->Reset();
 
@@ -249,6 +249,7 @@ namespace nv::graphics
         CopyDescriptorsToGPU();
 
         context->Begin();
+        context->SetRootSignature(mRootSignature.Get());
         TransitionToRenderTarget();
         ClearBackBuffers();
     }
@@ -283,6 +284,18 @@ namespace nv::graphics
         return mCommandQueue.Get();
     }
 
+    D3D12_GPU_DESCRIPTOR_HANDLE RendererDX12::GetConstBufferHandle(uint32_t index) const
+    {
+        auto heap = mDescriptorHeapPool.GetAsDerived(mGpuHeap);
+        return heap->HandleGPU(mGpuHeapState.mConstBufferOffset + index);
+    }
+
+    D3D12_GPU_DESCRIPTOR_HANDLE RendererDX12::GetTextureHandle(uint32_t index) const
+    {
+        auto heap = mDescriptorHeapPool.GetAsDerived(mGpuHeap);
+        return heap->HandleGPU(mGpuHeapState.mTextureOffset + index);
+    }
+
     ConstantBufferView RendererDX12::CreateConstantBuffer(uint32_t size)
     {
         auto heap = mDescriptorHeapPool.GetAsDerived(mConstantBufferHeap);
@@ -296,6 +309,7 @@ namespace nv::graphics
 
         D3D12_CONSTANT_BUFFER_VIEW_DESC	desc = { .BufferLocation = mConstantBuffer->GetAddress() + cbMemOffset, .SizeInBytes = bufferSize };
         pDevice->CreateConstantBufferView(&desc, heap->HandleCPU(cbIndex));
+        heap->PushCPU();
 
         return ConstantBufferView{ cbMemOffset, cbIndex };
     }
@@ -399,7 +413,8 @@ namespace nv::graphics
             constexpr auto descriptorType = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
             const uint32_t size = heap->GetSize();
             const uint32_t offset = frameOffset + mGpuHeapState.mCurrentCount;
-            pDevice->CopyDescriptorsSimple(size, gpuHeap->HandleCPU(offset), heap->HandleCPU(0), descriptorType);
+            if(size > 0)
+                pDevice->CopyDescriptorsSimple(size, gpuHeap->HandleCPU(offset), heap->HandleCPU(0), descriptorType);
             mGpuHeapState.mCurrentCount += size;
             return offset;
         };

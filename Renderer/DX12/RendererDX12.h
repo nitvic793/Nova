@@ -9,6 +9,7 @@ struct ID3D12RootSignature;
 struct ID3D12CommandAllocator;
 struct ID3D12CommandQueue;
 struct ID3D12Fence;
+struct D3D12_GPU_DESCRIPTOR_HANDLE;
 using HANDLE = void*;
 
 namespace nv::graphics
@@ -65,9 +66,11 @@ namespace nv::graphics
 
     public:
 
-        uint32_t                GetBackBufferIndex() const;
-        ID3D12CommandAllocator* GetAllocator() const;
-        ID3D12CommandQueue*     GetCommandQueue() const;
+        uint32_t                    GetBackBufferIndex() const;
+        ID3D12CommandAllocator*     GetAllocator() const;
+        ID3D12CommandQueue*         GetCommandQueue() const;
+        D3D12_GPU_DESCRIPTOR_HANDLE GetConstBufferHandle(uint32_t index) const;
+        D3D12_GPU_DESCRIPTOR_HANDLE GetTextureHandle(uint32_t index) const;
 
 
     private:

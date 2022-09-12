@@ -163,4 +163,24 @@ namespace nv::graphics
 
         mCommandList->SetDescriptorHeaps((UINT)dxHeaps.Size(), dxHeaps.Data());
     }
+
+    void ContextDX12::Bind(uint32_t slot, BindResourceType type, uint32_t offset)
+    {
+        D3D12_GPU_DESCRIPTOR_HANDLE handle = {};
+        auto renderer = (RendererDX12*)gRenderer;
+        switch (type)
+        {
+        case BIND_BUFFER:
+            handle = renderer->GetConstBufferHandle(offset);
+            break;
+        case BIND_TEXTURE:
+            break;
+        }
+
+        mCommandList->SetGraphicsRootDescriptorTable(slot, handle);
+    }
+    void ContextDX12::SetRootSignature(ID3D12RootSignature* pRootSig)
+    {
+        mCommandList->SetGraphicsRootSignature(pRootSig);
+    }
 }

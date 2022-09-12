@@ -93,6 +93,7 @@ namespace nv::graphics
             // TODO:
             // Bind resources - Constant Buffer (Textures later) 
             // Draw call
+            
 
             const auto topology = PRIMITIVE_TOPOLOGY_TRIANGLELIST;
             const auto renderTarget = gRenderer->GetDefaultRenderTarget();
@@ -109,7 +110,15 @@ namespace nv::graphics
             ctx->SetDescriptorHeap({ heaps, _countof(heaps) });
 
             ctx->SetRenderTarget({ targets, _countof(targets) }, depthTarget);
+            ctx->SetPipeline(mPso);
+            ctx->Bind(0, BIND_BUFFER, mObjectDrawData.mCBView.mHeapIndex);
+            ctx->Bind(4, BIND_BUFFER, mFrameCB.mHeapIndex);
             ctx->SetMesh(mMesh);
+            auto mesh = gResourceManager->GetMesh(mMesh);
+            for (auto entry : mesh->GetDesc().mMeshEntries)
+            {
+                ctx->DrawIndexedInstanced(entry.mNumIndices, 1, entry.mBaseIndex, entry.mBaseVertex, 0);
+            }
 
             gRenderer->EndFrame();
             gRenderer->Present();
@@ -118,6 +127,7 @@ namespace nv::graphics
 
     void RenderSystem::UploadDrawData()
     {
+        mCamera.SetPosition({ 0,0, -5 });
         mCamera.UpdateViewProjection();
         auto view = mCamera.GetViewTransposed();
         auto proj = mCamera.GetProjTransposed();

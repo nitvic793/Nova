@@ -29,6 +29,13 @@ namespace nv::graphics
         uint64_t    mIntermediateOffset = 0;
     };
 
+
+    enum BindResourceType
+    {
+        BIND_BUFFER,
+        BIND_TEXTURE
+    };
+
     class Context
     {
     public:
@@ -50,6 +57,7 @@ namespace nv::graphics
         virtual void SetScissorRect(uint32_t numRect, Rect* pRects) = 0;
         virtual void SetPrimitiveTopology(PrimitiveTopology topology) = 0;
         virtual void SetDescriptorHeap(Span<Handle<DescriptorHeap>> heaps) = 0;
+        virtual void Bind(uint32_t slot, BindResourceType type, uint32_t offset) = 0;
 
     protected:
         ContextDesc mDesc;

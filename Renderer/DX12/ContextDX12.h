@@ -5,6 +5,7 @@
 
 struct ID3D12GraphicsCommandList4;
 struct ID3D12CommandAllocator;
+struct ID3D12RootSignature;
 struct ID3D12Device;
 
 namespace nv::graphics
@@ -37,9 +38,11 @@ namespace nv::graphics
         virtual void SetScissorRect(uint32_t numRect, Rect* pRects) override;
         virtual void SetPrimitiveTopology(PrimitiveTopology topology) override;
         virtual void SetDescriptorHeap(Span<Handle<DescriptorHeap>> heaps) override;
+        virtual void Bind(uint32_t slot, BindResourceType type, uint32_t offset) override;
 
     public:
         ID3D12GraphicsCommandList4* GetCommandList() const { return mCommandList.Get(); }
+        void SetRootSignature(ID3D12RootSignature* pRootSig);
 
     private:
         template<typename T>
