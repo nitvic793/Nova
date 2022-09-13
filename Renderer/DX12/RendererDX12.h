@@ -48,6 +48,7 @@ namespace nv::graphics
         virtual void InitFrameBuffers(const Window& window, const format::SurfaceFormat format) override;
         virtual void Submit(Context* pContext) override;
         virtual void Wait() override;
+        virtual void WaitForAllFrames() override;
         virtual void ClearBackBuffers() override;
         virtual void Draw() override;
 

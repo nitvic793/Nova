@@ -15,7 +15,6 @@ namespace nv::asset
         void Destroy() override;
         void OnReload() override;
     private:
-
     };
 }
 

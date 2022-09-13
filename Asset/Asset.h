@@ -4,39 +4,16 @@
 #include <Lib/Array.h>
 #include <atomic>
 
+#include <AssetBase.h>
+
 namespace nv::asset
 {
-    enum AssetType : uint32_t
-    {
-        ASSET_INVALID   = 0,
-        ASSET_MESH      = ID("Mesh"),
-        ASSET_SHADER    = ID("Shader"),
-        ASSET_TEXTURE   = ID("Texture"),
-        ASSET_CONFIG    = ID("Config")
-    };
-
     enum LoadState : uint8_t
     {
         STATE_UNLOADED,
         STATE_LOADING,
         STATE_LOADED,
         STATE_ERROR
-    };
-
-    struct AssetID
-    {
-        union 
-        {
-            struct 
-            {
-                AssetType   mType;
-                uint32_t    mHash;
-            };
-
-            uint64_t mId;
-        };
-
-        constexpr operator uint64_t() const { return mId; }
     };
 
     struct Header

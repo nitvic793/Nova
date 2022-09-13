@@ -19,7 +19,7 @@ namespace nv::graphics
     {
         Asset* asset = gpAssetManager->GetAsset(mDesc.mShader);
         if (asset->GetState() != STATE_LOADED)
-            gpAssetManager->LoadAsset(mDesc.mShader, true);
+            gpAssetManager->LoadAsset(mDesc.mShader, nullptr, true);
     }
 
     D3D12_SHADER_BYTECODE ShaderDX12::GetByteCode() const

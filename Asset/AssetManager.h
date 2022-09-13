@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Lib/Handle.h>
+#include <functional>
 
 namespace nv::jobs
 {
@@ -9,8 +10,12 @@ namespace nv::jobs
 
 namespace nv::asset
 {
+    constexpr const char RAW_ASSET_PATH[] = "../../Data/";
+
     class Asset;
     struct AssetID;
+
+    using AssetLoadCallback = std::function<void(Asset*)>;
 
     class IAssetManager
     {
@@ -18,9 +23,13 @@ namespace nv::asset
         virtual void Init(const char* assetPath) = 0;
         virtual Asset* GetAsset(AssetID id) const = 0;
         virtual Asset* GetAsset(Handle<Asset> asset) const = 0;
-        virtual Handle<Asset> LoadAsset(AssetID id, bool wait = false) = 0;
+        virtual Handle<Asset> LoadAsset(AssetID id, AssetLoadCallback callback = nullptr, bool wait = false) = 0;
         virtual void UnloadAsset(Handle<Asset> asset) = 0;
         virtual Handle<jobs::Job> ExportAssets(const char* exportPath) = 0;
+
+        virtual void Reload(const char* file) = 0;
+
+        virtual void Tick() = 0;
 
         virtual ~IAssetManager() {}
     };

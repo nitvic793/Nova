@@ -37,6 +37,8 @@ namespace nv::graphics
         virtual Mesh*                   GetMesh(Handle<Mesh>) = 0;
         virtual Context*                GetContext(Handle<Context>) = 0;
 
+        virtual Handle<PipelineState>   RecreatePipelineState(Handle<PipelineState> handle) = 0;
+
         virtual ~ResourceManager() {}
     };
 

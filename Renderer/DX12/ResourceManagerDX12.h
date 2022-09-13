@@ -37,6 +37,8 @@ namespace nv::graphics
         virtual Mesh*                   GetMesh(Handle<Mesh>) override;
         virtual Context*                GetContext(Handle<Context>) override;
 
+        virtual Handle<PipelineState>   RecreatePipelineState(Handle<PipelineState> handle) override;
+
         ~ResourceManagerDX12();
 
     private:

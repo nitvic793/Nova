@@ -34,6 +34,8 @@ namespace nv::graphics
             mDesc(desc) {}
         virtual ~Shader() {}
 
+        const ShaderDesc& GetDesc() const { return mDesc; }
+
     protected:
         ShaderDesc mDesc;
     };

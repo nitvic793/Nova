@@ -386,6 +386,13 @@ namespace nv::graphics
         return mContexts.Get(handle);
     }
 
+    Handle<PipelineState> ResourceManagerDX12::RecreatePipelineState(Handle<PipelineState> handle)
+    {
+        PipelineStateDesc desc = mPipelineStates.Get(handle)->GetDesc();
+        mPipelineStates.Remove(handle);
+        return CreatePipelineState(desc); // It should return the same Handle 
+    }
+
     ResourceManagerDX12::~ResourceManagerDX12()
     {
         mMeshes.Destroy();

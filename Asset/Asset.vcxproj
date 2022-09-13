@@ -147,6 +147,8 @@
   <ItemGroup>
     <ClInclude Include="Asset.h" />
     <ClInclude Include="AssetManager.h" />
+    <ClInclude Include="AssetBase.h" />
+    <ClInclude Include="AssetReload.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="AssetSystem.h" />

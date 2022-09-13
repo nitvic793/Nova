@@ -24,5 +24,10 @@ namespace nv::io
 
         return !(is.bad() || is.fail());
     }
+
+    void NormalizePath(std::string& path)
+    {
+        std::replace(path.begin(), path.end(), '\\', '/');
+    }
 }
 

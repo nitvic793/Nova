@@ -26,6 +26,7 @@ namespace nv::graphics
         virtual void Destroy() = 0;
         virtual void Submit(Context* pContext) = 0;
         virtual void Wait() = 0;
+        virtual void WaitForAllFrames() = 0;
         virtual void ClearBackBuffers() = 0;
 
         virtual void TransitionToRenderTarget() = 0;

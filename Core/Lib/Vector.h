@@ -133,6 +133,7 @@ namespace nv
 			GrowIfNeeded();
 			assert(mCurrentIndex + 1 < mCapacity);
 			mCurrentIndex++;
+			new (&mBuffer[mCurrentIndex]) T();
 			mBuffer[mCurrentIndex] = value;
 		}
 
@@ -238,6 +239,9 @@ namespace nv
 
 		constexpr void Clear()
 		{
+			for (uint32_t i = 0; i < Size(); ++i)
+				mBuffer[i].~T();
+
 			mCurrentIndex = -1;
 		}
 

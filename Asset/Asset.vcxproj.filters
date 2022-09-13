@@ -42,6 +42,12 @@
     <ClInclude Include="AssetSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AssetBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AssetReload.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Asset.cpp">

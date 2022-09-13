@@ -33,8 +33,8 @@ namespace nv::jobs
         virtual Handle<Job> Enqueue(Job&& job) override
         {
             Handle<Job> handle = mJobs.Create();
-            auto instance = mJobs.Get(handle);
-            *instance = job;
+            auto mInstance = mJobs.Get(handle);
+            *mInstance = job;
 
             mQueue.Push(handle);
             mConditionVar.notify_one();

@@ -128,7 +128,7 @@ namespace nv::asset
                     auto asset = gpAssetManager->GetAsset(id);
                     if (asset->GetState() == STATE_UNLOADED)
                     {
-                        gpAssetManager->LoadAsset(id, true);
+                        gpAssetManager->LoadAsset(id, nullptr, true);
                     }
 
                     const auto& data = asset->GetAssetData();

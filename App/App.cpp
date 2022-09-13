@@ -31,11 +31,11 @@ int main()
     }
 
     using namespace nv;
-    nv::Instance instance("Test");
-    if(instance.Init())
-        instance.Run();
+    nv::Instance mInstance("Test");
+    if(mInstance.Init())
+        mInstance.Run();
 
     auto size = nv::GetSystemAllocatedBytes();
-    instance.Destroy();
+    mInstance.Destroy();
     return 0;
 }

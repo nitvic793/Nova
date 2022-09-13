@@ -1,16 +1,19 @@
 #include "pch.h"
 #include "AssetManager.h"
 #include <Asset.h>
+#include <AssetReload.h>
 #include <Lib/Map.h>
 #include <Lib/Pool.h>
 #include <Lib/StringHash.h>
 #include <Engine/JobSystem.h>
 #include <Engine/Log.h>
+#include <Engine/EventSystem.h>
 #include <IO/Utility.h>
 #include <IO/File.h>
 #include <Types/MeshAsset.h>
 #include <Types/ShaderAsset.h>
 #include <Types/Serializers.h>
+#include <Lib/ConcurrentQueue.h>
 #include <fstream>
 
 #include <filesystem>
@@ -33,6 +36,8 @@ namespace nv::asset
     constexpr const char CONFIGS_PATH[]         = "Configs";
     constexpr const char PACKAGE_EXTENSION[]    = ".novapkg";
 
+    constexpr bool HOT_RELOAD_ENABLED = true;
+
     constexpr bool StringContains(const std::string& str, const std::string& inString) 
     {
         return inString.find(str) != std::string::npos;  
@@ -48,7 +53,7 @@ namespace nv::asset
         return ASSET_INVALID;
     }
 
-    constexpr std::string GetNormalizedPath(const std::string& path)
+    std::string GetNormalizedBuildPath(const std::string& path)
     {
         const char* replaceEmpty = "";
         std::string_view dataPath = gpDataPath;
@@ -57,12 +62,18 @@ namespace nv::asset
         auto pos = outPath.find(dataPath);
         if(pos != std::string::npos)
             outPath = outPath.replace(pos, dataPath.size() + 1, "");
-        std::replace(outPath.begin(), outPath.end(), '\\', '/');
+        io::NormalizePath(outPath);
         return outPath;
     }
 
     class AssetManager : public IAssetManager
     {
+        struct CallbackData
+        {
+            AssetLoadCallback   mCallback;
+            Asset*              mAsset;
+        };
+
     public:
         virtual void Init(const char* assetPath) override
         {
@@ -74,7 +85,7 @@ namespace nv::asset
                     continue;
 
                 const auto path = entry.path().string();
-                const auto relative = GetNormalizedPath(fs::relative(path, fs::current_path()).string());
+                const auto relative = GetNormalizedBuildPath(fs::relative(path, fs::current_path()).string());
 
                 if (path.find(PACKAGE_EXTENSION) != std::string::npos)
                 {
@@ -151,21 +162,26 @@ namespace nv::asset
             }
         }
 
-        bool LoadAssetFromFile(Asset* asset, bool isTextFile = false)
+        bool LoadAssetFromFile(Asset* asset, const char* path)
         {
-            const auto& path = mAssetPathMap[asset->GetID()];
-            size_t size = io::GetFileSize(path.c_str());
+            size_t size = io::GetFileSize(path);
             Byte* pBuffer = (Byte*)Alloc(size);
 
-            asset->SetState(STATE_LOADING); 
+            asset->SetState(STATE_LOADING);
             AssetData data = { size, pBuffer };
-            bool result = io::ReadFile(path.c_str(), data.mData, (uint32_t)size);
+            bool result = io::ReadFile(path, data.mData, (uint32_t)size);
             asset->SetData(data);
             asset->SetState(result ? STATE_LOADED : STATE_ERROR);
             return result;
         }
 
-        virtual Handle<Asset> LoadAsset(AssetID id, bool wait) override
+        bool LoadAssetFromFile(Asset* asset, bool isTextFile = false)
+        {
+            const auto& path = mAssetPathMap[asset->GetID()];
+            return LoadAssetFromFile(asset, path.c_str());
+        }
+
+        virtual Handle<Asset> LoadAsset(AssetID id, AssetLoadCallback callback, bool wait) override
         {
 #if NV_ASSET_DEBUG_LOADER
             auto it = mAssetMap.find(id.mId);
@@ -181,7 +197,7 @@ namespace nv::asset
                     size_t size = io::GetFileSize(path.c_str());
                     Byte* pBuffer = (Byte*)Alloc(size);
 
-                    auto loadAsset = [=](void* ctx)
+                    auto loadAsset = [&](void* ctx)
                     {
                         asset->SetState(STATE_LOADING);
                         AssetData data = { size, pBuffer };
@@ -192,6 +208,9 @@ namespace nv::asset
                             log::Info("[Asset] Load {}: OK", path.c_str());
                         else
                             log::Error("[Asset] Load {}: ERROR", path.c_str());
+
+                        if (callback)
+                            mCallbacks.Push({ callback, asset });
                     };
 
                     if (wait)
@@ -279,13 +298,67 @@ namespace nv::asset
             return handle;
         }
 
+        void DeallocateAsset(Asset* asset)
+        {
+            if (asset)
+                Free(asset->GetData());
+
+            asset->SetBuffer(nullptr, 0);
+        }
+
         void CleanUp()
         {
             for (auto& item : mAssetMap)
             {
                 Asset* asset = mAssets.Get(item.second);
-                if (asset)
-                    Free(asset->GetData());
+                DeallocateAsset(asset);
+            }
+        }
+
+        virtual void Tick() override
+        {
+            while (!mCallbacks.IsEmpty())
+            {
+                auto callback = mCallbacks.Pop();
+                callback.mCallback(callback.mAsset);
+            }
+        }
+
+        virtual void Reload(const char* file) override
+        {
+            if constexpr (!HOT_RELOAD_ENABLED)
+                return;
+
+            std::string_view path(file);
+            path.remove_prefix(_countof(RAW_ASSET_PATH) - 1);
+            AssetType assetType = GetAssetType(path.data());
+            AssetID id = { assetType, ID(path.data()) };
+
+            auto asset = GetAsset(id);
+            DeallocateAsset(asset);
+            if(assetType == ASSET_SHADER)
+            {
+                size_t size = io::GetFileSize(file);
+                Byte* pBuffer = (Byte*)Alloc(size);
+                AssetData data = { size, pBuffer };
+                bool result = io::ReadFile(file, data.mData, (uint32_t)size);
+
+                std::ostringstream sstream;
+                ShaderAsset shader;
+                shader.Export(data, path.data(), sstream);
+                Free(pBuffer);
+
+                auto buffer = sstream.str();
+                pBuffer = (Byte*)Alloc(buffer.size());
+                memcpy(pBuffer, buffer.c_str(), buffer.size());
+                data = { buffer.size(), pBuffer };
+
+                asset->SetData(data);
+
+                AssetReloadEvent event;
+                event.mAssetId = id;
+                gEventBus.Publish(&event);
+                log::Info("[Asset] Reloaded {}", path.data());
             }
         }
 
@@ -299,7 +372,7 @@ namespace nv::asset
         void ExportAsset(Asset* asset, std::ostream& ostream)
         {
             cereal::BinaryOutputArchive archive(ostream);
-            auto path = GetNormalizedPath(fs::relative(mAssetPathMap[asset->GetID()], fs::current_path()).string());
+            auto path = GetNormalizedBuildPath(fs::relative(mAssetPathMap[asset->GetID()], fs::current_path()).string());
 
             const auto writeHeader = [asset, &archive, this, &path](size_t size)
             {
@@ -380,6 +453,7 @@ namespace nv::asset
 #endif
         std::mutex                          mMutex;
         std::vector<std::string>            mPackageFiles;
+        ConcurrentQueue<CallbackData>       mCallbacks;
     };
 
     void InitAssetManager(const char* assetPath)

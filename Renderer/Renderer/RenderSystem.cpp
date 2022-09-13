@@ -6,8 +6,10 @@
 #include <Engine/Instance.h>
 #include <Engine/Log.h>
 #include <Engine/Transform.h>
+#include <Engine/EventSystem.h>
 #include <Debug/Profiler.h>
 
+#include <AssetReload.h>
 #include <AssetManager.h>
 #include <Types/MeshAsset.h>
 #include <Types/ShaderAsset.h>
@@ -23,11 +25,40 @@
 
 namespace nv::graphics
 {
+    class RenderReloadManager
+    {
+    public:
+        RenderReloadManager(RenderSystem* renderSystem) :
+            mRenderSystem(renderSystem)
+        {}
+
+        void RegisterPSO(const PipelineStateDesc& desc, Handle<PipelineState>* pso)
+        {
+            auto psId = gResourceManager->GetShader(desc.mPS)->GetDesc().mShader;
+            auto vsId = gResourceManager->GetShader(desc.mVS)->GetDesc().mShader;
+
+            mPsoShaderMap[psId.mId] = pso;
+            mPsoShaderMap[psId.mId] = pso;
+        }
+
+        void OnReload(asset::AssetReloadEvent* event)
+        {
+            auto pso = mPsoShaderMap.at(event->mAssetId.mId);
+            mRenderSystem->QueueReload(pso);
+        }
+
+    private:
+        HashMap<uint64_t, Handle<PipelineState>*> mPsoShaderMap;
+        RenderSystem* mRenderSystem;
+    };
+
     RenderSystem::RenderSystem(uint32_t width, uint32_t height) :
         mCamera(CameraDesc{ .mWidth = (float)width, .mHeight = (float)height }),
         mRect(),
         mViewport()
     {
+        mReloadManager = Alloc<RenderReloadManager>(SystemAllocator::gPtr, this);
+        gEventBus.Subscribe(mReloadManager, &RenderReloadManager::OnReload);
     }
 
     void RenderSystem::Init()
@@ -53,11 +84,15 @@ namespace nv::graphics
         asset->DeserializeTo(m);
         mMesh = gResourceManager->CreateMesh(m.GetData());
 
+        auto ps = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultPS.hlsl") };
+        auto vs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultVS.hlsl") };
+
         PipelineStateDesc psoDesc = {};
         psoDesc.mPipelineType = PIPELINE_RASTER;
-        psoDesc.mPS = gResourceManager->CreateShader({ shader::PIXEL, asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultPS.hlsl") } });
-        psoDesc.mVS = gResourceManager->CreateShader({ shader::VERTEX, asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultVS.hlsl") } });
+        psoDesc.mPS = gResourceManager->CreateShader({ shader::PIXEL, ps });
+        psoDesc.mVS = gResourceManager->CreateShader({ shader::VERTEX, vs });
         mPso = gResourceManager->CreatePipelineState(psoDesc);
+        mReloadManager->RegisterPSO(psoDesc, &mPso);
 
         mRenderJobHandle = nv::jobs::Execute([this](void* ctx) 
         { 
@@ -75,10 +110,25 @@ namespace nv::graphics
     {
         nv::jobs::Wait(mRenderJobHandle);
         gRenderer->Wait();
+        Free(mReloadManager);
     }
 
     void RenderSystem::OnReload()
     {
+    }
+
+    void RenderSystem::QueueReload(Handle<PipelineState>* pso)
+    {
+        mPsoReloadQueue.Push(pso);
+    }
+
+    void RenderSystem::Reload(Handle<PipelineState>* pso)
+    {
+        // Since the shaders referred by the pso description have the same asset ID, 
+        // recreating with the same description would ensure the updated asset data is 
+        // used by the shader. This is possible because the shader bytecode directly 
+        // points to the asset data. 
+        *pso = gResourceManager->RecreatePipelineState(*pso); 
     }
 
     void RenderSystem::RenderThreadJob(void* ctx)
@@ -86,6 +136,16 @@ namespace nv::graphics
         while (Instance::GetInstanceState() == INSTANCE_STATE_RUNNING)
         {
             NV_FRAME("RenderThread");
+            if (!mPsoReloadQueue.IsEmpty())
+            {
+                gRenderer->WaitForAllFrames();
+                while (!mPsoReloadQueue.IsEmpty())
+                {
+                    auto pso = mPsoReloadQueue.Pop();
+                    Reload(pso);
+                }
+            }
+
             UploadDrawData();
             gRenderer->Wait();
             gRenderer->StartFrame();

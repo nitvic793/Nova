@@ -153,6 +153,7 @@
     <ClInclude Include="Debug\Error.h" />
     <ClInclude Include="Debug\Profiler.h" />
     <ClInclude Include="Engine\Camera.h" />
+    <ClInclude Include="Engine\EventSystem.h" />
     <ClInclude Include="Engine\JobSystem.h" />
     <ClInclude Include="Engine\Timer.h" />
     <ClInclude Include="Engine\Transform.h" />
@@ -188,6 +189,7 @@
     <ClCompile Include="Context.cpp" />
     <ClCompile Include="Debug\Error.cpp" />
     <ClCompile Include="Engine\Camera.cpp" />
+    <ClCompile Include="Engine\EventSystem.cpp" />
     <ClCompile Include="Engine\Instance.cpp" />
     <ClCompile Include="Engine\JobSystem.cpp" />
     <ClCompile Include="Engine\System.cpp" />

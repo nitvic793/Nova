@@ -6,7 +6,8 @@
 #include <Renderer/CommonDefines.h>
 #include <Engine/System.h>
 #include <Engine/Camera.h>
-#include <Lib/Pool.h>
+#include <Lib/ConcurrentQueue.h>
+#include <Lib/Map.h>
 #include <ShaderInteropTypes.h>
 
 namespace nv::jobs
@@ -18,6 +19,7 @@ namespace nv::graphics
 {
     class Mesh;
     class PipelineState;
+    class RenderReloadManager;
 
     struct DrawData
     {
@@ -34,6 +36,9 @@ namespace nv::graphics
         void Update(float deltaTime, float totalTime) override;
         void Destroy() override;
         void OnReload() override;
+
+        void QueueReload(Handle<PipelineState>* pso);
+        void Reload(Handle<PipelineState>* pso);
 
         void RenderThreadJob(void* ctx);
 
@@ -53,6 +58,9 @@ namespace nv::graphics
         DrawData            mObjectDrawData;
         Handle<Mesh>        mMesh;
         Handle<PipelineState> mPso;
+
+        RenderReloadManager* mReloadManager;
+        ConcurrentQueue<Handle<PipelineState>*> mPsoReloadQueue;
     };
 }
 
