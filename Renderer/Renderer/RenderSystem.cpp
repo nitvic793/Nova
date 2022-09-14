@@ -38,13 +38,16 @@ namespace nv::graphics
             auto vsId = gResourceManager->GetShader(desc.mVS)->GetDesc().mShader;
 
             mPsoShaderMap[psId.mId] = pso;
-            mPsoShaderMap[psId.mId] = pso;
+            mPsoShaderMap[vsId.mId] = pso;
         }
 
         void OnReload(asset::AssetReloadEvent* event)
         {
-            auto pso = mPsoShaderMap.at(event->mAssetId.mId);
-            mRenderSystem->QueueReload(pso);
+            if (event->mAssetId.mType == asset::ASSET_SHADER)
+            {
+                auto pso = mPsoShaderMap.at(event->mAssetId.mId);
+                mRenderSystem->QueueReload(pso);
+            }
         }
 
     private:

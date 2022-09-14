@@ -390,7 +390,7 @@ namespace nv::graphics
     {
         PipelineStateDesc desc = mPipelineStates.Get(handle)->GetDesc();
         mPipelineStates.Remove(handle);
-        return CreatePipelineState(desc); // It should return the same Handle 
+        return CreatePipelineState(desc); 
     }
 
     ResourceManagerDX12::~ResourceManagerDX12()

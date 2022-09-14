@@ -8,6 +8,13 @@ namespace nv::asset
 {
     void TextureAsset::Deserialize(const AssetData& data)
     {
+        using namespace DirectX;
+        TexMetadata info = {};
+        ScratchImage image;
+        LoadFromDDSMemory(data.mData, data.mSize, DDS_FLAGS_NONE, &info, image);
+        // TODO: 
+        // Load to GPU Resource
+        // Store Metadata to Texture Desc
     }
 
     void TextureAsset::Export(const AssetData& data, std::ostream& ostream)
@@ -15,14 +22,11 @@ namespace nv::asset
         using namespace DirectX;
         TexMetadata metadata;
         ScratchImage image;
-        
-        LoadFromWICMemory(data.begin(), data.Size(), WIC_FLAGS_NONE, &metadata, image);
         Blob blob;
-        if (metadata.arraySize == 1)
-        {
-            //SaveToDDSMemory(, DDS_FLAGS_NONE, blob);
-        }
-        
+
+        LoadFromWICMemory(data.begin(), data.Size(), WIC_FLAGS_NONE, &metadata, image);
+        SaveToDDSMemory(image.GetImages(), image.GetImageCount(), metadata, DDS_FLAGS_NONE, blob);
+        ostream.write((const char*)blob.GetBufferPointer(), blob.GetBufferSize());
     }
 }
 

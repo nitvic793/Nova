@@ -1,21 +1,27 @@
 #include "pch.h"
+
 #include "AssetManager.h"
 #include <Asset.h>
 #include <AssetReload.h>
+
 #include <Lib/Map.h>
 #include <Lib/Pool.h>
 #include <Lib/StringHash.h>
+#include <Lib/ConcurrentQueue.h>
+
 #include <Engine/JobSystem.h>
 #include <Engine/Log.h>
 #include <Engine/EventSystem.h>
+
 #include <IO/Utility.h>
 #include <IO/File.h>
+
 #include <Types/MeshAsset.h>
 #include <Types/ShaderAsset.h>
+#include <Types/TextureAsset.h>
 #include <Types/Serializers.h>
-#include <Lib/ConcurrentQueue.h>
-#include <fstream>
 
+#include <fstream>
 #include <filesystem>
 #include <mutex>
 #include <cereal/archives/binary.hpp>
@@ -349,6 +355,12 @@ namespace nv::asset
                 Free(pBuffer);
 
                 auto buffer = sstream.str();
+                if (buffer.empty())
+                {
+                    log::Error("[Asset] Error reloading asset {}", path.data());
+                    return;
+                }
+
                 pBuffer = (Byte*)Alloc(buffer.size());
                 memcpy(pBuffer, buffer.c_str(), buffer.size());
                 data = { buffer.size(), pBuffer };
@@ -402,6 +414,16 @@ namespace nv::asset
                 ostream.write(sstream.str().c_str(), sstream.str().size());
                 break;
             }
+            case ASSET_TEXTURE:
+            {
+                const auto& data = asset->GetAssetData();
+                std::ostringstream sstream;
+                TextureAsset texture;
+                texture.Export(data, sstream);
+                writeHeader((size_t)sstream.tellp());
+                ostream.write(sstream.str().c_str(), sstream.str().size());
+                break;
+            }
             case ASSET_CONFIG:
             {
                 std::ostringstream sstream;
@@ -415,6 +437,7 @@ namespace nv::asset
 
                 writeHeader((size_t)sstream.tellp());
                 ostream.write(sstream.str().c_str(), sstream.str().size());
+                break;
             }
             }
 
@@ -423,6 +446,8 @@ namespace nv::asset
 
         size_t ImportAsset(std::istream& istream, Asset* pAsset)
         {
+            // TODO:
+            // Store offsets instead and read assets on-demand
             auto curPos = istream.tellg();
             cereal::BinaryInputArchive archive(istream);
             Header header = {};
@@ -435,7 +460,7 @@ namespace nv::asset
             if (header.mSizeBytes != 0)
             {
                 void* pBuffer = Alloc(header.mSizeBytes);
-                istream.read((char*)pBuffer, header.mSizeBytes);
+                istream.read((char*)pBuffer, header.mSizeBytes); // TODO: Seek forward mSizeBytes and store istream.tellg() offset in a map
                 pAsset->Set(header.mAssetId, { header.mSizeBytes, (uint8_t*)pBuffer });
                 pAsset->SetState(STATE_LOADED);
                 log::Info("[Asset] Loaded from package: {}", name.c_str());

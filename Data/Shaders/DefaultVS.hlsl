@@ -8,7 +8,7 @@ PixelInput main(VertexInput input)
     PixelInput output;
     float4 worldPos = mul(float4(input.Position, 1.0f), Object.World);
     float4x4 wvp = mul(Object.World, mul(Frame.View, Frame.Projection));
-    
+
     output.Position = mul(float4(input.Position, 1.f), wvp);
 	output.Normal = normalize(mul(input.Normal, (float3x3)Object.World));
 	output.UV = input.UV;

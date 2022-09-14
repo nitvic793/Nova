@@ -24,6 +24,8 @@
 #include <Engine/Job.h>
 #include <Engine/System.h>
 #include <Engine/Timer.h>
+#include <Engine/Log.h>
+#include <combaseapi.h>
 
 #include <thread>
 #include <Windows.h>
@@ -45,8 +47,21 @@ int main()
         }
     }
 
+    constexpr int PIPELINE_ERROR = -1;
+    constexpr int PIPELINE_SUCCESS = 0;
+    auto hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    if (FAILED(hr))
+    {
+        nv::log::Error("[Asset] CoInitialize Failure. Aborting asset export.");
+        return PIPELINE_ERROR;
+    }
+
     nv::InitContext(nullptr, "\\Data");
     auto assetManager = nv::asset::GetAssetManager();
     assetManager->ExportAssets(".\\Build\\Assets.novapkg");
     nv::DestroyContext();
+
+    CoUninitialize();
+
+    return PIPELINE_SUCCESS;
 }
