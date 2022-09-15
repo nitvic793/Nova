@@ -2,6 +2,7 @@
 
 #include <Lib/Handle.h>
 #include <Lib/ScopedPtr.h>
+#include <Lib/Vector.h>
 #include <Renderer/CommonDefines.h>
 #include <Renderer/Format.h>
 
@@ -43,12 +44,15 @@ namespace nv::graphics
         virtual void                    UploadToConstantBuffer(ConstantBufferView view, uint8_t* data, uint32_t size) = 0;
 
         Device* GetDevice() const;
+        void    QueueDestroy(Handle<GPUResource> resource);
+        void    ExecuteQueuedDestroy();
 
     protected:
-        ScopedPtr<Device, true> mDevice;
-        Handle<GPUResource>     mpBackBuffers[FRAMEBUFFER_COUNT];
-        Handle<Texture>         mRenderTargets[FRAMEBUFFER_COUNT];
-        Handle<Texture>         mDepthStencil;
+        ScopedPtr<Device, true>         mDevice;
+        Handle<GPUResource>             mpBackBuffers[FRAMEBUFFER_COUNT];
+        Handle<Texture>                 mRenderTargets[FRAMEBUFFER_COUNT];
+        Handle<Texture>                 mDepthStencil;
+        nv::Vector<Handle<GPUResource>> mDeleteQueue;
     };
 
     extern IRenderer* gRenderer;

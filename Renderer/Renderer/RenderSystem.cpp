@@ -13,6 +13,7 @@
 #include <AssetManager.h>
 #include <Types/MeshAsset.h>
 #include <Types/ShaderAsset.h>
+#include <Types/TextureAsset.h>
 
 #include <Renderer/ResourceManager.h>
 #include <Renderer/Context.h>
@@ -86,6 +87,16 @@ namespace nv::graphics
         asset::MeshAsset m;
         asset->DeserializeTo(m);
         mMesh = gResourceManager->CreateMesh(m.GetData());
+
+        auto ctx = gRenderer->GetContext();
+        ctx->Begin();
+        auto texAsset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_TEXTURE, ID("Textures/floor_albedo.png") });
+        asset::TextureAsset tex;
+        tex.Deserialize(texAsset->GetAssetData(), ctx);
+        ctx->End();
+        gRenderer->Submit(ctx);
+
+        mTexture = gResourceManager->CreateTexture(tex.GetDesc());
 
         auto ps = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultPS.hlsl") };
         auto vs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultVS.hlsl") };
@@ -180,6 +191,7 @@ namespace nv::graphics
 
             gRenderer->EndFrame();
             gRenderer->Present();
+            gRenderer->ExecuteQueuedDestroy();
         }
     }
 

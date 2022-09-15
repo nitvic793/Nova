@@ -23,6 +23,7 @@ namespace nv::graphics
     public:
         virtual Handle<Shader>          CreateShader(const ShaderDesc& desc) = 0;
         virtual Handle<GPUResource>     CreateResource(const GPUResourceDesc& desc) = 0;
+        virtual Handle<GPUResource>     CreateEmptyResource() = 0; // Creates a resource pointer
         virtual Handle<PipelineState>   CreatePipelineState(const PipelineStateDesc& desc) = 0;
         virtual Handle<Texture>         CreateTexture(const TextureDesc& desc) = 0;
         virtual Handle<Mesh>            CreateMesh(const MeshDesc& desc) = 0;
@@ -38,6 +39,8 @@ namespace nv::graphics
         virtual Context*                GetContext(Handle<Context>) = 0;
 
         virtual Handle<PipelineState>   RecreatePipelineState(Handle<PipelineState> handle) = 0;
+
+        virtual void                    DestroyResource(Handle<GPUResource> resource) = 0;
 
         virtual ~ResourceManager() {}
     };

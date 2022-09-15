@@ -158,6 +158,7 @@ namespace nv::graphics
         }
 
         D3D12MA::Allocation* allocation = nullptr;
+        
         auto hr = pAllocator->CreateResource(&allocationDesc, &bufferDesc, initResourceState, outClearValue, &allocation, IID_NULL, nullptr);
         resource->SetResource(allocation);
 
@@ -166,6 +167,11 @@ namespace nv::graphics
         if (!SUCCEEDED(hr)) return Null<GPUResource>();
 
         return handle;
+    }
+
+    Handle<GPUResource> ResourceManagerDX12::CreateEmptyResource()
+    {
+        return mGpuResources.Create();
     }
 
     Handle<PipelineState> ResourceManagerDX12::CreatePipelineState(const PipelineStateDesc& desc)
@@ -391,6 +397,11 @@ namespace nv::graphics
         PipelineStateDesc desc = mPipelineStates.Get(handle)->GetDesc();
         mPipelineStates.Remove(handle);
         return CreatePipelineState(desc); 
+    }
+
+    void ResourceManagerDX12::DestroyResource(Handle<GPUResource> resource)
+    {
+        mGpuResources.Remove(resource);
     }
 
     ResourceManagerDX12::~ResourceManagerDX12()

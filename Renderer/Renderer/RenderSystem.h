@@ -20,6 +20,7 @@ namespace nv::graphics
     class Mesh;
     class PipelineState;
     class RenderReloadManager;
+    class Texture;
 
     struct DrawData
     {
@@ -50,14 +51,15 @@ namespace nv::graphics
         Handle<jobs::Job>   mRenderJobHandle;
         
         /*TEMP*/
-        Viewport            mViewport;
-        Rect                mRect;
-        Camera              mCamera;
+        Viewport                mViewport;
+        Rect                    mRect;
+        Camera                  mCamera;
 
-        ConstantBufferView  mFrameCB;
-        DrawData            mObjectDrawData;
-        Handle<Mesh>        mMesh;
-        Handle<PipelineState> mPso;
+        ConstantBufferView      mFrameCB;
+        DrawData                mObjectDrawData;
+        Handle<Mesh>            mMesh;
+        Handle<PipelineState>   mPso;
+        Handle<Texture>         mTexture;
 
         RenderReloadManager* mReloadManager;
         ConcurrentQueue<Handle<PipelineState>*> mPsoReloadQueue;

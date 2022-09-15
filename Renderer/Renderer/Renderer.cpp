@@ -58,4 +58,19 @@ namespace nv::graphics
     {
         return mDevice.Get();
     }
+
+    void IRenderer::QueueDestroy(Handle<GPUResource> resource)
+    {
+        mDeleteQueue.Push(resource);
+    }
+
+    void IRenderer::ExecuteQueuedDestroy()
+    {
+        for (auto res : mDeleteQueue)
+        {
+            gResourceManager->DestroyResource(res);
+        }
+
+        mDeleteQueue.Clear();
+    }
 }

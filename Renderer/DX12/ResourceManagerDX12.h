@@ -23,6 +23,7 @@ namespace nv::graphics
         // Inherited via ResourceManager
         virtual Handle<Shader>          CreateShader(const ShaderDesc& desc) override;
         virtual Handle<GPUResource>     CreateResource(const GPUResourceDesc& desc) override;
+        virtual Handle<GPUResource>     CreateEmptyResource() override;
         virtual Handle<PipelineState>   CreatePipelineState(const PipelineStateDesc& desc) override;
         virtual Handle<Texture>         CreateTexture(const TextureDesc& desc) override;
         virtual Handle<Mesh>            CreateMesh(const MeshDesc& desc) override;
@@ -38,7 +39,7 @@ namespace nv::graphics
         virtual Context*                GetContext(Handle<Context>) override;
 
         virtual Handle<PipelineState>   RecreatePipelineState(Handle<PipelineState> handle) override;
-
+        virtual void                    DestroyResource(Handle<GPUResource> resource) override;
         ~ResourceManagerDX12();
 
     private:
