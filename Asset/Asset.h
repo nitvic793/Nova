@@ -5,7 +5,7 @@
 #include <Lib/Util.h>
 #include <atomic>
 #include <concepts>
-
+#include <type_traits>
 #include <AssetBase.h>
 
 namespace nv::asset
@@ -35,14 +35,8 @@ namespace nv::asset
         AssetDataArray  mAssetDataArray;
     };
 
-    template <typename T, typename ...Args>
-    concept Serializable =
-        requires(T& t, const AssetData& data, Args&&... args)
-         {
-             { t.Deserialize(data, Forward<Args>(args)...) } -> std::same_as<void>;
-             { t.Deserialize(data) } -> std::same_as<void>;
-         };
-        
+    template <typename TSerializable>
+    concept Serializable = std::is_member_pointer_v<decltype(&TSerializable::Deserialize)>;
 
     class Asset 
     {
@@ -74,14 +68,6 @@ namespace nv::asset
         {
             TSerializable type;
             type.Deserialize(mData, Forward<Args>(args)...);
-            return type;
-        }
-
-        template<Serializable TSerializable>
-        constexpr TSerializable DeserializeTo()
-        {
-            TSerializable type;
-            type.Deserialize(mData);
             return type;
         }
 

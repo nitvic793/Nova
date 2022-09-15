@@ -90,9 +90,7 @@ namespace nv::graphics
         auto ctx = gRenderer->GetContext();
         ctx->Begin();
         auto texAsset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_TEXTURE, ID("Textures/floor_albedo.png") });
-        asset::TextureAsset tex;
-        //texAsset->DeserializeTo<asset::TextureAsset>(ctx);
-        tex.Deserialize(texAsset->GetAssetData(), ctx);
+        asset::TextureAsset tex = texAsset->DeserializeTo<asset::TextureAsset>(ctx);
         ctx->End();
         gRenderer->Submit(ctx);
 
