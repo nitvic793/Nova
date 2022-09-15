@@ -84,14 +84,14 @@ namespace nv::graphics
 
         // Test Mesh
         auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_MESH, ID("Mesh/cube.obj") });
-        asset::MeshAsset m;
-        asset->DeserializeTo(m);
+        auto m = asset->DeserializeTo<asset::MeshAsset>();
         mMesh = gResourceManager->CreateMesh(m.GetData());
 
         auto ctx = gRenderer->GetContext();
         ctx->Begin();
         auto texAsset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_TEXTURE, ID("Textures/floor_albedo.png") });
         asset::TextureAsset tex;
+        //texAsset->DeserializeTo<asset::TextureAsset>(ctx);
         tex.Deserialize(texAsset->GetAssetData(), ctx);
         ctx->End();
         gRenderer->Submit(ctx);
@@ -188,6 +188,10 @@ namespace nv::graphics
             {
                 ctx->DrawIndexedInstanced(entry.mNumIndices, 1, entry.mBaseIndex, entry.mBaseVertex, 0);
             }
+
+            // TODO:
+            // Bind textures by dynamic indexing
+            // Indirect Draw
 
             gRenderer->EndFrame();
             gRenderer->Present();

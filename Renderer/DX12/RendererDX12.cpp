@@ -53,7 +53,11 @@ namespace nv::graphics
 
         for (uint32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
         {
-            pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(mCommandAllocators[i].ReleaseAndGetAddressOf()));
+            pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(mCommandAllocators[i].ReleaseAndGetAddressOf())); 
+            // TODO:
+            // Need CreateCommandAllocator() function
+            // Create per thread command allocator
+            // Only needed once there are multiple render threads. 
         }
 
         mCommandQueue = mDevice.As<DeviceDX12>()->GetCommandQueue();
@@ -120,6 +124,7 @@ namespace nv::graphics
 
         for (int i = 0; i < FRAMEBUFFER_COUNT; i++)
         {
+            // TODO: Create per thread contexts once there are multiple render threads.
             mContexts[i] = gResourceManager->CreateContext({ .mType = CONTEXT_GFX });
             auto pContext = (ContextDX12*)gResourceManager->GetContext(mContexts[i]);
             if (!pContext->Init(dxDevice->GetDevice(), mCommandAllocators[i].Get()))

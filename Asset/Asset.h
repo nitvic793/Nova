@@ -2,7 +2,9 @@
 
 #include <cstdint>
 #include <Lib/Array.h>
+#include <Lib/Util.h>
 #include <atomic>
+#include <concepts>
 
 #include <AssetBase.h>
 
@@ -33,12 +35,14 @@ namespace nv::asset
         AssetDataArray  mAssetDataArray;
     };
 
-    template <typename T>
+    template <typename T, typename ...Args>
     concept Serializable =
-        requires(T& t, AssetData& data) 
+        requires(T& t, const AssetData& data, Args&&... args)
          {
+             { t.Deserialize(data, Forward<Args>(args)...) } -> std::same_as<void>;
              { t.Deserialize(data) } -> std::same_as<void>;
          };
+        
 
     class Asset 
     {
@@ -59,11 +63,18 @@ namespace nv::asset
         LoadState           GetState() const { return mState.load(); }
         void                SetState(LoadState state) { mState.store(state); }
 
-
-        template<Serializable TSerializable>
-        constexpr void      DeserializeTo(TSerializable& type)
+        template<Serializable TSerializable, typename ...Args>
+        constexpr void      DeserializeTo(TSerializable& type, Args&&... args)
         {
-            type.Deserialize(mData);
+            type.Deserialize(mData, Forward<Args>(args)...);
+        }
+
+        template<Serializable TSerializable, typename ...Args>
+        constexpr TSerializable DeserializeTo(Args&&... args)
+        {
+            TSerializable type;
+            type.Deserialize(mData, Forward<Args>(args)...);
+            return type;
         }
 
         template<Serializable TSerializable>
@@ -75,7 +86,7 @@ namespace nv::asset
         }
 
     protected:
-        AssetID                 mId     = { 0 };
+        AssetID                 mId     = { (AssetType)0, 0 };
         AssetData               mData   = { 0, nullptr  };
         std::atomic<LoadState>  mState  = STATE_UNLOADED;
     };
