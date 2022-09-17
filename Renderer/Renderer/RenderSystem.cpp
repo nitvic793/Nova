@@ -20,6 +20,7 @@
 #include <Renderer/PipelineState.h>
 #include <Renderer/Mesh.h>
 #include <Renderer/Window.h>
+#include <Renderer/GPUProfile.h>
 
 #include <thread>
 #include <functional>
@@ -163,14 +164,16 @@ namespace nv::graphics
             gRenderer->Wait();
             gRenderer->StartFrame();
 
+            Context* ctx = gRenderer->GetContext();
+
+            GPUBeginEvent(ctx, "Frame");
+
             const auto topology = PRIMITIVE_TOPOLOGY_TRIANGLELIST;
             const auto renderTarget = gRenderer->GetDefaultRenderTarget();
             const auto depthTarget = gRenderer->GetDefaultDepthTarget();
             const auto gpuHeap = gRenderer->GetGPUDescriptorHeap();
             Handle<Texture> targets[] = { renderTarget };
             Handle<DescriptorHeap> heaps[] = { gpuHeap };
-
-            Context* ctx = gRenderer->GetContext();
 
             ctx->SetScissorRect(1, &mRect);
             ctx->SetViewports(1, &mViewport);
@@ -192,6 +195,7 @@ namespace nv::graphics
 
             // TODO:
             // Indirect Draw
+            GPUEndEvent(ctx);
 
             gRenderer->EndFrame();
             gRenderer->Present();
