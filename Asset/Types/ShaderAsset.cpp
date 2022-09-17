@@ -13,6 +13,7 @@
 #include <d3d12.h>
 #include <dxcapi.h>
 #include <atlbase.h>
+#include <array>
 
 constexpr auto DXCOMPILER_DLL = L"dxcompiler.dll";
 
@@ -188,12 +189,15 @@ namespace nv::asset
             const std::wstring profile = GetTargetProfile(config.mShaderType, config.mShaderModel);
 
             CComPtr<IDxcOperationResult> result;
+
+            std::array<const wchar_t*, 2> args = { L"-Zi", L"-Qembed_debug"};
+
             hr = compiler->Compile(
                 sourceBlob, // pSource
                 srcName.c_str(), // pSourceName
                 mainEntry, // pEntryPoint
                 profile.c_str(), // pTargetProfile
-                NULL, 0, // pArguments, argCount
+                args.data(), args.size(), // pArguments, argCount
                 NULL, 0, // pDefines, defineCount
                 &includeHandler, // pIncludeHandler
                 &result); // ppResult

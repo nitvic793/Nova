@@ -19,6 +19,7 @@
 #include <D3D12MemAlloc.h>
 
 #include <Debug/Profiler.h>
+#include <Engine/Log.h>
 
 extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 606; }
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\"; }
@@ -70,6 +71,9 @@ namespace nv::graphics
             mFenceValues[i] = i == 0 ? 1 : 0;
             mFenceEvents[i] = CreateEvent(nullptr, FALSE, FALSE, nullptr);
         }
+
+        D3D12_FEATURE_DATA_SHADER_MODEL shaderModelSupport = { D3D_SHADER_MODEL_6_6 };
+        auto hr = pDevice->CheckFeatureSupport((D3D12_FEATURE)D3D12_FEATURE_SHADER_MODEL, &shaderModelSupport, sizeof(shaderModelSupport));
 
         CreateRootSignature();
     }
@@ -381,7 +385,7 @@ namespace nv::graphics
         CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
         descRootSignature.Init(RootSigParamCount, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | // we can deny shader stages here for better performance
             D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-            D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS);
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED);
 
         CD3DX12_STATIC_SAMPLER_DESC staticSamplers[5] = {};
         //Base Sampler
@@ -408,9 +412,19 @@ namespace nv::graphics
             D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
             D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
 
+        descRootSignature.NumStaticSamplers = _countof(staticSamplers);
+        descRootSignature.pStaticSamplers = staticSamplers;
+
         Microsoft::WRL::ComPtr<ID3DBlob> rootSigBlob;
         Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
-        D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &rootSigBlob, &errorBlob);
+        D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1_0, &rootSigBlob, &errorBlob);
+
+        if (errorBlob)
+        {
+            const char* errStr = (const char*)errorBlob->GetBufferPointer();
+            log::Error("Error creating Root Signature: {}", errStr);
+        }
+
         device->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(), IID_PPV_ARGS(mRootSignature.ReleaseAndGetAddressOf()));
     }
 

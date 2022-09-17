@@ -20,6 +20,11 @@ namespace nv::graphics
         float4x4 World;
     };
 
+    struct MaterialData
+    {
+        uint32_t AlbedoOffset;
+    };
+
     struct FrameData
     {
         float4x4 View;

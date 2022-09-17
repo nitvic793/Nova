@@ -57,6 +57,7 @@ namespace nv::graphics
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const;
         D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const;
         ID3D12Resource*             GetResource() const;
+        virtual uint32_t            GetHeapIndex() const override { return mDescriptorHandle.mHeapIndex; }
 
     private:
         DescriptorHandle mDescriptorHandle;

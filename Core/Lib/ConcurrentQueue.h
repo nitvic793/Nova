@@ -14,8 +14,8 @@ namespace nv
         void        Push(const T& val);
         void        Push(T& val);
 
-        T           Pop();
-        void        Pop(T& val);
+        T           Pop(bool wait = false);
+        void        Pop(T& val, bool wait = false);
         const T&    Peek();
 
         bool    IsEmpty() const;
@@ -64,10 +64,10 @@ namespace nv
     }
 
     template<typename T>
-    inline T ConcurrentQueue<T>::Pop()
+    inline T ConcurrentQueue<T>::Pop(bool wait)
     {
         UniqueLock lock(mMutex);
-        while (IsEmpty())
+        while (IsEmpty() && wait)
         {
             mConditionVar.wait(lock);
         }
@@ -77,10 +77,10 @@ namespace nv
     }
 
     template<typename T>
-    inline void ConcurrentQueue<T>::Pop(T& val)
+    inline void ConcurrentQueue<T>::Pop(T& val, bool wait)
     {
         UniqueLock lock(mMutex);
-        while (IsEmpty())
+        while (IsEmpty() && wait)
         {
             mConditionVar.wait(lock);
         }

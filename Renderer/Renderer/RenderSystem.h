@@ -8,7 +8,7 @@
 #include <Engine/Camera.h>
 #include <Lib/ConcurrentQueue.h>
 #include <Lib/Map.h>
-#include <ShaderInteropTypes.h>
+#include <Interop/ShaderInteropTypes.h>
 
 namespace nv::jobs
 {
@@ -25,7 +25,9 @@ namespace nv::graphics
     struct DrawData
     {
         ObjectData          mData;
-        ConstantBufferView  mCBView;
+        MaterialData        mMaterial;
+        ConstantBufferView  mObjectCBView;
+        ConstantBufferView  mMaterialCBView;
     };
 
     class RenderSystem : public ISystem

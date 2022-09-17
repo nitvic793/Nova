@@ -80,7 +80,8 @@ namespace nv::graphics
         mRect.mBottom = gWindow->GetHeight();
 
         mFrameCB = gRenderer->CreateConstantBuffer(sizeof(FrameData));
-        mObjectDrawData.mCBView = gRenderer->CreateConstantBuffer(sizeof(ObjectData));
+        mObjectDrawData.mObjectCBView = gRenderer->CreateConstantBuffer(sizeof(ObjectData));
+        mObjectDrawData.mMaterialCBView = gRenderer->CreateConstantBuffer(sizeof(MaterialData));
 
         // Test Mesh
         auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_MESH, ID("Mesh/cube.obj") });
@@ -178,8 +179,10 @@ namespace nv::graphics
 
             ctx->SetRenderTarget({ targets, _countof(targets) }, depthTarget);
             ctx->SetPipeline(mPso);
-            ctx->Bind(0, BIND_BUFFER, (uint32_t)mObjectDrawData.mCBView.mHeapIndex);
+            ctx->Bind(0, BIND_BUFFER, (uint32_t)mObjectDrawData.mObjectCBView.mHeapIndex);
             ctx->Bind(4, BIND_BUFFER, (uint32_t)mFrameCB.mHeapIndex);
+            ctx->BindConstantBuffer(1, (uint32_t)mObjectDrawData.mMaterialCBView.mHeapIndex);
+            ctx->BindTexture(2, mTexture);
             ctx->SetMesh(mMesh);
             auto mesh = gResourceManager->GetMesh(mMesh);
             for (auto entry : mesh->GetDesc().mMeshEntries)
@@ -208,6 +211,9 @@ namespace nv::graphics
 
         Transform transform = {};
         mObjectDrawData.mData.World = transform.GetTransformMatrixTransposed();
-        gRenderer->UploadToConstantBuffer(mObjectDrawData.mCBView, (uint8_t*)&mObjectDrawData.mData.World, sizeof(ObjectData));
+        gRenderer->UploadToConstantBuffer(mObjectDrawData.mObjectCBView, (uint8_t*)&mObjectDrawData.mData, sizeof(ObjectData));
+
+        mObjectDrawData.mMaterial.AlbedoOffset = gResourceManager->GetTexture(mTexture)->GetHeapIndex();
+        gRenderer->UploadToConstantBuffer(mObjectDrawData.mMaterialCBView, (uint8_t*)&mObjectDrawData.mMaterial, sizeof(MaterialData));
     }
 }

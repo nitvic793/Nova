@@ -28,6 +28,8 @@ namespace nv::graphics
         constexpr tex::Type GetType() const { return mDesc.mType; }
         constexpr tex::Usage GetUsage() const { return mDesc.mUsage; }
 
+        virtual uint32_t GetHeapIndex() const = 0;
+
     protected:
         TextureDesc mDesc;
     };

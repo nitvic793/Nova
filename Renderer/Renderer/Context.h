@@ -58,6 +58,8 @@ namespace nv::graphics
         virtual void SetPrimitiveTopology(PrimitiveTopology topology) = 0;
         virtual void SetDescriptorHeap(Span<Handle<DescriptorHeap>> heaps) = 0;
         virtual void Bind(uint32_t slot, BindResourceType type, uint32_t offset) = 0;
+        virtual void BindConstantBuffer(uint32_t slot, uint32_t offset) = 0;
+        virtual void BindTexture(uint32_t slot, Handle<Texture> texture) = 0;
 
     protected:
         ContextDesc mDesc;

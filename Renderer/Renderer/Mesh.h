@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ShaderInteropTypes.h>
+#include <Interop/ShaderInteropTypes.h>
 #include <vector>
 
 namespace nv::graphics

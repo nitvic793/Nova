@@ -1,6 +1,15 @@
 #include "Common.hlsli"
 
+ConstantBuffer<MaterialData> Material: register(b0);
+
+Texture2D<float4> Albedo : register(t0);
+
+SamplerState    BasicSampler		: register(s0);
+SamplerState    LinearWrapSampler	: register(s2);
+
 float4 main(PixelInput input) : SV_TARGET
 {
-    return float4(1,1,1,1);
+    //Texture2D<float4> myTexture = ResourceDescriptorHeap[Material.AlbedoOffset + 3];
+    float3 albedo = Albedo.Sample(LinearWrapSampler, input.UV).xyz; 
+    return float4(albedo, 1); 
 }

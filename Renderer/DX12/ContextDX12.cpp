@@ -168,17 +168,31 @@ namespace nv::graphics
     {
         D3D12_GPU_DESCRIPTOR_HANDLE handle = {};
         auto renderer = (RendererDX12*)gRenderer;
+        
         switch (type)
         {
         case BIND_BUFFER:
             handle = renderer->GetConstBufferHandle(offset);
             break;
         case BIND_TEXTURE:
+            handle = renderer->GetTextureHandle(offset);
             break;
         }
 
         mCommandList->SetGraphicsRootDescriptorTable(slot, handle);
     }
+
+    void ContextDX12::BindConstantBuffer(uint32_t slot, uint32_t offset)
+    {
+        Bind(slot, BIND_BUFFER, offset);
+    }
+
+    void ContextDX12::BindTexture(uint32_t slot, Handle<Texture> texture)
+    {
+        auto tex = (TextureDX12*)gResourceManager->GetTexture(texture);
+        Bind(slot, BIND_TEXTURE, tex->GetHeapIndex());
+    }
+
     void ContextDX12::SetRootSignature(ID3D12RootSignature* pRootSig)
     {
         mCommandList->SetGraphicsRootSignature(pRootSig);

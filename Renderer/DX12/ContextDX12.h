@@ -39,6 +39,8 @@ namespace nv::graphics
         virtual void SetPrimitiveTopology(PrimitiveTopology topology) override;
         virtual void SetDescriptorHeap(Span<Handle<DescriptorHeap>> heaps) override;
         virtual void Bind(uint32_t slot, BindResourceType type, uint32_t offset) override;
+        virtual void BindConstantBuffer(uint32_t slot, uint32_t offset) override;
+        virtual void BindTexture(uint32_t slot, Handle<Texture> texture) override;
 
     public:
         ID3D12GraphicsCommandList4* GetCommandList() const { return mCommandList.Get(); }
