@@ -72,7 +72,7 @@ namespace nv::graphics
         ID3D12CommandQueue*         GetCommandQueue() const;
         D3D12_GPU_DESCRIPTOR_HANDLE GetConstBufferHandle(uint32_t index) const;
         D3D12_GPU_DESCRIPTOR_HANDLE GetTextureHandle(uint32_t index) const;
-
+        GpuHeapState                GetGPUHeapState() const { return mGpuHeapState; }
 
     private:
         void                    CreateRootSignature();

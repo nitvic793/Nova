@@ -191,7 +191,6 @@ namespace nv::graphics
             }
 
             // TODO:
-            // Bind textures by dynamic indexing
             // Indirect Draw
 
             gRenderer->EndFrame();

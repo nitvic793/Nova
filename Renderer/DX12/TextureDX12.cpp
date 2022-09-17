@@ -3,6 +3,8 @@
 #include <d3d12.h>
 #include <DX12/GPUResourceDX12.h>
 #include <DX12/ResourceManagerDX12.h>
+#include <DX12/RendererDX12.h>
+#include <DX12/DeviceDX12.h>
 #include <D3D12MemAlloc.h>
 
 namespace nv::graphics
@@ -44,5 +46,12 @@ namespace nv::graphics
     ID3D12Resource* TextureDX12::GetResource() const
     {
         return ((GPUResourceDX12*)gResourceManager->GetGPUResource(mDesc.mBuffer))->GetResource().Get();
+    }
+
+    uint32_t TextureDX12::GetHeapIndex() const
+    {
+       auto renderer = (RendererDX12*)gRenderer;
+       const auto state = renderer->GetGPUHeapState();
+       return state.mTextureOffset + mDescriptorHandle.mHeapIndex;
     }
 }

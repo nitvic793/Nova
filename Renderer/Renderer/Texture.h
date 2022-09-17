@@ -29,6 +29,7 @@ namespace nv::graphics
         constexpr tex::Usage GetUsage() const { return mDesc.mUsage; }
 
         virtual uint32_t GetHeapIndex() const = 0;
+        virtual uint32_t GetHeapOffset() const = 0;
 
     protected:
         TextureDesc mDesc;

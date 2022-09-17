@@ -9,7 +9,7 @@ SamplerState    LinearWrapSampler	: register(s2);
 
 float4 main(PixelInput input) : SV_TARGET
 {
-    //Texture2D<float4> myTexture = ResourceDescriptorHeap[Material.AlbedoOffset + 3];
+    Texture2D<float4> myTexture = ResourceDescriptorHeap[Material.AlbedoOffset];
     float3 albedo = Albedo.Sample(LinearWrapSampler, input.UV).xyz; 
     return float4(albedo, 1); 
 }

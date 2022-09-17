@@ -71,6 +71,10 @@ namespace nv
         {
             mConditionVar.wait(lock);
         }
+
+        if (IsEmpty())
+            return T();
+
         auto val = mQueue.front();
         mQueue.pop();
         return val;
@@ -84,6 +88,10 @@ namespace nv
         {
             mConditionVar.wait(lock);
         }
+
+        if (IsEmpty())
+            return;
+
         val = mQueue.front();
         mQueue.pop();
         return val;

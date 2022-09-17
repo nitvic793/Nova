@@ -190,7 +190,7 @@ namespace nv::graphics
     void ContextDX12::BindTexture(uint32_t slot, Handle<Texture> texture)
     {
         auto tex = (TextureDX12*)gResourceManager->GetTexture(texture);
-        Bind(slot, BIND_TEXTURE, tex->GetHeapIndex());
+        Bind(slot, BIND_TEXTURE, tex->GetHeapOffset());
     }
 
     void ContextDX12::SetRootSignature(ID3D12RootSignature* pRootSig)

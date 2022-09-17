@@ -71,10 +71,12 @@ namespace nv::asset
         using namespace DirectX;
         TexMetadata metadata;
         ScratchImage image;
+        ScratchImage imageMipped;
         Blob blob;
 
         LoadFromWICMemory(data.begin(), data.Size(), WIC_FLAGS_NONE, &metadata, image);
-        SaveToDDSMemory(image.GetImages(), image.GetImageCount(), metadata, DDS_FLAGS_NONE, blob);
+        GenerateMipMaps(image.GetImages(), image.GetImageCount(), metadata, TEX_FILTER_FLAGS::TEX_FILTER_DEFAULT, 8, imageMipped);
+        SaveToDDSMemory(imageMipped.GetImages(), imageMipped.GetImageCount(), imageMipped.GetMetadata(), DDS_FLAGS_NONE, blob);
         ostream.write((const char*)blob.GetBufferPointer(), blob.GetBufferSize());
 #endif
     }
