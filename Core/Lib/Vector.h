@@ -101,7 +101,7 @@ namespace nv
 			Grow(mCapacity * kVectorGrowthMultiplier);
 		}
 
-		constexpr void Grow(uint64_t newCapacity)
+		constexpr void Grow(uint64_t newCapacity, bool bUpdateSize = false)
 		{
 			if (newCapacity <= mCapacity) return;
 
@@ -116,6 +116,9 @@ namespace nv
 			}
 
 			mBuffer = (T*)buffer;
+
+			if (bUpdateSize)
+				mCurrentIndex = (uint32_t)mCapacity - 1;
 		}
 
 		void SetSize(uint32_t count = kMinVectorSize)
@@ -153,12 +156,30 @@ namespace nv
 			return mBuffer[mCurrentIndex];
 		}
 
+		template<typename ...Args>
+		T& Emplace(Args&&... args)
+		{
+			GrowIfNeeded();
+			assert(mCurrentIndex + 1 < mCapacity);
+			mCurrentIndex++;
+			T* buffer = &mBuffer[mCurrentIndex];
+			new(buffer) T(args);
+			return mBuffer[mCurrentIndex];
+		}
+
 		const T& Pop()
 		{
 			assert(mCurrentIndex >= 0);
 			auto& val = mBuffer[mCurrentIndex];
 			mCurrentIndex--;
 			return val;
+		}
+
+		void Pop(T& val)
+		{
+			assert(mCurrentIndex >= 0);
+			auto& val = mBuffer[mCurrentIndex];
+			mCurrentIndex--;
 		}
 
 		constexpr bool Exists(T& inItem) const

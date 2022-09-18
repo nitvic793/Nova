@@ -163,7 +163,7 @@ namespace nv
                     SystemAllocator::gPtr->Free(mBuffer);
                 mBuffer = (TDerived*)pBuffer;
 
-                mGenerations.Grow(mCapacity);
+                mGenerations.Grow(mCapacity, true);
             }
         }
 

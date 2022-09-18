@@ -197,7 +197,7 @@ namespace nv::asset
                 srcName.c_str(), // pSourceName
                 mainEntry, // pEntryPoint
                 profile.c_str(), // pTargetProfile
-                args.data(), args.size(), // pArguments, argCount
+                args.data(), (UINT)args.size(), // pArguments, argCount
                 NULL, 0, // pDefines, defineCount
                 &includeHandler, // pIncludeHandler
                 &result); // ppResult

@@ -51,7 +51,7 @@ namespace nv::graphics
     uint32_t TextureDX12::GetHeapIndex() const
     {
        auto renderer = (RendererDX12*)gRenderer;
-       const auto state = renderer->GetGPUHeapState();
+       const auto& state = renderer->GetGPUHeapState();
        return state.mTextureOffset + mDescriptorHandle.mHeapIndex;
     }
 }

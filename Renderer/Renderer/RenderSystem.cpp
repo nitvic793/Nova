@@ -85,7 +85,7 @@ namespace nv::graphics
         mObjectDrawData.mMaterialCBView = gRenderer->CreateConstantBuffer(sizeof(MaterialData));
 
         // Test Mesh
-        auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_MESH, ID("Mesh/cube.obj") });
+        auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_MESH, ID("Mesh/cone.obj") });
         auto m = asset->DeserializeTo<asset::MeshAsset>();
         mMesh = gResourceManager->CreateMesh(m.GetData());
 
