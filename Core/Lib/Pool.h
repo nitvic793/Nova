@@ -3,6 +3,7 @@
 #include <cstdint>
 #include "Vector.h"
 #include <Lib/Util.h>
+#include <Lib/Map.h>
 
 namespace nv
 {
@@ -178,5 +179,113 @@ namespace nv
         uint32_t                mCapacity;
         nv::Vector<uint32_t>    mFreeIndices;
         nv::Vector<uint32_t>    mGenerations;
+    };
+
+    template<typename T, typename TDerived = T, uint32_t InitPoolCount = kPoolInitDefaultSize>
+    class ContiguousPool
+    {
+    public:
+        ContiguousPool() :
+            mCapacity(InitPoolCount)
+        {
+            mGenerations.SetSize(InitPoolCount);
+            mPool.Reserve(InitPoolCount);
+            for (auto& val : mGenerations)
+                val = 0;
+        }
+
+        template<typename ...Args>
+        Handle<T> Create(Args&&... args)
+        {
+            Handle<T> handle;
+            GrowIfNeeded();
+            handle.mIndex = (uint32_t)mPool.Size();
+            mPool.Emplace(nv::Forward<Args>(args)...);
+            
+            handle.mGeneration = mGenerations[handle.mIndex];
+            mHandleIndexMap[handle.mHandle] = handle.mIndex;
+
+            return handle;
+        }
+
+        Handle<T> Insert(const TDerived& data)
+        {
+            return Create(data);
+        }
+
+        Handle<T> Insert(TDerived&& data)
+        {
+            return Create(data);
+        }
+
+        constexpr Span<TDerived> Span() const
+        {
+            return mPool.Span();
+        }
+
+        constexpr bool IsValid(Handle<T> handle) const
+        {
+            auto it = mHandleIndexMap.find(handle.mHandle);
+            if (it == mHandleIndexMap.end())
+                return false;
+
+            const uint32_t idx = it->second;
+            return handle.mGeneration == mGenerations[idx];
+        }
+
+        constexpr T* Get(Handle<T> handle) const
+        {
+            const uint32_t idx = mHandleIndexMap.at(handle.mHandle);
+            return (T*)&mPool[idx];
+        }
+
+        constexpr TDerived* GetAsDerived(Handle<T> handle) const
+        {
+            const uint32_t idx = mHandleIndexMap.at(handle.mHandle);
+            return &mPool[idx];
+        }
+
+        constexpr size_t Size() const
+        {
+            return mPool.Size();
+        }
+
+        void Remove(Handle<T> handle)
+        {
+            if (!IsValid(handle))
+                return;
+
+            const uint32_t idx = mHandleIndexMap.at(handle.mHandle);
+            const uint32_t lastIdx = (uint32_t)mPool.Size() - 1;
+            const auto lastHandle = Handle<T>(lastIdx, mGenerations[lastIdx]);
+
+            std::swap(mPool[idx], mPool[lastIdx]);
+            std::swap(mGenerations[idx], mGenerations[lastIdx]);
+            TDerived& val = mPool.Pop();
+            val.~TDerived();
+            mGenerations[lastIdx]++;
+            
+            mHandleIndexMap[lastHandle.mHandle] = idx;
+            mHandleIndexMap.erase(handle.mHandle);
+        }
+
+    private:
+        void GrowIfNeeded()
+        {
+            if (mPool.Size() + 1 >= mCapacity)
+            {
+                mCapacity = mCapacity * 2;
+                mGenerations.Grow(mCapacity, true);
+                for (uint32_t i = (uint32_t)mPool.Size(); i < mCapacity; ++i)
+                    mGenerations[i] = 0;
+            }
+        }
+
+    private:
+        uint32_t                mCapacity;
+        nv::Vector<TDerived>    mPool;
+        nv::Vector<uint32_t>    mGenerations;
+
+        HashMap<uint64_t, uint32_t> mHandleIndexMap;
     };
 }

@@ -28,6 +28,9 @@ namespace nv
 
         template<typename U, typename Gen, uint32_t>
         friend class Pool;
+
+        template<typename U, typename Gen, uint32_t>
+        friend class ContiguousPool;
     };
 
     template<typename T>

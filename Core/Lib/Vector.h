@@ -163,11 +163,11 @@ namespace nv
 			assert(mCurrentIndex + 1 < mCapacity);
 			mCurrentIndex++;
 			T* buffer = &mBuffer[mCurrentIndex];
-			new(buffer) T(args);
+			new(buffer) T(Forward<Args>(args)...);
 			return mBuffer[mCurrentIndex];
 		}
 
-		const T& Pop()
+		T& Pop()
 		{
 			assert(mCurrentIndex >= 0);
 			auto& val = mBuffer[mCurrentIndex];
