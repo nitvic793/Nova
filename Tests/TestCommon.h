@@ -28,5 +28,25 @@ namespace nv::tests
         }
     };
 
-    using EntityComponentTests = CoreTests;
+    class EntityComponentTests : public ::testing::Test
+    {
+    public:
+        void SetUp() override
+        {
+        }
+
+        void TearDown() override
+        {
+        }
+
+        static void SetUpTestSuite()
+        {
+            nv::InitContext(nullptr);
+        }
+
+        static void TearDownTestSuite()
+        {
+            nv::DestroyContext();
+        }
+    };
 }

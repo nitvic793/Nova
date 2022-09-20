@@ -17,11 +17,21 @@ namespace nv::tests
     struct BComponent : public IComponent
     {
         std::string mString;
-        uint64_t    mCount;
+        uint64_t    mCount = 0;
     };
+
+    class AutoEntityManagerInit
+    {
+    public:
+        AutoEntityManagerInit() { gEntityManager.Init(); }
+        ~AutoEntityManagerInit() { gEntityManager.Destroy(); }
+    };
+
+#define INIT_ENTITYMGR AutoEntityManagerInit autoInit
 
     TEST_F(EntityComponentTests, EntityCreateTest)
     {
+        INIT_ENTITYMGR;
         auto e1 = gEntityManager.Create();
         auto e2 = gEntityManager.Create();
 
@@ -34,6 +44,7 @@ namespace nv::tests
 
     TEST_F(EntityComponentTests, EntityAddComponent)
     {
+        INIT_ENTITYMGR;
         auto e1 = gEntityManager.Create();
         auto entity1 = gEntityManager.GetEntity(e1);
         EXPECT_TRUE(entity1 != nullptr);
@@ -46,6 +57,7 @@ namespace nv::tests
 
     TEST_F(EntityComponentTests, EntityGetComponent)
     {
+        INIT_ENTITYMGR;
         auto e1 = gEntityManager.Create();
         auto e2 = gEntityManager.Create();
         auto entity1 = gEntityManager.GetEntity(e1);
@@ -70,16 +82,13 @@ namespace nv::tests
 
     TEST_F(EntityComponentTests, EntityMultipleTest)
     {
+        INIT_ENTITYMGR;
         constexpr uint32_t TEST_COUNT = 100000;
         static Handle<Entity> entities[TEST_COUNT];
 
         for (auto& e : entities)
         {
             e = gEntityManager.Create();
-        }
-
-        for (const auto& e : entities)
-        {
             auto entity = gEntityManager.GetEntity(e);
             entity->Add<AComponent>();
         }

@@ -6,6 +6,16 @@ namespace nv::ecs
     ComponentManager gComponentManager;
     EntityManager    gEntityManager;
 
+    void EntityManager::Init()
+    {
+        mEntities.Init();
+    }
+
+    void EntityManager::Destroy()
+    {
+        mEntities.Destroy();
+    }
+
     Handle<Entity> EntityManager::Create()
     {
         auto handle = mEntities.Create();

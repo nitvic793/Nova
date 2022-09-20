@@ -246,12 +246,15 @@ namespace nv::ecs
     class EntityManager
     {
     public:
+        void Init();
+        void Destroy();
+
         Handle<Entity>  Create();
         void            Remove(Handle<Entity> entity);
 
         constexpr Entity* GetEntity(Handle<Entity> handle) const { return mEntities.Get(handle); }
     private:
-        ContiguousPool<Entity>  mEntities;
+        Pool<Entity>            mEntities;
         ComponentManager        mComponentMgr;
     };
 

@@ -7,6 +7,7 @@
 #include <Asset.h>
 #include <AssetManager.h>
 #include <AssetSystem.h>
+#include <Engine/EntityComponent.h>
 
 using namespace nv;
 
@@ -28,12 +29,14 @@ namespace nv
         pContext->mpAssetManager = asset::GetAssetManager();
 
         gSystemManager.CreateSystem<asset::AssetSystem>();
+        ecs::gEntityManager.Init();
         //auto handle = pContext->mpAssetManager->ExportAssets(".\\Build\\Assets.novapkg");
         //jobs::Wait(handle);
     }
 
     void DestroyContext(Context* pContext)
     {
+        ecs::gEntityManager.Destroy();
         DestroyMemoryTracker(pContext->mpMemTracker);
         MemTracker::gPtr = nullptr;
         pContext->mpInstance = nullptr;
