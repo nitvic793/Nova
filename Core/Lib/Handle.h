@@ -21,6 +21,8 @@ namespace nv
         constexpr Handle() : mHandle(0) {}
         constexpr bool IsNull() { return mGeneration == 0; }
 
+        constexpr bool operator<(const Handle& h)  const { return mHandle < h.mHandle; }
+
     private:
         constexpr Handle(uint32_t index, uint32_t gen) :
             mIndex(index),

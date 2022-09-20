@@ -189,6 +189,7 @@
     <ClCompile Include="Context.cpp" />
     <ClCompile Include="Debug\Error.cpp" />
     <ClCompile Include="Engine\Camera.cpp" />
+    <ClCompile Include="Engine\EntityComponent.cpp" />
     <ClCompile Include="Engine\EventSystem.cpp" />
     <ClCompile Include="Engine\Instance.cpp" />
     <ClCompile Include="Engine\JobSystem.cpp" />

@@ -1,323 +1,303 @@
 #include "pch.h"
-#include <Lib/StringHash.h>
-#include <Engine/System.h>
+#include "TestCommon.h"
 
-class CoreTests : public ::testing::Test
+namespace nv::tests
 {
-public:
-    void SetUp() override
+    TEST_F(CoreTests, BasicMemTest)
     {
+        EXPECT_EQ(1, 1);
+        EXPECT_TRUE(true);
     }
 
-    void TearDown() override
+    TEST_F(CoreTests, VectorInit)
     {
+        nv::Vector v({ 1,2,3 });
+        EXPECT_EQ(v.Size(), 3);
     }
 
-    static void SetUpTestSuite()
+    TEST_F(CoreTests, VectorSliceTest)
     {
-        nv::InitContext(nullptr);
-    }
+        nv::Vector<int> v({ 1,2,3,4,5,6,7,8 });
 
-    static void TearDownTestSuite() 
-    {
-        nv::DestroyContext();
-    }
-};
-
-TEST_F(CoreTests, BasicMemTest)
-{
-    EXPECT_EQ(1, 1);
-    EXPECT_TRUE(true);
-}
-
-TEST_F(CoreTests, VectorInit)
-{
-    nv::Vector v({ 1,2,3 });
-    EXPECT_EQ(v.Size(), 3);
-}
-
-TEST_F(CoreTests, VectorSliceTest)
-{
-    nv::Vector<int> v({ 1,2,3,4,5,6,7,8 });
-
-    auto slice = v.Slice(5, 7);
-    for (auto& item : slice)
-    {
-        item++;
-    }
-
-    EXPECT_EQ(v[5], 7);
-    EXPECT_EQ(v[6], 8);
-    EXPECT_EQ(v[7], 9);
-}
-
-class IBase
-{
-public:
-    virtual void Test(int) = 0;
-    virtual int GetTest() = 0;
-    virtual ~IBase() {}
-};
-
-class Child : public IBase
-{
-public:
-    Child(int t) : mTest(t) {}
-    Child() : mTest(0) {}
-    void Test(int val) override { mTest = val; }
-    int GetTest() override { return mTest; }
-
-private:
-    int mTest;
-};
-
-TEST_F(CoreTests, PoolTest)
-{
-    using namespace nv;
-
-    Handle<IBase> handle;
-    handle.mIndex = 1;
-    Pool<IBase, Child> pool;
-    pool.Init();
-
-    Child test;
-    test.Test(100);
-    handle = pool.Create(1);
-    auto handle2 = pool.Create(2);
-    auto handle3 = pool.Insert(test);
-    auto data = pool.Get(handle);
-
-    auto data2 = pool.Get(handle2);
-    EXPECT_EQ(data2->GetTest(), 2);
-
-    pool.Remove(handle);
-    const bool r = pool.IsValid(handle);
-    EXPECT_FALSE(r);
-
-    const bool r2 = pool.IsValid(handle2);
-    EXPECT_TRUE(r2);
-
-    auto data3 = pool.GetAsDerived(handle2);
-    EXPECT_EQ(data3->GetTest(), 2);
-
-    Child& data4 = *pool.GetAsDerived(handle3);
-    EXPECT_EQ(data4.GetTest(), 100);
-
-    data4.Test(101);
-    pool.Destroy();
-}
-
-TEST_F(CoreTests, ContiguousPoolTest)
-{
-    using namespace nv;
-
-    Handle<IBase> handle;
-    handle.mIndex = 1;
-    ContiguousPool<IBase, Child> pool;
-
-    Child test;
-    test.Test(100);
-    handle = pool.Create(1);
-    auto handle2 = pool.Create(2);
-    auto handle3 = pool.Insert(test);
-    auto data = pool.Get(handle);
-
-    auto data2 = pool.Get(handle2);
-    EXPECT_EQ(data2->GetTest(), 2);
-
-    pool.Remove(handle);
-    const bool r = pool.IsValid(handle);
-    EXPECT_FALSE(r);
-
-    handle = pool.Create(123);
-    EXPECT_TRUE(pool.IsValid(handle));
-    pool.Remove(handle);
-    EXPECT_FALSE(pool.IsValid(handle));
-
-    const bool r2 = pool.IsValid(handle2);
-    EXPECT_TRUE(r2);
-
-    auto data3 = pool.GetAsDerived(handle2);
-    EXPECT_EQ(data3->GetTest(), 2);
-
-    Child& data4 = *pool.GetAsDerived(handle3);
-    EXPECT_EQ(data4.GetTest(), 100);
-
-    data4.Test(101);
-}
-
-struct IComponent 
-{
-    const char* mName = "COMPONENT";
-};
-
-struct TestComponent : public IComponent
-{
-    float mSpeed;
-    float mMuliplier;
-};
-
-TEST_F(CoreTests, PoolSpanTest)
-{
-    using namespace nv;
-
-    Pool<IComponent, TestComponent> comPool;
-    comPool.Init();
-    auto h1 = comPool.Insert({ .mSpeed = 1.5f, .mMuliplier = 1.f });
-    auto h2 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
-    auto comSpan = comPool.Span();
-
-    for (TestComponent& comp : comSpan)
-    {
-        comp.mMuliplier *= 2.f;
-    }
-
-    for (auto i = 0llu; i < comSpan.Size(); ++i)
-    {
-        comSpan[i].mMuliplier *= 2.f;
-    }
-
-    EXPECT_FLOAT_EQ(comPool.GetAsDerived(h1)->mMuliplier, 4.f);
-    EXPECT_FLOAT_EQ(comPool.GetAsDerived(h2)->mMuliplier, 8.f);
-    comPool.Destroy();
-}
-
-TEST_F(CoreTests, ContiguousPoolSpanTest)
-{
-    using namespace nv;
-
-    ContiguousPool<IComponent, TestComponent> comPool;
-    auto h1 = comPool.Insert({ .mSpeed = 1.5f, .mMuliplier = 1.f });
-    auto h2 = comPool.Create(TestComponent{ .mSpeed = 3.5f, .mMuliplier = 5.f });
-    auto h3 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
-    comPool.Remove(h2);
-    auto comSpan = comPool.Span();
-
-    EXPECT_EQ(comSpan.Size(), 2);
-
-    for (TestComponent& comp : comSpan)
-    {
-        comp.mMuliplier *= 2.f;
-    }
-
-    for (auto i = 0llu; i < comSpan.Size(); ++i)
-    {
-        comSpan[i].mMuliplier *= 2.f;
-    }
-
-    EXPECT_FLOAT_EQ(comPool.GetAsDerived(h1)->mMuliplier, 4.f);
-    EXPECT_FLOAT_EQ(comPool.GetAsDerived(h3)->mMuliplier, 8.f);
-}
-
-TEST_F(CoreTests, ContiguousPoolGrowTest)
-{
-    using namespace nv;
-
-    ContiguousPool<IComponent, TestComponent> comPool;
-    auto h1 = comPool.Insert({ .mSpeed = 1.5f, .mMuliplier = 1.f });
-    auto h2 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
-    auto h3 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
-    auto h4 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
-    auto h5 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
-    auto h6 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
-
-    EXPECT_EQ(comPool.Size(), 6);
-
-    auto comSpan = comPool.Span();
-
-    for (TestComponent& comp : comSpan)
-    {
-        comp.mMuliplier *= 2.f;
-    }
-
-    for (auto i = 0llu; i < comSpan.Size(); ++i)
-    {
-        comSpan[i].mMuliplier *= 2.f;
-    }
-
-    EXPECT_FLOAT_EQ(comPool.GetAsDerived(h1)->mMuliplier, 4.f);
-    EXPECT_FLOAT_EQ(comPool.GetAsDerived(h3)->mMuliplier, 8.f);
-}
-
-TEST_F(CoreTests, PoolGrowTest)
-{
-    using namespace nv;
-
-    Pool<IComponent, TestComponent, 2> comPool;
-    comPool.Init();
-    auto h1 = comPool.Insert({ .mSpeed = 1.5f, .mMuliplier = 1.f });
-    auto h2 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
-    auto h3 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
-    auto h4 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
-
-    EXPECT_EQ(comPool.Size(), 4);
-
-    auto comSpan = comPool.Span();
-
-    for (TestComponent& comp : comSpan)
-    {
-        comp.mMuliplier *= 2.f;
-    }
-
-    for (auto i = 0llu; i < comSpan.Size(); ++i)
-    {
-        comSpan[i].mMuliplier *= 2.f;
-    }
-
-    EXPECT_FLOAT_EQ(comPool.GetAsDerived(h1)->mMuliplier, 4.f);
-    EXPECT_FLOAT_EQ(comPool.GetAsDerived(h3)->mMuliplier, 8.f);
-    comPool.Destroy();
-}
-
-TEST_F(CoreTests, StringHashTest)
-{
-    using namespace nv;
-    constexpr nv::StringID check = "GET"_hash;
-    static_assert(check == 2531704439, "bad hash value");
-}
-
-TEST_F(CoreTests, SpanTest)
-{
-    using namespace nv;
-    struct Data
-    {
-        int mVal;
-    };
-
-    auto transform = [](Span<uint64_t> items)
-    {
-        for (auto& item : items)
+        auto slice = v.Slice(5, 7);
+        for (auto& item : slice)
+        {
             item++;
-        return items;
-    };
+        }
 
-    auto val = transform({ 1, 2 });
-    EXPECT_EQ(val[0], 2);
-    EXPECT_EQ(val[1], 3);
+        EXPECT_EQ(v[5], 7);
+        EXPECT_EQ(v[6], 8);
+        EXPECT_EQ(v[7], 9);
+    }
 
-}
-
-TEST_F(CoreTests, SystemManagerCreate)
-{
-    using namespace nv;
-    class TestSystem : public ISystem
+    class IBase
     {
     public:
-        float mSpeed = 0.f;
+        virtual void Test(int) = 0;
+        virtual int GetTest() = 0;
+        virtual ~IBase() {}
     };
 
-    SystemManager sysMan;
+    class Child : public IBase
+    {
+    public:
+        Child(int t) : mTest(t) {}
+        Child() : mTest(0) {}
+        void Test(int val) override { mTest = val; }
+        int GetTest() override { return mTest; }
 
-    auto testSystem = (TestSystem*)sysMan.CreateSystem<TestSystem>();
-    EXPECT_FLOAT_EQ(testSystem->mSpeed, 0.f);
+    private:
+        int mTest;
+    };
 
-    testSystem->mSpeed = 1.f;
+    TEST_F(CoreTests, PoolTest)
+    {
+        using namespace nv;
 
-    auto testSystemRef = sysMan.GetSystem<TestSystem>();
-    EXPECT_FLOAT_EQ(testSystemRef->mSpeed, 1.f);
+        Handle<IBase> handle;
+        handle.mIndex = 1;
+        Pool<IBase, Child> pool;
+        pool.Init();
 
-    testSystemRef->mSpeed = 2.f;
+        Child test;
+        test.Test(100);
+        handle = pool.Create(1);
+        auto handle2 = pool.Create(2);
+        auto handle3 = pool.Insert(test);
+        auto data = pool.Get(handle);
 
-    auto testSystemRef2 = (TestSystem*)sysMan.GetSystem(TypeNameID<TestSystem>());
-    EXPECT_FLOAT_EQ(testSystemRef->mSpeed, 2.f);
+        auto data2 = pool.Get(handle2);
+        EXPECT_EQ(data2->GetTest(), 2);
+
+        pool.Remove(handle);
+        const bool r = pool.IsValid(handle);
+        EXPECT_FALSE(r);
+
+        const bool r2 = pool.IsValid(handle2);
+        EXPECT_TRUE(r2);
+
+        auto data3 = pool.GetAsDerived(handle2);
+        EXPECT_EQ(data3->GetTest(), 2);
+
+        Child& data4 = *pool.GetAsDerived(handle3);
+        EXPECT_EQ(data4.GetTest(), 100);
+
+        data4.Test(101);
+        pool.Destroy();
+    }
+
+    TEST_F(CoreTests, ContiguousPoolTest)
+    {
+        using namespace nv;
+
+        Handle<IBase> handle;
+        handle.mIndex = 1;
+        ContiguousPool<IBase, Child> pool;
+
+        Child test;
+        test.Test(100);
+        handle = pool.Create(1);
+        auto handle2 = pool.Create(2);
+        auto handle3 = pool.Insert(test);
+        auto data = pool.Get(handle);
+
+        auto data2 = pool.Get(handle2);
+        EXPECT_EQ(data2->GetTest(), 2);
+
+        pool.Remove(handle);
+        const bool r = pool.IsValid(handle);
+        EXPECT_FALSE(r);
+
+        handle = pool.Create(123);
+        EXPECT_TRUE(pool.IsValid(handle));
+        pool.Remove(handle);
+        EXPECT_FALSE(pool.IsValid(handle));
+
+        const bool r2 = pool.IsValid(handle2);
+        EXPECT_TRUE(r2);
+
+        auto data3 = pool.GetAsDerived(handle2);
+        EXPECT_EQ(data3->GetTest(), 2);
+
+        Child& data4 = *pool.GetAsDerived(handle3);
+        EXPECT_EQ(data4.GetTest(), 100);
+
+        data4.Test(101);
+    }
+
+    struct IComponent
+    {
+        const char* mName = "COMPONENT";
+    };
+
+    struct TestComponent : public IComponent
+    {
+        float mSpeed;
+        float mMuliplier;
+    };
+
+    TEST_F(CoreTests, PoolSpanTest)
+    {
+        using namespace nv;
+
+        Pool<IComponent, TestComponent> comPool;
+        comPool.Init();
+        auto h1 = comPool.Insert({ .mSpeed = 1.5f, .mMuliplier = 1.f });
+        auto h2 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
+        auto comSpan = comPool.Span();
+
+        for (TestComponent& comp : comSpan)
+        {
+            comp.mMuliplier *= 2.f;
+        }
+
+        for (auto i = 0llu; i < comSpan.Size(); ++i)
+        {
+            comSpan[i].mMuliplier *= 2.f;
+        }
+
+        EXPECT_FLOAT_EQ(comPool.GetAsDerived(h1)->mMuliplier, 4.f);
+        EXPECT_FLOAT_EQ(comPool.GetAsDerived(h2)->mMuliplier, 8.f);
+        comPool.Destroy();
+    }
+
+    TEST_F(CoreTests, ContiguousPoolSpanTest)
+    {
+        using namespace nv;
+
+        ContiguousPool<IComponent, TestComponent> comPool;
+        auto h1 = comPool.Insert({ .mSpeed = 1.5f, .mMuliplier = 1.f });
+        auto h2 = comPool.Create(TestComponent{ .mSpeed = 3.5f, .mMuliplier = 5.f });
+        auto h3 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
+        comPool.Remove(h2);
+        auto comSpan = comPool.Span();
+
+        EXPECT_EQ(comSpan.Size(), 2);
+
+        for (TestComponent& comp : comSpan)
+        {
+            comp.mMuliplier *= 2.f;
+        }
+
+        for (auto i = 0llu; i < comSpan.Size(); ++i)
+        {
+            comSpan[i].mMuliplier *= 2.f;
+        }
+
+        EXPECT_FLOAT_EQ(comPool.GetAsDerived(h1)->mMuliplier, 4.f);
+        EXPECT_FLOAT_EQ(comPool.GetAsDerived(h3)->mMuliplier, 8.f);
+    }
+
+    TEST_F(CoreTests, ContiguousPoolGrowTest)
+    {
+        using namespace nv;
+
+        ContiguousPool<IComponent, TestComponent> comPool;
+        auto h1 = comPool.Insert({ .mSpeed = 1.5f, .mMuliplier = 1.f });
+        auto h2 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
+        auto h3 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
+        auto h4 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
+        auto h5 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
+        auto h6 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
+
+        EXPECT_EQ(comPool.Size(), 6);
+
+        auto comSpan = comPool.Span();
+
+        for (TestComponent& comp : comSpan)
+        {
+            comp.mMuliplier *= 2.f;
+        }
+
+        for (auto i = 0llu; i < comSpan.Size(); ++i)
+        {
+            comSpan[i].mMuliplier *= 2.f;
+        }
+
+        EXPECT_FLOAT_EQ(comPool.GetAsDerived(h1)->mMuliplier, 4.f);
+        EXPECT_FLOAT_EQ(comPool.GetAsDerived(h3)->mMuliplier, 8.f);
+    }
+
+    TEST_F(CoreTests, PoolGrowTest)
+    {
+        using namespace nv;
+
+        Pool<IComponent, TestComponent, 2> comPool;
+        comPool.Init();
+        auto h1 = comPool.Insert({ .mSpeed = 1.5f, .mMuliplier = 1.f });
+        auto h2 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
+        auto h3 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
+        auto h4 = comPool.Create(TestComponent{ .mSpeed = 2.5f, .mMuliplier = 2.f });
+
+        EXPECT_EQ(comPool.Size(), 4);
+
+        auto comSpan = comPool.Span();
+
+        for (TestComponent& comp : comSpan)
+        {
+            comp.mMuliplier *= 2.f;
+        }
+
+        for (auto i = 0llu; i < comSpan.Size(); ++i)
+        {
+            comSpan[i].mMuliplier *= 2.f;
+        }
+
+        EXPECT_FLOAT_EQ(comPool.GetAsDerived(h1)->mMuliplier, 4.f);
+        EXPECT_FLOAT_EQ(comPool.GetAsDerived(h3)->mMuliplier, 8.f);
+        comPool.Destroy();
+    }
+
+    TEST_F(CoreTests, StringHashTest)
+    {
+        using namespace nv;
+        constexpr nv::StringID check = "GET"_hash;
+        static_assert(check == 2531704439, "bad hash value");
+    }
+
+    TEST_F(CoreTests, SpanTest)
+    {
+        using namespace nv;
+        struct Data
+        {
+            int mVal;
+        };
+
+        auto transform = [](Span<uint64_t> items)
+        {
+            for (auto& item : items)
+                item++;
+            return items;
+        };
+
+        auto val = transform({ 1, 2 });
+        EXPECT_EQ(val[0], 2);
+        EXPECT_EQ(val[1], 3);
+
+    }
+
+    TEST_F(CoreTests, SystemManagerCreate)
+    {
+        using namespace nv;
+        class TestSystem : public ISystem
+        {
+        public:
+            float mSpeed = 0.f;
+        };
+
+        SystemManager sysMan;
+
+        auto testSystem = (TestSystem*)sysMan.CreateSystem<TestSystem>();
+        EXPECT_FLOAT_EQ(testSystem->mSpeed, 0.f);
+
+        testSystem->mSpeed = 1.f;
+
+        auto testSystemRef = sysMan.GetSystem<TestSystem>();
+        EXPECT_FLOAT_EQ(testSystemRef->mSpeed, 1.f);
+
+        testSystemRef->mSpeed = 2.f;
+
+        auto testSystemRef2 = (TestSystem*)sysMan.GetSystem(TypeNameID<TestSystem>());
+        EXPECT_FLOAT_EQ(testSystemRef->mSpeed, 2.f);
+    }
 }

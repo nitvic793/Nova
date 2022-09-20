@@ -9,7 +9,7 @@
 #include <Lib/Map.h>
 #include <Lib/ScopedPtr.h>
 
-namespace nv
+namespace nv::ecs
 {
     struct Entity;
     struct IComponent 
@@ -45,7 +45,7 @@ namespace nv
         std::string_view compName = TypeName<TComp>();
         constexpr std::string_view prefix = "struct ";
         compName.remove_prefix(prefix.size());
-        return compName;
+        return ID(compName.data());
     }
 
     class IComponentPool 
@@ -53,23 +53,25 @@ namespace nv
     public:
         IComponentPool(Span<Field> fields) 
         {
-            mFields.Reserve(fields.Size());
+            mFields.Reserve((uint32_t)fields.Size());
             for (const Field& field : fields)
                 mFields.Push(field);
         }
 
-        virtual bool IsValid(uint32_t index) const = 0;
-        virtual bool IsValid(uint64_t handle) const = 0;
-        virtual Span<IComponent> GetComponents() const = 0;
-        virtual IComponent* GetComponent(uint32_t index) const = 0;
-        virtual IComponent* GetComponent(uint64_t handle) const = 0;
-        virtual size_t GetComponentSize() const = 0;
-        virtual size_t Size() const = 0;
+        virtual bool                IsValid(uint64_t handle) const = 0;
+        virtual Span<IComponent>    GetComponents() const = 0;
+        virtual IComponent*         GetComponent(uint32_t index) const = 0;
+        virtual IComponent*         GetComponent(uint64_t handle) const = 0;
+        virtual size_t              GetStrideSize() const = 0;
+        virtual size_t              Size() const = 0;
+        virtual uint64_t            Create(Handle<Entity> entity) = 0;
+        virtual void                Remove(uint64_t handle) = 0;
+        virtual void                RemoveEntity(Handle<Entity> entity) = 0;
 
         template<typename TComp>
         IComponent* GetComponent(Handle<TComp> handle)
         {
-            if (!IsValid())
+            if (!IsValid(handle.mHandle))
                 return nullptr;
 
             return static_cast<TComp*>(GetComponent(handle.mHandle));
@@ -82,21 +84,17 @@ namespace nv
     template<typename TComp>
     class ComponentPool : public IComponentPool
     {
-        using EntityComponentMap = HashMap<Handle<Entity>, Handle<TComp>>;
+        using EntityComponentMap = HashMap<uint64_t, Handle<TComp>>;
 
     public:
         ComponentPool(Span<Field> fields):
             IComponentPool(fields)
         {}
 
-        virtual bool IsValid(uint32_t index) const override
-        {
-            return mComponents.IsValid(index);
-        }
-
         virtual bool IsValid(uint64_t handle) const override
         {
-            auto h = Handle<TComp>{ .mHandle = handle };
+            Handle<TComp> h; 
+            h.mHandle = handle;
             return mComponents.IsValid(h);
         }
 
@@ -108,16 +106,17 @@ namespace nv
 
         virtual IComponent* GetComponent(uint32_t index) const override
         {
-            return static_cast<IComponent*>(mComponents.GetIndex(index));
+            return static_cast<IComponent*>(&mComponents[index]);
         }
 
         virtual IComponent* GetComponent(uint64_t handle) const override
         {
-            auto h = Handle<TComp>{ .mHandle = handle };
+            Handle<TComp> h;
+            h.mHandle = handle;
             return static_cast<IComponent*>(mComponents.Get(h));
         }
 
-        virtual size_t GetComponentSize() const override
+        virtual size_t GetStrideSize() const override
         {
             return sizeof(TComp);
         }
@@ -127,14 +126,37 @@ namespace nv
             return mComponents.Size();
         }
 
+        virtual uint64_t Create(Handle<Entity> entity) override
+        {
+            Handle<TComp> handle = mComponents.Create();
+            mEntityMap[entity.mHandle] = handle;
+            return handle.mHandle;
+        }
+
+        virtual void Remove(uint64_t handle) override
+        {
+            Handle<TComp> h;
+            h.mHandle = handle;
+            mComponents.Remove(h);
+        }
+
         constexpr Span<TComp> Span() const
         {
             return mComponents.Span();
         }
 
+        virtual void RemoveEntity(Handle<Entity> entity) override
+        {
+            auto handle = mEntityMap[entity.mHandle];
+            mEntityMap.erase(entity.mHandle);
+            Remove(handle.mHandle);
+        }
+
     private:
-        Pool<TComp>         mComponents;
-        EntityComponentMap  mEntityCompMap;
+        ContiguousPool<TComp>   mComponents;
+        EntityComponentMap      mEntityMap;
+
+        friend class ComponentManager;
     };
 
     class ComponentManager
@@ -152,25 +174,57 @@ namespace nv
             return pool.As<ComponentPool<TComp>>();
         }
 
+        IComponentPool* GetPool(StringID compId) const
+        {
+            auto it = mComponentPools.find(compId);
+            if (it == mComponentPools.end())
+                return nullptr;
+
+            return it->second.Get();
+        }
+
+        template<typename TComp>
+        Span<TComp> GetComponents()
+        {
+            constexpr StringID compId = GetComponentID<TComp>();
+            auto& pool = mComponentPools.at(compId);
+            ComponentPool<TComp>* cPool = pool.As<ComponentPool<TComp>>();
+            return cPool->mComponents.Span();
+        }
+
         template<typename TComp>
         void CreatePool(Span<Field> fields)
         {
             constexpr StringID compId = GetComponentID<TComp>();
-            void* buffer = Alloc<ComponentPool<TComp>>(fields);
+            void* buffer = Alloc<ComponentPool<TComp>>(SystemAllocator::gPtr, fields);
             mComponentPools[compId] = ScopedPtr<IComponentPool, true>((IComponentPool*)buffer);
+        }
+
+        bool IsPoolAvailable(StringID id) const
+        {
+            return mComponentPools.find(id) != mComponentPools.end();
         }
 
     private:
         ComponentPoolMap mComponentPools;
     };
 
+    extern ComponentManager gComponentManager;
+
     struct Entity
     {
     public:
         template<typename TComp, typename ...Args>
-        void Add(Args&&... args)
+        TComp* Add(Args&&... args)
         {
+            constexpr StringID compId = GetComponentID<TComp>();
+            if (!gComponentManager.IsPoolAvailable(GetComponentID<TComp>()))
+                gComponentManager.CreatePool<TComp>({ nullptr, 0 });
             
+            ComponentPool<TComp>* pool = gComponentManager.GetPool<TComp>();
+            auto handle = pool->Create(mHandle);
+            mComponents[compId] = handle;
+            return pool->GetComponent(handle)->As<TComp>();
         }
 
         template<typename TComp>
@@ -178,14 +232,15 @@ namespace nv
         {
             constexpr StringID compId = GetComponentID<TComp>();
             auto comp = mComponents.at(compId);
-            return comp->As<TComp>();
+            ComponentPool<TComp>* pool = gComponentManager.GetPool<TComp>();
+            return pool->GetComponent(comp)->As<TComp>();
         }
 
         constexpr void SetHandle(Handle<Entity> handle) { mHandle = handle; }
 
     public:
         Handle<Entity> mHandle;
-        HashMap<StringID, IComponent*> mComponents;
+        HashMap<StringID, uint64_t> mComponents;
     };
 
     class EntityManager
@@ -196,9 +251,11 @@ namespace nv
 
         constexpr Entity* GetEntity(Handle<Entity> handle) const { return mEntities.Get(handle); }
     private:
-        Pool<Entity> mEntities;
-        ComponentManager mComponentMgr;
+        ContiguousPool<Entity>  mEntities;
+        ComponentManager        mComponentMgr;
     };
+
+    extern EntityManager    gEntityManager;
 }
 
 #endif // !NV_ENGINE_ENTITYCOMPONENT

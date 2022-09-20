@@ -181,6 +181,8 @@ namespace nv
         nv::Vector<uint32_t>    mGenerations;
     };
 
+    // Gauranteed to have elements contiguously in memory. Useful for iterating.
+    // More expensive to look up handle since it uses a map internally. 
     template<typename T, typename TDerived = T, uint32_t InitPoolCount = kPoolInitDefaultSize>
     class ContiguousPool
     {
@@ -249,6 +251,8 @@ namespace nv
         {
             return mPool.Size();
         }
+
+        constexpr TDerived& operator[](size_t idx) const { return mPool[idx]; }
 
         void Remove(Handle<T> handle)
         {

@@ -153,6 +153,10 @@ namespace nv
 			GrowIfNeeded();
 			assert(mCurrentIndex + 1 < mCapacity);
 			mCurrentIndex++;
+
+			T* buffer = &mBuffer[mCurrentIndex];
+			new(buffer) T();
+
 			return mBuffer[mCurrentIndex];
 		}
 
@@ -232,8 +236,10 @@ namespace nv
 			return { mBuffer, Size() };
 		}
 
-		void CopyFrom(const T* data, const uint32_t count)
+		void Append(const T* data, const uint32_t count)
 		{
+			if (Size() + count >= mCapacity)
+				Grow(Size() + count + 1);
 			memcpy(mBuffer + Size(), data, sizeof(T) * count);
 			mCurrentIndex = (int32_t)(Size() + count - 1);
 		}
