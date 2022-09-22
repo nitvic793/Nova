@@ -26,7 +26,6 @@ namespace nv::graphics
     {
         if (!mBlob)
         {
-            // TODO: Verify
             Asset* asset = gpAssetManager->GetAsset(mDesc.mShader);
             return
             {

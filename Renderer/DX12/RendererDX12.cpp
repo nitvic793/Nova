@@ -55,7 +55,7 @@ namespace nv::graphics
         for (uint32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
         {
             pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(mCommandAllocators[i].ReleaseAndGetAddressOf())); 
-            // TODO:
+            // TODO: Create Command Allocator Ring Buffer, GetCommandAllocator should return allocator on-demand
             // Need CreateCommandAllocator() function
             // Create per thread command allocator
             // Only needed once there are multiple render threads. 
@@ -111,7 +111,7 @@ namespace nv::graphics
 
         auto rm = (ResourceManagerDX12*)gResourceManager;
         for (int32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
-            backBufferResources[i] = rm->mGpuResources.CreateInstance(mpBackBuffers[i], GPUResourceDesc{.mFormat = format /*TODO: Translate all*/});
+            backBufferResources[i] = rm->mGpuResources.CreateInstance(mpBackBuffers[i], GPUResourceDesc{ .mFormat = format });
 
         for (int32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
         {
