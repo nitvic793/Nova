@@ -9,6 +9,7 @@ namespace nv::ecs
     void EntityManager::Init()
     {
         mEntities.Init();
+        mRoot = mEntities.Create();
     }
 
     void EntityManager::Destroy()
@@ -16,10 +17,17 @@ namespace nv::ecs
         mEntities.Destroy();
     }
 
-    Handle<Entity> EntityManager::Create()
+    Handle<Entity> EntityManager::Create(Handle<Entity> parent)
     {
-        auto handle = mEntities.Create();
+        if (parent == Null<Entity>())
+        {
+            parent = mRoot;
+        }
 
+        auto handle = mEntities.Create();
+        Entity* entity = mEntities.Get(handle);
+        entity->mHandle = handle;
+        entity->mParent = parent;
         return handle;
     }
 

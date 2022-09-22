@@ -29,4 +29,9 @@ namespace nv::asset
 
         constexpr operator uint64_t() const { return mId; }
     };
+
+    struct IDesc
+    {
+        AssetID mAssetId;
+    };
 }

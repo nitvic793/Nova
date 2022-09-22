@@ -21,6 +21,7 @@ namespace nv::graphics
     class PipelineState;
     class RenderReloadManager;
     class Texture;
+    class ConstantBufferPool;
 
     struct DrawData
     {
@@ -49,8 +50,8 @@ namespace nv::graphics
         void UploadDrawData();
 
     private:
-        Pool<DrawData>      mObjectDataPool;
         Handle<jobs::Job>   mRenderJobHandle;
+        ConstantBufferPool* mpConstantBufferPool;
         
         /*TEMP*/
         Viewport                mViewport;

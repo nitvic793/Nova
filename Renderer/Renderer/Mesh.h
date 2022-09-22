@@ -17,6 +17,9 @@ namespace nv::graphics
         std::vector<Vertex>     mVertices;
         std::vector<uint32_t>   mIndices;
         std::vector<MeshEntry>  mMeshEntries;
+        // TODO: 
+        // Support material creation for each mesh entry
+        // While drawing, sort by material and then draw mesh entry accordingly. 
     };
 
     class Mesh

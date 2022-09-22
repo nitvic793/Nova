@@ -23,8 +23,8 @@ namespace nv::graphics
 
     struct ShaderDesc
     {
-        shader::Type    mType;
         asset::AssetID  mShader;
+        shader::Type    mType;
     };
 
     class Shader

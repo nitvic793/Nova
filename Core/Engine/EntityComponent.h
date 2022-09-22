@@ -9,17 +9,11 @@
 #include <Lib/Map.h>
 #include <Lib/ScopedPtr.h>
 
+#include <Engine/Component.h>
+
 namespace nv::ecs
 {
     struct Entity;
-    struct IComponent 
-    {
-        template<typename T>
-        T* As()
-        {
-            return static_cast<T*>(this);
-        }
-    };
 
     enum FieldType : uint8_t
     {
@@ -35,18 +29,9 @@ namespace nv::ecs
     struct Field
     {
         std::string mFieldName;
-        FieldType   mType;
-        uint32_t    mOffset;
+        FieldType   mType       = FIELD_UNDEFINED;
+        uint32_t    mOffset     = 0;
     };
-
-    template<typename TComp>
-    constexpr StringID GetComponentID()
-    {
-        std::string_view compName = TypeName<TComp>();
-        constexpr std::string_view prefix = "struct ";
-        compName.remove_prefix(prefix.size());
-        return ID(compName.data());
-    }
 
     class IComponentPool 
     {
@@ -218,7 +203,7 @@ namespace nv::ecs
         TComp* Add(Args&&... args)
         {
             constexpr StringID compId = GetComponentID<TComp>();
-            if (!gComponentManager.IsPoolAvailable(GetComponentID<TComp>()))
+            if (!gComponentManager.IsPoolAvailable(compId))
                 gComponentManager.CreatePool<TComp>({ nullptr, 0 });
             
             ComponentPool<TComp>* pool = gComponentManager.GetPool<TComp>();
@@ -239,6 +224,7 @@ namespace nv::ecs
         constexpr void SetHandle(Handle<Entity> handle) { mHandle = handle; }
 
     public:
+        Handle<Entity> mParent;
         Handle<Entity> mHandle;
         HashMap<StringID, uint64_t> mComponents;
     };
@@ -249,13 +235,18 @@ namespace nv::ecs
         void Init();
         void Destroy();
 
-        Handle<Entity>  Create();
+        // TODO:
+        // Test Transform Creation
+        // Pass Transform data to renderer 
+        // Attach "Renderable" component manually for now.
+        
+        Handle<Entity>  Create(Handle<Entity> parent = Null<Entity>());
         void            Remove(Handle<Entity> entity);
 
         constexpr Entity* GetEntity(Handle<Entity> handle) const { return mEntities.Get(handle); }
     private:
         Pool<Entity>            mEntities;
-        ComponentManager        mComponentMgr;
+        Handle<Entity>          mRoot;
     };
 
     extern EntityManager    gEntityManager;

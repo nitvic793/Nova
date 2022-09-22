@@ -21,6 +21,7 @@
 #include <Renderer/Mesh.h>
 #include <Renderer/Window.h>
 #include <Renderer/GPUProfile.h>
+#include <Renderer/ConstantBufferPool.h>
 
 #include <thread>
 #include <functional>
@@ -60,7 +61,8 @@ namespace nv::graphics
     RenderSystem::RenderSystem(uint32_t width, uint32_t height) :
         mCamera(CameraDesc{ .mWidth = (float)width, .mHeight = (float)height }),
         mRect(),
-        mViewport()
+        mViewport(),
+        mpConstantBufferPool(nullptr)
     {
         mReloadManager = Alloc<RenderReloadManager>(SystemAllocator::gPtr, this);
         gEventBus.Subscribe(mReloadManager, &RenderReloadManager::OnReload);
@@ -68,6 +70,8 @@ namespace nv::graphics
 
     void RenderSystem::Init()
     {
+        mpConstantBufferPool = Alloc<ConstantBufferPool>();
+
         mViewport.mTopLeftX = 0;
         mViewport.mTopLeftY = 0;
         mViewport.mWidth = (float)gWindow->GetWidth();
@@ -80,11 +84,16 @@ namespace nv::graphics
         mRect.mRight = gWindow->GetWidth();
         mRect.mBottom = gWindow->GetHeight();
 
-        mFrameCB = gRenderer->CreateConstantBuffer(sizeof(FrameData));
-        mObjectDrawData.mObjectCBView = gRenderer->CreateConstantBuffer(sizeof(ObjectData));
-        mObjectDrawData.mMaterialCBView = gRenderer->CreateConstantBuffer(sizeof(MaterialData));
+        mFrameCB = mpConstantBufferPool->GetConstantBuffer<FrameData>();
+        mObjectDrawData.mObjectCBView = mpConstantBufferPool->GetConstantBuffer<ObjectData>();
+        mObjectDrawData.mMaterialCBView = mpConstantBufferPool->GetConstantBuffer<MaterialData>();
 
-        // Test Mesh
+        // TODO:
+        // Refactor Resource Manager to take Resource ID as parameter
+        // Use Resource Tracker to track resource creation and ensure no duplication
+        // Create simple material system -> For each Material -> Pass only texture heap offsets index via Constant Buffer -> Use global ResourceHeapIndex in shader
+        // For each entity with Transform and Renderable -> Copy transform to Constant buffers, Bind mesh/materials and Draw
+
         auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_MESH, ID("Mesh/cone.obj") });
         auto m = asset->DeserializeTo<asset::MeshAsset>();
         mMesh = gResourceManager->CreateMesh(m.GetData());
@@ -103,8 +112,8 @@ namespace nv::graphics
 
         PipelineStateDesc psoDesc = {};
         psoDesc.mPipelineType = PIPELINE_RASTER;
-        psoDesc.mPS = gResourceManager->CreateShader({ shader::PIXEL, ps });
-        psoDesc.mVS = gResourceManager->CreateShader({ shader::VERTEX, vs });
+        psoDesc.mPS = gResourceManager->CreateShader({ ps, shader::PIXEL });
+        psoDesc.mVS = gResourceManager->CreateShader({ vs, shader::VERTEX });
         mPso = gResourceManager->CreatePipelineState(psoDesc);
         mReloadManager->RegisterPSO(psoDesc, &mPso);
 
@@ -125,6 +134,7 @@ namespace nv::graphics
         nv::jobs::Wait(mRenderJobHandle);
         gRenderer->Wait();
         Free(mReloadManager);
+        Free(mpConstantBufferPool);
     }
 
     void RenderSystem::OnReload()

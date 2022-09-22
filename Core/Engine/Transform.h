@@ -2,6 +2,8 @@
 
 #include <Math/Math.h>
 
+#include <Engine/Component.h>
+
 namespace nv
 {
     // TODO: Convert to Struct of Arrays
@@ -17,5 +19,23 @@ namespace nv
 
         float4x4 GetTransformMatrix() const;
         float4x4 GetTransformMatrixTransposed() const;
+    };
+
+    struct Position : ecs::IComponent
+    {
+        using float3 = math::float3;
+        float3 mPosition;
+    };
+
+    struct Scale : ecs::IComponent
+    {
+        using float3 = math::float3;
+        float3 mScale;
+    };
+
+    struct Rotation : ecs::IComponent
+    {
+        using float4 = math::float4;
+        float4 mRotation;
     };
 }

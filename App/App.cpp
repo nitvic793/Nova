@@ -32,6 +32,13 @@ int main()
 
     using namespace nv;
     nv::Instance mInstance("Test");
+
+    // TODO: 
+    // Handle KB + Mouse Input -> Create "InputSystem", Update DirectXTK KB + Mouse Static functions
+    // Put game logic in App Project for now. 
+    // Create Systems folder and create a simple ISystem instance and register using mInstance
+    // Manually Create entities -> Attach Transforms -> Attach Renderable Components
+    // Extra -> Find a way to draw Sponza
     if(mInstance.Init())
         mInstance.Run();
 

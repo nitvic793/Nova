@@ -196,6 +196,9 @@ namespace nv
                 val = 0;
         }
 
+        void Init() {}
+        void Destroy() {}
+
         template<typename ...Args>
         Handle<T> Create(Args&&... args)
         {

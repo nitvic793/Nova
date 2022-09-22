@@ -146,6 +146,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Components\Material.h" />
+    <ClInclude Include="Components\Renderable.h" />
     <ClInclude Include="DX12\ConstantBuffer.h" />
     <ClInclude Include="DX12\ContextDX12.h" />
     <ClInclude Include="DX12\D3D12MemoryAllocator\include\D3D12MemAlloc.h" />
@@ -166,6 +168,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Renderer\CommonDefines.h" />
+    <ClInclude Include="Renderer\ConstantBufferPool.h" />
     <ClInclude Include="Renderer\Context.h" />
     <ClInclude Include="Renderer\DescriptorHeap.h" />
     <ClInclude Include="Renderer\Device.h" />
@@ -177,6 +180,7 @@
     <ClInclude Include="Renderer\Renderer.h" />
     <ClInclude Include="Renderer\RenderSystem.h" />
     <ClInclude Include="Renderer\ResourceManager.h" />
+    <ClInclude Include="Renderer\ResourceTracker.h" />
     <ClInclude Include="Renderer\Shader.h" />
     <ClInclude Include="Renderer\SwapChain.h" />
     <ClInclude Include="Renderer\Texture.h" />
@@ -203,6 +207,7 @@
     <ClCompile Include="Renderer\GPUProfile.cpp" />
     <ClCompile Include="Renderer\Renderer.cpp" />
     <ClCompile Include="Renderer\RenderSystem.cpp" />
+    <ClCompile Include="Renderer\ResourceTracker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">

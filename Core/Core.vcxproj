@@ -153,6 +153,7 @@
     <ClInclude Include="Debug\Error.h" />
     <ClInclude Include="Debug\Profiler.h" />
     <ClInclude Include="Engine\Camera.h" />
+    <ClInclude Include="Engine\Component.h" />
     <ClInclude Include="Engine\EventSystem.h" />
     <ClInclude Include="Engine\JobSystem.h" />
     <ClInclude Include="Engine\Timer.h" />
