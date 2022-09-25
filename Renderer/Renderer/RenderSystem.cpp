@@ -22,6 +22,7 @@
 #include <Renderer/Window.h>
 #include <Renderer/GPUProfile.h>
 #include <Renderer/ConstantBufferPool.h>
+#include <Components/Material.h>
 
 #include <thread>
 #include <functional>
@@ -98,14 +99,30 @@ namespace nv::graphics
         auto m = asset->DeserializeTo<asset::MeshAsset>();
         mMesh = gResourceManager->CreateMesh(m.GetData());
 
-        auto ctx = gRenderer->GetContext();
-        ctx->Begin();
-        auto texAsset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_TEXTURE, ID("Textures/floor_albedo.png") });
-        asset::TextureAsset tex = texAsset->DeserializeTo<asset::TextureAsset>(ctx);
-        ctx->End();
-        gRenderer->Submit(ctx);
+        PBRMaterial material = 
+        { 
+            .mAlbedoTexture     = { asset::ASSET_TEXTURE, ID("Textures/floor_albedo.png")},
+            .mNormalTexture     = { asset::ASSET_TEXTURE, ID("Textures/floor_normals.png")},
+            .mRoughnessTexture  = { asset::ASSET_TEXTURE, ID("Textures/floor_roughness.png")},
+            .mMetalnessTexture  = { asset::ASSET_TEXTURE, ID("Textures/floor_metal.png")},
+        };
 
-        mTexture = gResourceManager->CreateTexture(tex.GetDesc());
+        PBRMaterial bronzeMaterial = 
+        { 
+            .mAlbedoTexture     = { asset::ASSET_TEXTURE, ID("Textures/bronze_albedo.png")},
+            .mNormalTexture     = { asset::ASSET_TEXTURE, ID("Textures/bronze_normals.png")},
+            .mRoughnessTexture  = { asset::ASSET_TEXTURE, ID("Textures/bronze_roughness.png")},
+            .mMetalnessTexture  = { asset::ASSET_TEXTURE, ID("Textures/bronze_metal.png")},
+        };
+
+        auto matHandle = gResourceManager->CreateMaterial(material, ID("Floor"));
+        auto matHandle2 = gResourceManager->CreateMaterial(bronzeMaterial, ID("Bronze"));
+        Material* mat = gResourceManager->GetMaterial(matHandle);
+        Material* mat2 = gResourceManager->GetMaterial(matHandle2);
+
+        gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/SunnyCubeMap.dds") });
+
+        mTexture = mat2->mTextures[0];//gResourceManager->CreateTexture(tex.GetDesc(), texId);
 
         auto ps = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultPS.hlsl") };
         auto vs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultVS.hlsl") };
@@ -122,6 +139,17 @@ namespace nv::graphics
             nv::log::Info("[Renderer] Start Render Job");
             RenderThreadJob(ctx); 
         });
+
+        auto unloadMaterial = [&](const PBRMaterial& material)
+        {
+            asset::gpAssetManager->UnloadAsset(material.mAlbedoTexture);
+            asset::gpAssetManager->UnloadAsset(material.mNormalTexture);
+            asset::gpAssetManager->UnloadAsset(material.mRoughnessTexture);
+            asset::gpAssetManager->UnloadAsset(material.mMetalnessTexture);
+        };
+
+        unloadMaterial(material);
+        unloadMaterial(bronzeMaterial);
     }
 
     void RenderSystem::Update(float deltaTime, float totalTime)

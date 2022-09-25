@@ -24,6 +24,8 @@
 #include <Renderer/ResourceManager.h>
 #include <Renderer/Renderer.h>
 
+#include <Engine/Log.h>
+
 namespace nv::asset
 {
     void TextureAsset::Deserialize(const AssetData& data, graphics::Context* context)
@@ -40,9 +42,10 @@ namespace nv::asset
         auto ctx = (ContextDX12*)context;
 
         std::vector<D3D12_SUBRESOURCE_DATA> subresources;
-        LoadDDSTextureFromMemoryEx(device->GetDevice(), data.mData, data.mSize, 0,
+        bool isCubeMap = false;
+        auto hr = LoadDDSTextureFromMemoryEx(device->GetDevice(), data.mData, data.mSize, 0,
             D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE, DDS_LOADER_FLAGS::DDS_LOADER_MIP_AUTOGEN, 
-            resource->GetResource().ReleaseAndGetAddressOf(), subresources);
+            resource->GetResource().ReleaseAndGetAddressOf(), subresources, nullptr, &isCubeMap);
 
         const UINT64 uploadBufferSize = GetRequiredIntermediateSize(resource->GetResource().Get(), 0,
             static_cast<UINT>(subresources.size()));
@@ -50,6 +53,7 @@ namespace nv::asset
         auto uploadResHandle = gResourceManager->CreateResource(GPUResourceDesc::UploadConstBuffer((uint32_t)uploadBufferSize));
         auto uploadRes = (GPUResourceDX12*)gResourceManager->GetGPUResource(uploadResHandle);
 
+        resource = (GPUResourceDX12*)graphics::gResourceManager->GetGPUResource(resHandle); // Need to get resource again because if resource manager creates again, the pointer maybe invalid. 
         UpdateSubresources(ctx->GetCommandList(), resource->GetResource().Get(), uploadRes->GetResource().Get(),
             0, 0, static_cast<UINT>(subresources.size()), subresources.data());
 
@@ -61,20 +65,30 @@ namespace nv::asset
 
         mData.mBuffer = resHandle;
         mData.mFormat = GetFormat(resource->GetResource().Get()->GetDesc().Format);
-        mData.mType = tex::TEXTURE_2D;
+        mData.mType = isCubeMap ? tex::TEXTURE_CUBE : tex::TEXTURE_2D;
         mData.mUsage = tex::USAGE_SHADER;
     }
 
-    void TextureAsset::Export(const AssetData& data, std::ostream& ostream)
+    void TextureAsset::Export(const AssetData& data, std::ostream& ostream, Type type)
     {
 #if NV_RENDERER_DX12
         using namespace DirectX;
-        TexMetadata metadata;
+        TexMetadata metadata = {};
         ScratchImage image;
         ScratchImage imageMipped;
         Blob blob;
 
-        LoadFromWICMemory(data.begin(), data.Size(), WIC_FLAGS_NONE, &metadata, image);
+        switch (type)
+        {
+        default:
+        case WIC:
+            LoadFromWICMemory(data.begin(), data.Size(), WIC_FLAGS_NONE, &metadata, image);
+            break;
+        case DDS:
+            ostream.write((const char*)data.mData, data.mSize); // Just write through directly.
+            break;
+        }
+        
         GenerateMipMaps(image.GetImages(), image.GetImageCount(), metadata, TEX_FILTER_FLAGS::TEX_FILTER_DEFAULT, 8, imageMipped);
         SaveToDDSMemory(imageMipped.GetImages(), imageMipped.GetImageCount(), imageMipped.GetMetadata(), DDS_FLAGS_NONE, blob);
         ostream.write((const char*)blob.GetBufferPointer(), blob.GetBufferSize());

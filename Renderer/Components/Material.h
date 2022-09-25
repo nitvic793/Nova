@@ -5,7 +5,7 @@
 #include <Engine/Component.h>
 #include <Renderer/Texture.h>
 
-namespace nv::graphics::components
+namespace nv::graphics
 {
     enum MaterialType
     {

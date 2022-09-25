@@ -95,6 +95,7 @@ namespace nv::graphics
     };
 
     ResourceManagerDX12::ResourceManagerDX12()
+        : ResourceManager()
     {
         mDevice = (DeviceDX12*)gRenderer->GetDevice();
         mGpuResources.Init();

@@ -28,6 +28,11 @@ namespace nv::graphics
         mMeshResMap[id] = handle;
     }
 
+    void ResourceTracker::Track(ResID id, Handle<Material> handle)
+    {
+        mMaterialResMap[id] = handle;
+    }
+
     void ResourceTracker::Remove(ResID id, Handle<Shader> handle)
     {
         mShaderResMap.erase(id);
@@ -53,6 +58,16 @@ namespace nv::graphics
         mMeshResMap.erase(id);
     }
 
+    bool ResourceTracker::ExistsTexture(ResID id) const
+    {
+        return mTextureResMap.find(id) != mTextureResMap.end();
+    }
+
+    bool ResourceTracker::ExistsMaterial(ResID id) const
+    {
+        return mMaterialResMap.find(id) != mMaterialResMap.end();
+    }
+
     Handle<Shader> ResourceTracker::GetShaderHandle(ResID id) const
     {
         return mShaderResMap.at(id);
@@ -76,6 +91,11 @@ namespace nv::graphics
     Handle<Mesh> ResourceTracker::GetMeshHandle(ResID id) const
     {
         return mMeshResMap.at(id);
+    }
+
+    Handle<Material> ResourceTracker::GetMaterialHandle(ResID id) const
+    {
+        return mMaterialResMap.at(id);
     }
 }
 

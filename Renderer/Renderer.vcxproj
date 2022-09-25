@@ -207,6 +207,7 @@
     <ClCompile Include="Renderer\GPUProfile.cpp" />
     <ClCompile Include="Renderer\Renderer.cpp" />
     <ClCompile Include="Renderer\RenderSystem.cpp" />
+    <ClCompile Include="Renderer\ResourceManager.cpp" />
     <ClCompile Include="Renderer\ResourceTracker.cpp" />
   </ItemGroup>
   <ItemGroup>

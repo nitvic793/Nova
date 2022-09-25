@@ -4,16 +4,17 @@
 #include <Lib/Map.h>
 #include <Lib/StringHash.h>
 
+#include <Renderer/CommonDefines.h>
+
 namespace nv::graphics
 {
-    using ResID = StringID;
-
     class Shader;
     class GPUResource;
     class PipelineState;
     class Texture;
     class Mesh;
     class Context;
+    struct Material;
 
     class ResourceTracker
     {
@@ -23,6 +24,7 @@ namespace nv::graphics
         void Track(ResID id, Handle<PipelineState>  handle);
         void Track(ResID id, Handle<Texture>        handle);
         void Track(ResID id, Handle<Mesh>           handle);
+        void Track(ResID id, Handle<Material>       handle);
 
         void Remove(ResID id, Handle<Shader>         handle);
         void Remove(ResID id, Handle<GPUResource>    handle);
@@ -30,11 +32,15 @@ namespace nv::graphics
         void Remove(ResID id, Handle<Texture>        handle);
         void Remove(ResID id, Handle<Mesh>           handle);
 
+        bool ExistsTexture(ResID id) const;
+        bool ExistsMaterial(ResID id) const;
+
         Handle<Shader>         GetShaderHandle(ResID id) const;
         Handle<GPUResource>    GetGPUResourceHandle(ResID id) const;
         Handle<PipelineState>  GetPipelineStateHandle(ResID id) const;
         Handle<Texture>        GetTextureHandle(ResID id) const;
         Handle<Mesh>           GetMeshHandle(ResID id) const;
+        Handle<Material>       GetMaterialHandle(ResID id) const;
 
     private:
         HashMap<ResID, Handle<Shader>       > mShaderResMap;
@@ -42,5 +48,6 @@ namespace nv::graphics
         HashMap<ResID, Handle<PipelineState>> mPsoResMap;
         HashMap<ResID, Handle<Texture>      > mTextureResMap;
         HashMap<ResID, Handle<Mesh>         > mMeshResMap;
+        HashMap<ResID, Handle<Material>     > mMaterialResMap;
     };
 }

@@ -143,6 +143,7 @@ namespace nv::asset
                 Handle<Asset> handle;
                 auto asset = mAssets.CreateInstance(handle);
                 totalBytesRead += ImportAsset(file, asset);
+                mAssetMap[asset->GetID()] = handle;
                 if (asset->GetState() == STATE_LOADED)
                 {
                     mAssetMap[asset->GetID()] = handle;
@@ -248,6 +249,12 @@ namespace nv::asset
             assert(false);
             const auto& assetPath = mAssetPathMap[pAsset->GetID()];
             log::Error("[Asset] Error unloading asset {}", assetPath.c_str());
+        }
+
+        virtual void UnloadAsset(AssetID asset) override
+        {
+            auto handle = mAssetMap[asset.mId];
+            UnloadAsset(handle);
         }
 
         virtual Handle<jobs::Job> ExportAssets(const char* exportPath) override
@@ -419,7 +426,11 @@ namespace nv::asset
                 const auto& data = asset->GetAssetData();
                 std::ostringstream sstream;
                 TextureAsset texture;
-                texture.Export(data, sstream);
+                TextureAsset::Type type = TextureAsset::WIC;
+                if (path.find(".dds") != std::string::npos)
+                    type = TextureAsset::DDS;
+
+                texture.Export(data, sstream, type);
                 writeHeader((size_t)sstream.tellp());
                 ostream.write(sstream.str().c_str(), sstream.str().size());
                 break;

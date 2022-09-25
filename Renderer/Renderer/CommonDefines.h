@@ -5,6 +5,8 @@
 namespace nv::graphics
 {
     static constexpr int FRAMEBUFFER_COUNT = 3;
+    
+    using ResID = StringID;
 
     struct ConstantBufferView
     {

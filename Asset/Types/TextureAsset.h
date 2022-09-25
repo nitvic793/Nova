@@ -12,8 +12,14 @@ namespace nv::asset
         using TextureDesc = graphics::TextureDesc;
 
     public:
+        enum Type
+        {
+            WIC, DDS
+        };
+
+    public:
         void Deserialize(const AssetData& data, graphics::Context* context);
-        void Export(const AssetData& data, std::ostream& ostream);
+        void Export(const AssetData& data, std::ostream& ostream, Type type = WIC);
         constexpr const TextureDesc& GetDesc() const { return mData; }
 
     private:
