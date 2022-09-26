@@ -8,6 +8,7 @@
 #include <AssetManager.h>
 #include <AssetSystem.h>
 #include <Engine/EntityComponent.h>
+#include <Input/InputSystem.h>
 
 using namespace nv;
 
@@ -30,6 +31,8 @@ namespace nv
 
         gSystemManager.CreateSystem<asset::AssetSystem>();
         ecs::gEntityManager.Init();
+        gSystemManager.CreateSystem<input::InputSystem>();
+        pContext->mpInputeState = input::gpInputState;
         //auto handle = pContext->mpAssetManager->ExportAssets(".\\Build\\Assets.novapkg");
         //jobs::Wait(handle);
     }

@@ -61,19 +61,19 @@ namespace nv
 		T* ptr = nullptr;
 	};
 
-	template<typename T>
-	static ScopedPtr<T> MakeScoped()
+	template<typename T, bool TCallSysFree = false>
+	static ScopedPtr<T, TCallSysFree> MakeScoped()
 	{
 		auto allocator = SystemAllocator::gPtr;
-		return MakeScoped<T>(allocator);
+		return MakeScoped<T, TCallSysFree>(allocator);
 	}
 
-	template<typename T>
-	static ScopedPtr<T> MakeScoped(IAllocator* allocator)
+	template<typename T, bool TCallSysFree = false>
+	static ScopedPtr<T, TCallSysFree> MakeScoped(IAllocator* allocator)
 	{
 		auto alloc = allocator->Allocate(sizeof(T));
 		T* p = new(alloc) T();
-		ScopedPtr<T> ptr(p);
+		ScopedPtr<T, TCallSysFree> ptr(p);
 		return ptr;
 	}
 

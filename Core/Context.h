@@ -19,6 +19,11 @@ namespace nv
         class IAssetManager;
     }
 
+    namespace input
+    {
+        struct InputState;
+    }
+
     struct Context
     {
         MemTracker*             mpMemTracker;
@@ -26,6 +31,7 @@ namespace nv
         Instance*               mpInstance;
         jobs::IJobSystem*       mpJobSystem;
         asset::IAssetManager*   mpAssetManager;
+        input::InputState*      mpInputeState;
         static Context*         gPtr;
     };
 

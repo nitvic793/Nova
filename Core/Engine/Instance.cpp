@@ -9,6 +9,8 @@
 #include <Engine/Job.h>
 #include <Engine/System.h>
 #include <Engine/Timer.h>
+#include <Input/InputSystem.h>
+#include <Input/Input.h>
 #include <Debug/Profiler.h>
 
 #include <thread>
@@ -45,6 +47,12 @@ namespace nv
                 NV_EVENT("App/Update");
                 //std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 gSystemManager.UpdateSystems(gTimer.DeltaTime, gTimer.TotalTime);
+
+                if (input::IsKeyPressed(input::Keys::F))
+                    log::Info("F Pressed");
+
+                if (input::LeftMouseButtonState() == input::ButtonState::PRESSED)
+                    log::Info("Left mouse button pressed");
             }
         }
         return true;

@@ -471,7 +471,9 @@ namespace nv::asset
             if (header.mSizeBytes != 0)
             {
                 void* pBuffer = Alloc(header.mSizeBytes);
+                //istream.seekg(header.mSizeBytes, std::ios::cur);
                 istream.read((char*)pBuffer, header.mSizeBytes); // TODO: Seek forward mSizeBytes and store istream.tellg() offset in a map
+                header.mOffset = istream.tellg();
                 pAsset->Set(header.mAssetId, { header.mSizeBytes, (uint8_t*)pBuffer });
                 pAsset->SetState(STATE_LOADED);
                 log::Info("[Asset] Loaded from package: {}", name.c_str());
@@ -508,4 +510,18 @@ namespace nv::asset
     {
         return gpAssetManager;
     }
+
+    class AssetPackage
+    {
+    public:
+        AssetPackage(const char* path);
+
+        void Load();
+        void LoadAsset(AssetID asset, AssetLoadCallback callback, bool async = true);
+        void UnloadAsset(AssetID asset);
+
+    private:
+        std::string                 mPath;
+        HashMap<uint64_t, Header>   mAssetHeaderMap;
+    };
 }

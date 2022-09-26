@@ -75,7 +75,6 @@ namespace nv::graphics
         int ShowWnd = 1;
         ShowWindow(mHwnd, ShowWnd);
         UpdateWindow(mHwnd);
-
         return true;
     }
 
@@ -150,9 +149,22 @@ namespace nv::graphics
         case WM_MOUSEHOVER:
             Mouse::ProcessMessage(msg, wParam, lParam);
             break;
+        case WM_MENUCHAR:
+            // A menu is active and the user presses a key that does not correspond
+            // to any mnemonic or accelerator key. Ignore so we don't produce an error beep.
+            return MAKELRESULT(0, MNC_CLOSE);
         }
 
         return DefWindowProc(hWnd, msg, wParam, lParam);
+    }
+
+    void WindowDX12::SetInputWindow(void* pKeyboard, void* pMouse)
+    {
+        using namespace DirectX;
+        auto kb = static_cast<Keyboard*>(pKeyboard);
+        auto mouse = static_cast<Mouse*>(pMouse);
+
+        mouse->SetWindow(mHwnd);
     }
 }
 
