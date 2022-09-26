@@ -89,9 +89,10 @@ namespace nv
         static SystemManager* gPtr;
 
     private:
-        OrderedMap<StringID, ScopedPtr<ISystem, true>> mSystems;
+        nv::Vector<StringID>                        mInsertOrder;
+        HashMap<StringID, ScopedPtr<ISystem, true>> mSystems;
 #if NV_ENABLE_SYSTEM_NAMES
-        OrderedMap<StringID, std::string> mSystemNames;
+        HashMap<StringID, std::string> mSystemNames;
 #endif
 
         IAllocator* mAllocator;
@@ -108,6 +109,7 @@ namespace nv
         constexpr StringID typeId = nv::TypeNameID<TSystem>();
         mSystems[typeId] = ScopedPtr<ISystem, true>((ISystem*)buffer);
         SetSystemName(typeId, typeName);
+        mInsertOrder.Push(typeId);
         return (ISystem*)buffer;
     }
 }

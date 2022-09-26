@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "EntityComponent.h"
+#include <Engine/Transform.h>
 
 namespace nv::ecs
 {
@@ -34,5 +35,24 @@ namespace nv::ecs
     void EntityManager::Remove(Handle<Entity> entity)
     {
         mEntities.Remove(entity);
+    }
+
+    void Entity::AttachTransform(const Transform& transform)
+    {
+        auto pos = Add<Position>();
+        auto rot = Add<Rotation>();
+        auto scale = Add<Scale>();
+
+        pos->mPosition = transform.mPosition;
+        rot->mRotation = transform.mRotation;
+        scale->mScale = transform.mScale;
+    }
+
+    ComponentManager::~ComponentManager()
+    {
+        for (auto& it : mComponentPools)
+        {
+            it.second->~IComponentPool();
+        }
     }
 }

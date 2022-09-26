@@ -107,7 +107,9 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\include;$(SolutionDir)Shared\External\Optick\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\include;$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\assimp\include;$(SolutionDir)Shared\;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Data\Shaders;$(SolutionDir)App</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,7 +131,9 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\include;$(SolutionDir)Shared\External\Optick\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\include;$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\assimp\include;$(SolutionDir)Shared\;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Data\Shaders;$(SolutionDir)App</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -145,6 +149,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="Systems\DriverSystem.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="Systems\Register.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Asset\Asset.vcxproj">
@@ -159,6 +166,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Systems\DriverSystem.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="Systems\Register.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -47,12 +47,6 @@ namespace nv
                 NV_EVENT("App/Update");
                 //std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 gSystemManager.UpdateSystems(gTimer.DeltaTime, gTimer.TotalTime);
-
-                if (input::IsKeyPressed(input::Keys::F))
-                    log::Info("F Pressed");
-
-                if (input::LeftMouseButtonState() == input::ButtonState::PRESSED)
-                    log::Info("Left mouse button pressed");
             }
         }
         return true;

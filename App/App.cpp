@@ -1,9 +1,14 @@
 
 #pragma warning( disable : 4530 ) // Disable warning related to exceptions
 
-#include <NovaCore.h>
+#include "pch.h"
+
 #include <Engine/Instance.h>
-//#include <vld.h>
+
+#if NV_ENABLE_VLD
+#include <vld.h>
+#endif
+
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
@@ -13,6 +18,8 @@
 //#endif
 
 #include <windows.h>
+
+#include "Systems/Register.h"
 
 int main()
 {
@@ -39,8 +46,11 @@ int main()
     // Create Systems folder and create a simple ISystem instance and register using mInstance
     // Manually Create entities -> Attach Transforms -> Attach Renderable Components
     // Extra -> Find a way to draw Sponza
-    if(mInstance.Init())
+    if (mInstance.Init())
+    {
+        nv::RegisterGameSystems();
         mInstance.Run();
+    }
 
     auto size = nv::GetSystemAllocatedBytes();
     mInstance.Destroy();

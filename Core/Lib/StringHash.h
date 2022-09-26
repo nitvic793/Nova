@@ -100,7 +100,7 @@ namespace nv
         return FNV1A_32(str);
     }
 
-    constexpr StringID operator"" _hash(char const* s, size_t count)
+    constexpr StringID operator"" _id(char const* s, size_t count)
     {
         return FNV1A_32(s, count);
     }

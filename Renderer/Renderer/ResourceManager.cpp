@@ -36,6 +36,13 @@ namespace nv::graphics
         return gResourceManager->CreateTexture(tex.GetDesc(), asset.mHash);
     }
 
+    Handle<Mesh> ResourceManager::CreateMesh(const MeshDesc& desc, ResID id)
+    {
+        auto handle = CreateMesh(desc);
+        gResourceTracker.Track(id, handle);
+        return handle;
+    }
+
     Handle<Material> ResourceManager::CreateMaterial(const PBRMaterial& matDesc, ResID id)
     {
         if (gResourceTracker.ExistsMaterial(id))
@@ -58,13 +65,45 @@ namespace nv::graphics
         mat.mTextures[3] = getOrCreateTexture(matDesc.mMetalnessTexture);
 
         auto handle = mMaterialPool.Create(mat);
+        gResourceTracker.Track(id, handle);
 
         return handle;
+    }
+
+    Handle<Material> ResourceManager::GetMaterialHandle(ResID id)
+    {
+        if (gResourceTracker.ExistsMaterial(id))
+        {
+            return gResourceTracker.GetMaterialHandle(id);
+        }
+
+        return Null<Material>();
+    }
+
+    Handle<Mesh> ResourceManager::GetMeshHandle(ResID id)
+    {
+        if (gResourceTracker.ExistsMesh(id))
+        {
+            return gResourceTracker.GetMeshHandle(id);
+        }
+
+        return Null<Mesh>();
     }
 
     Material* ResourceManager::GetMaterial(Handle<Material> handle)
     {
         return mMaterialPool.Get(handle);
+    }
+
+    Material* ResourceManager::GetMaterial(ResID id)
+    {
+        if (gResourceTracker.ExistsMaterial(id))
+        {
+            Handle<Material> handle = gResourceTracker.GetMaterialHandle(id);
+            return mMaterialPool.Get(handle);
+        }
+
+        return nullptr;
     }
 
     Texture* ResourceManager::GetTexture(ResID id)

@@ -68,6 +68,11 @@ namespace nv::graphics
         return mMaterialResMap.find(id) != mMaterialResMap.end();
     }
 
+    bool ResourceTracker::ExistsMesh(ResID id) const
+    {
+        return mMeshResMap.find(id) != mMeshResMap.end();
+    }
+
     Handle<Shader> ResourceTracker::GetShaderHandle(ResID id) const
     {
         return mShaderResMap.at(id);

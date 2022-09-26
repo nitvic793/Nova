@@ -24,6 +24,11 @@ namespace nv::input
         return gpInputState->mKeyboard.IsKeyReleased(key);
     }
 
+    bool IsKeyDown(Keys key)
+    {
+        return gpInputState->mKeyboard.GetLastState().IsKeyDown(key);
+    }
+
     ButtonState LeftMouseButtonState()
     {
         return gpInputState->mMouse.leftButton;

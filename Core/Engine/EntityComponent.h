@@ -10,6 +10,7 @@
 #include <Lib/ScopedPtr.h>
 
 #include <Engine/Component.h>
+#include <Engine/Transform.h>
 
 namespace nv::ecs
 {
@@ -61,6 +62,8 @@ namespace nv::ecs
 
             return static_cast<TComp*>(GetComponent(handle.mHandle));
         }
+
+        virtual ~IComponentPool() {}
 
     protected:
         nv::Vector<Field>   mFields;
@@ -190,6 +193,8 @@ namespace nv::ecs
             return mComponentPools.find(id) != mComponentPools.end();
         }
 
+        ~ComponentManager();
+
     private:
         ComponentPoolMap mComponentPools;
     };
@@ -211,6 +216,8 @@ namespace nv::ecs
             mComponents[compId] = handle;
             return pool->GetComponent(handle)->As<TComp>();
         }
+
+        void AttachTransform(const Transform& transform = Transform());
 
         template<typename TComp>
         TComp* Get() const

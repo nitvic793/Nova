@@ -35,12 +35,17 @@ namespace nv::graphics
         virtual Handle<Texture>         CreateTexture(const TextureDesc& desc, ResID id);
         virtual Handle<Texture>         CreateTexture(asset::AssetID asset);
         virtual Handle<Mesh>            CreateMesh(const MeshDesc& desc) = 0;
+        virtual Handle<Mesh>            CreateMesh(const MeshDesc& desc, ResID id);
         virtual Handle<Context>         CreateContext(const ContextDesc& desc) = 0;
 
         virtual GPUResource*            Emplace(Handle<GPUResource>& handle) = 0;
 
-        Handle<Material> CreateMaterial(const PBRMaterial& matDesc, ResID id);
-        Material*        GetMaterial(Handle<Material> handle);
+        Handle<Material>                CreateMaterial(const PBRMaterial& matDesc, ResID id);
+        Handle<Material>                GetMaterialHandle(ResID id);
+        Handle<Mesh>                    GetMeshHandle(ResID id);
+        Material*                       GetMaterial(Handle<Material> handle);
+        Material*                       GetMaterial(ResID id);
+
 
         virtual Texture*                GetTexture(Handle<Texture>) = 0;
         virtual Texture*                GetTexture(ResID id);

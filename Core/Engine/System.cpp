@@ -11,9 +11,10 @@ namespace nv
     void SystemManager::InitSystems()
     {
         NV_EVENT("Systems/Init");
-        for (auto& system : mSystems)
+        for (auto id : mInsertOrder)
         {
-            system.second->Init();
+            auto& system = mSystems.at(id);
+            system->Init();
         }
     }
 

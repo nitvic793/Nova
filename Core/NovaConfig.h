@@ -19,4 +19,8 @@
 #define NV_ENABLE_PROFILING 1
 #endif
 
+#ifndef NV_ENABLE_VLD
+#define NV_ENABLE_VLD 0 // Enables Visual Leak Detector. Affects performance, only use for debugging.
+#endif NV_ENABLE_VLD
+
 #endif // !NV_NOVACONFIG

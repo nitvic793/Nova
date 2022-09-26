@@ -95,9 +95,15 @@ namespace nv::graphics
         // Create simple material system -> For each Material -> Pass only texture heap offsets index via Constant Buffer -> Use global ResourceHeapIndex in shader
         // For each entity with Transform and Renderable -> Copy transform to Constant buffers, Bind mesh/materials and Draw
 
-        auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_MESH, ID("Mesh/cone.obj") });
-        auto m = asset->DeserializeTo<asset::MeshAsset>();
-        mMesh = gResourceManager->CreateMesh(m.GetData());
+        const auto loadMesh = [&](ResID meshId)
+        {
+            auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_MESH, meshId });
+            auto m = asset->DeserializeTo<asset::MeshAsset>();
+            return gResourceManager->CreateMesh(m.GetData(), meshId);
+        };
+
+        loadMesh(ID("Mesh/cube.obj"));
+        mMesh = loadMesh(ID("Mesh/cone.obj"));
 
         PBRMaterial material = 
         { 

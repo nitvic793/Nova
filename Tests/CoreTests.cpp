@@ -251,7 +251,7 @@ namespace nv::tests
     TEST_F(CoreTests, StringHashTest)
     {
         using namespace nv;
-        constexpr nv::StringID check = "GET"_hash;
+        constexpr nv::StringID check = "GET"_id;
         static_assert(check == 2531704439, "bad hash value");
     }
 
