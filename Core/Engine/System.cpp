@@ -21,27 +21,30 @@ namespace nv
     void SystemManager::UpdateSystems(float deltaTime, float totalTime)
     {
         NV_EVENT("Systems/Update");
-        for (auto& system : mSystems)
+        for (auto id : mInsertOrder)
         {
-            system.second->Update(deltaTime, totalTime);
+            auto& system = mSystems.at(id);
+            system->Update(deltaTime, totalTime);
         }
     }
 
     void SystemManager::DestroySystems()
     {
         NV_EVENT("Systems/Destroy");
-        for (auto& system : mSystems)
+        for (auto id : mInsertOrder)
         {
-            system.second->Destroy();
+            auto& system = mSystems.at(id);
+            system->Destroy();
         }
     }
 
     void SystemManager::ReloadSystems()
     {
         NV_EVENT("Systems/Reload");
-        for (auto& system : mSystems)
+        for (auto id : mInsertOrder)
         {
-            system.second->OnReload();
+            auto& system = mSystems.at(id);
+            system->OnReload();
         }
     }
 
