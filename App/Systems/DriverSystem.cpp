@@ -35,6 +35,9 @@ namespace nv
 
         auto pos = entity1->Get<Position>();
         pos->mPosition.x += 1.f;
+
+        auto transform = entity1->GetTransform();
+        entity2->GetTransform().mPosition.x += 1;
     }
 
     void DriverSystem::Update(float deltaTime, float totalTime)

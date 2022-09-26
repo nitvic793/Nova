@@ -218,6 +218,7 @@ namespace nv::ecs
         }
 
         void AttachTransform(const Transform& transform = Transform());
+        TransformRef GetTransform() const;
 
         template<typename TComp>
         TComp* Get() const
