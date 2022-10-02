@@ -60,7 +60,12 @@ namespace nv::graphics
 
     void ContextDX12::SetMesh(Handle<Mesh> mesh)
     {
-        auto dxMesh = (MeshDX12*)gResourceManager->GetMesh(mesh);
+        SetMesh(gResourceManager->GetMesh(mesh));
+    }
+
+    void ContextDX12::SetMesh(Mesh* mesh)
+    {
+        auto dxMesh = (MeshDX12*)mesh;
         const auto& ibv = dxMesh->GetIndexBufferView();
         const auto& vbv = dxMesh->GetVertexBufferView();
 

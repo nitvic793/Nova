@@ -26,9 +26,9 @@ extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\
 
 namespace nv::graphics
 {
-    constexpr uint64_t MAX_CONST_BUFFER_SIZE = 1024 * 256; // 256KB
+    constexpr uint64_t MAX_CONST_BUFFER_SIZE = 10 * 1024 * 1024; // 10MB
     constexpr uint32_t kDefaultDescriptorCount = 32;
-    constexpr uint32_t kDefaultFrameDescriptorCount = 1024;
+    constexpr uint32_t kDefaultFrameDescriptorCount = 1024 * 3;
     constexpr uint32_t kDefaultGPUDescriptorCount = kDefaultFrameDescriptorCount * 3;
 
     void RendererDX12::Init(Window& window)
@@ -49,8 +49,8 @@ namespace nv::graphics
         initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, kDefaultDescriptorCount, mRtvHeap);
         initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, kDefaultDescriptorCount, mDsvHeap);
         initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultGPUDescriptorCount, mGpuHeap, true);
-        initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultDescriptorCount, mTextureHeap);
-        initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultDescriptorCount, mConstantBufferHeap);
+        initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultFrameDescriptorCount, mTextureHeap);
+        initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultFrameDescriptorCount, mConstantBufferHeap);
 
         for (uint32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
         {

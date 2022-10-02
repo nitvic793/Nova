@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Interop/ShaderInteropTypes.h>
+#include <Engine/Component.h>
 #include <vector>
 
 namespace nv::graphics
@@ -22,9 +23,10 @@ namespace nv::graphics
         // While drawing, sort by material and then draw mesh entry accordingly. 
     };
 
-    class Mesh
+    class Mesh : public ecs::IComponent
     {
     public:
+        Mesh() {};
         Mesh(const MeshDesc& desc) :
             mDesc(desc) {}
         virtual ~Mesh() {}

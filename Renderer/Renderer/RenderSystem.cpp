@@ -7,6 +7,7 @@
 #include <Engine/Log.h>
 #include <Engine/Transform.h>
 #include <Engine/EventSystem.h>
+#include <Engine/EntityComponent.h>
 #include <Debug/Profiler.h>
 
 #include <AssetReload.h>
@@ -23,6 +24,7 @@
 #include <Renderer/GPUProfile.h>
 #include <Renderer/ConstantBufferPool.h>
 #include <Components/Material.h>
+#include <Components/Renderable.h>
 
 #include <thread>
 #include <functional>
@@ -72,6 +74,7 @@ namespace nv::graphics
     void RenderSystem::Init()
     {
         mpConstantBufferPool = Alloc<ConstantBufferPool>();
+        gpConstantBufferPool = mpConstantBufferPool;
 
         mViewport.mTopLeftX = 0;
         mViewport.mTopLeftY = 0;
@@ -103,7 +106,7 @@ namespace nv::graphics
         };
 
         loadMesh(ID("Mesh/cube.obj"));
-        mMesh = loadMesh(ID("Mesh/cone.obj"));
+        mMesh = loadMesh(ID("Mesh/torus.obj"));
 
         PBRMaterial material = 
         { 
@@ -122,7 +125,7 @@ namespace nv::graphics
         };
 
         auto matHandle = gResourceManager->CreateMaterial(material, ID("Floor"));
-        auto matHandle2 = gResourceManager->CreateMaterial(bronzeMaterial, ID("Bronze"));
+        auto matHandle2 = gResourceManager->CreateMaterial(bronzeMaterial, ID("Bronze")); 
         Material* mat = gResourceManager->GetMaterial(matHandle);
         Material* mat2 = gResourceManager->GetMaterial(matHandle2);
 
@@ -160,7 +163,8 @@ namespace nv::graphics
 
     void RenderSystem::Update(float deltaTime, float totalTime)
     {
-        //std::this_thread::sleep_for(std::chrono::milliseconds(3));
+        UpdateRenderData();
+        std::this_thread::sleep_for(std::chrono::milliseconds(3));
     }
 
     void RenderSystem::Destroy()
@@ -209,6 +213,19 @@ namespace nv::graphics
             gRenderer->StartFrame();
 
             Context* ctx = gRenderer->GetContext();
+            auto objectCbs = mRenderData.GetObjectCBs();
+            auto materialCbs = mRenderData.GetMaterialCBs();
+            auto meshes = mRenderData.GetMeshes();
+            const auto bindAndDrawObject = [&](ConstantBufferView objCb, ConstantBufferView matCb, Mesh* mesh)
+            {
+                ctx->BindConstantBuffer(0, (uint32_t)objCb.mHeapIndex);
+                ctx->BindConstantBuffer(1, (uint32_t)matCb.mHeapIndex);
+                ctx->SetMesh(mesh);
+                for (auto entry : mesh->GetDesc().mMeshEntries)
+                {
+                    ctx->DrawIndexedInstanced(entry.mNumIndices, 1, entry.mBaseIndex, entry.mBaseVertex, 0);
+                }
+            };
 
             GPUBeginEvent(ctx, "Frame");
 
@@ -226,15 +243,23 @@ namespace nv::graphics
 
             ctx->SetRenderTarget({ targets, _countof(targets) }, depthTarget);
             ctx->SetPipeline(mPso);
-            ctx->Bind(0, BIND_BUFFER, (uint32_t)mObjectDrawData.mObjectCBView.mHeapIndex);
+            //ctx->Bind(0, BIND_BUFFER, (uint32_t)mObjectDrawData.mObjectCBView.mHeapIndex);
             ctx->Bind(4, BIND_BUFFER, (uint32_t)mFrameCB.mHeapIndex);
-            ctx->BindConstantBuffer(1, (uint32_t)mObjectDrawData.mMaterialCBView.mHeapIndex);
-            ctx->BindTexture(2, mTexture);
+            //ctx->BindConstantBuffer(1, (uint32_t)mObjectDrawData.mMaterialCBView.mHeapIndex);
+           // ctx->BindTexture(2, mTexture);
             ctx->SetMesh(mMesh);
             auto mesh = gResourceManager->GetMesh(mMesh);
-            for (auto entry : mesh->GetDesc().mMeshEntries)
+            //for (auto entry : mesh->GetDesc().mMeshEntries)
+            //{
+            //    ctx->DrawIndexedInstanced(entry.mNumIndices, 1, entry.mBaseIndex, entry.mBaseVertex, 0);
+            //}
+
+            for (size_t i = 0; i < objectCbs.Size(); ++i)
             {
-                ctx->DrawIndexedInstanced(entry.mNumIndices, 1, entry.mBaseIndex, entry.mBaseVertex, 0);
+                const auto& objectCb = objectCbs[i];
+                const auto& matCb = materialCbs[i];
+                const auto mesh = meshes[i];
+                bindAndDrawObject(objectCb, matCb, mesh);
             }
 
             // TODO:
@@ -256,11 +281,62 @@ namespace nv::graphics
         FrameData data = { .View = view, .Projection = proj};
         gRenderer->UploadToConstantBuffer(mFrameCB, (uint8_t*)&data, sizeof(data));
 
-        Transform transform = {};
-        mObjectDrawData.mData.World = transform.GetTransformMatrixTransposed();
-        gRenderer->UploadToConstantBuffer(mObjectDrawData.mObjectCBView, (uint8_t*)&mObjectDrawData.mData, sizeof(ObjectData));
+        auto objectCbs = mRenderData.GetObjectCBs();
+        auto materialCbs = mRenderData.GetMaterialCBs();
+        auto objectData = mRenderData.GetObjectData();
+        auto materials = mRenderData.GetMaterials();
 
-        mObjectDrawData.mMaterial.AlbedoOffset = gResourceManager->GetTexture(mTexture)->GetHeapIndex();
-        gRenderer->UploadToConstantBuffer(mObjectDrawData.mMaterialCBView, (uint8_t*)&mObjectDrawData.mMaterial, sizeof(MaterialData));
+        for (size_t i = 0; i < objectCbs.Size(); ++i)
+        {
+            auto& objectCb = objectCbs[i];
+            auto& data = objectData[i];
+            auto& mat = materials[i];
+            auto& matCb = materialCbs[i];
+
+            gRenderer->UploadToConstantBuffer(objectCb, (uint8_t*)&data, sizeof(ObjectData));
+
+            MaterialData matData;
+            matData.AlbedoOffset = gResourceManager->GetTexture(mat->mTextures[0])->GetHeapIndex();
+            gRenderer->UploadToConstantBuffer(matCb, (uint8_t*)&matData, sizeof(MaterialData));
+        }
+
+        if (mRenderData.GetProducedCount() != 0)
+            mRenderData.IncrementConsumed();
+        //Transform transform = {};
+        //mObjectDrawData.mData.World = transform.GetTransformMatrixTransposed();
+        //gRenderer->UploadToConstantBuffer(mObjectDrawData.mObjectCBView, (uint8_t*)&mObjectDrawData.mData, sizeof(ObjectData));
+
+        //mObjectDrawData.mMaterial.AlbedoOffset = gResourceManager->GetTexture(mTexture)->GetHeapIndex();
+        //gRenderer->UploadToConstantBuffer(mObjectDrawData.mMaterialCBView, (uint8_t*)&mObjectDrawData.mMaterial, sizeof(MaterialData));
+    }
+
+    void RenderSystem::UpdateRenderData()
+    {
+        constexpr uint32_t CONSUME_OFFSET = 0; // FIXME: Initial frame flickering. 
+        if (mRenderData.GetConsumedCount() < (mRenderData.GetProducedCount() + CONSUME_OFFSET) && mRenderData.GetProducedCount() > 0)
+            return;
+
+        mRenderData.Clear();
+        auto renderables = ecs::gComponentManager.GetComponents<components::Renderable>();
+
+        auto positions = ecs::gComponentManager.GetComponents<Position>();
+        auto scales = ecs::gComponentManager.GetComponents<Scale>();
+        auto rotations = ecs::gComponentManager.GetComponents<Rotation>();
+
+        for (size_t i = 0; i < renderables.Size(); ++i)
+        {
+            auto& renderable = renderables[i];
+            auto mesh = gResourceManager->GetMesh(renderable.mMesh);
+            auto mat = gResourceManager->GetMaterial(renderable.mMaterial);
+
+            auto pos = &positions[i];
+            auto scale = &scales[i];
+            auto rotation = &rotations[i];
+            TransformRef transform = { pos->mPosition, rotation->mRotation, scale->mScale };
+
+            mRenderData.Insert(mesh, mat, transform);
+        }
+
+        mRenderData.IncrementProduced();
     }
 }

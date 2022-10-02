@@ -10,6 +10,7 @@
 
 namespace nv
 {
+    ecs::Entity* entity;
     void DriverSystem::Init()
     {
         using namespace ecs;
@@ -30,18 +31,22 @@ namespace nv
             return entity;
         };
 
-        Entity* entity1 = createEntity(ID("Mesh/cone.obj"), ID("Floor"));
+        Entity* entity1 = createEntity(ID("Mesh/torus.obj"), ID("Floor"));
         Entity* entity2 = createEntity(ID("Mesh/cube.obj"), ID("Bronze"));
+        entity = entity1;
 
         auto pos = entity1->Get<Position>();
         pos->mPosition.x += 1.f;
 
         auto transform = entity1->GetTransform();
-        entity2->GetTransform().mPosition.x += 1;
+        entity2->GetTransform().mPosition.x -= 1;
     }
 
     void DriverSystem::Update(float deltaTime, float totalTime)
     {
+        auto transform = entity->GetTransform();
+        transform.mPosition.y = sin(totalTime);
+
         auto kb = input::GetInputState().mpKeyboardInstance->GetState();
 
         if (input::IsKeyComboPressed(input::Keys::LeftShift, input::Keys::T))

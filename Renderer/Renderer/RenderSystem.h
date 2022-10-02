@@ -4,6 +4,7 @@
 #pragma once
 
 #include <Renderer/CommonDefines.h>
+#include <Renderer/RenderDataArray.h>
 #include <Engine/System.h>
 #include <Engine/Camera.h>
 #include <Lib/ConcurrentQueue.h>
@@ -48,6 +49,7 @@ namespace nv::graphics
 
     private:
         void UploadDrawData();
+        void UpdateRenderData();
 
     private:
         Handle<jobs::Job>   mRenderJobHandle;
@@ -66,6 +68,8 @@ namespace nv::graphics
 
         RenderReloadManager* mReloadManager;
         ConcurrentQueue<Handle<PipelineState>*> mPsoReloadQueue;
+
+        RenderDataArray         mRenderData;
     };
 }
 

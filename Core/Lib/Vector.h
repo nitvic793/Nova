@@ -15,8 +15,6 @@ namespace nv
 	constexpr uint32_t kMinVectorSize = 4;
 	constexpr uint32_t kVectorGrowthMultiplier = 2;
 
-
-
 	template<typename T, bool TGrowDynamic = true, uint32_t TSize = kMinVectorSize>
 	class Vector
 	{

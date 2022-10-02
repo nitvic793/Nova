@@ -27,6 +27,7 @@ namespace nv::graphics
         virtual void Begin() override;
         virtual void End() override;
         virtual void SetMesh(Handle<Mesh> mesh) override;
+        virtual void SetMesh(Mesh* mesh) override;
         virtual void SetPipeline(Handle<PipelineState> pipeline) override;
         virtual void SetRenderTarget(Span<Handle<Texture>> renderTargets, Handle<Texture> dsvHandle, bool singleRTV) override;
         virtual void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation, uint32_t baseVertexLocation, uint32_t startInstanceLocation) override;
