@@ -48,6 +48,19 @@ namespace nv::ecs
         scale->mScale = transform.mScale;
     }
 
+    TransformRef Entity::GetTransform() const
+    {
+        auto pos = Get<Position>();
+        auto rot = Get<Rotation>();
+        auto scale = Get<Scale>();
+        return TransformRef
+        { 
+            .mPosition = pos->mPosition, 
+            .mRotation = rot->mRotation, 
+            .mScale = scale->mScale 
+        };
+    }
+
     ComponentManager::~ComponentManager()
     {
         for (auto& it : mComponentPools)
