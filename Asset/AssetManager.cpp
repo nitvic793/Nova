@@ -20,6 +20,7 @@
 #include <Types/ShaderAsset.h>
 #include <Types/TextureAsset.h>
 #include <Types/Serializers.h>
+#include <Types/ConfigAsset.h>
 
 #include <fstream>
 #include <filesystem>
@@ -149,11 +150,18 @@ namespace nv::asset
                     mAssetMap[asset->GetID()] = handle;
                     if (asset->GetType() == ASSET_CONFIG)
                     {
-                        if (asset->GetHash() == ID("Configs/ShaderConfig.json"))
+                        const auto hash = asset->GetHash();
+                        if (hash == ID("Configs/ShaderConfig.json"))
                         {
                             auto data = asset->GetAssetData();
                             nv::io::MemoryStream stream((const char*)data.mData, data.mSize);
                             LoadShaderConfigDataBinary(stream);
+                        }
+                        else if (hash == ID("Configs/Materials.json"))
+                        {
+                            auto data = asset->GetAssetData();
+                            nv::io::MemoryStream stream((const char*)data.mData, data.mSize);
+                            Load<MaterialDatabase, SERIAL_BINARY>(stream, "Materials");
                         }
                     }
                 }
@@ -444,6 +452,13 @@ namespace nv::asset
                     nv::io::MemoryStream stream((const char*)data.mData, data.mSize);
                     LoadShaderConfigData(stream);
                     ExportShaderConfigDataBinary(sstream);
+                }
+                else if (path.find("Materials") != std::string::npos)
+                {
+                    auto data = asset->GetAssetData();
+                    nv::io::MemoryStream stream((const char*)data.mData, data.mSize);
+                    Load<MaterialDatabase>(stream, "Materials");
+                    Export<MaterialDatabase, SERIAL_BINARY>(sstream, "Materials");
                 }
 
                 writeHeader((size_t)sstream.tellp());

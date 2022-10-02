@@ -48,6 +48,12 @@
     <ClInclude Include="AssetReload.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Types\ConfigAsset.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Configs\MaterialDatabase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Asset.cpp">
@@ -69,6 +75,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AssetSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Types\ConfigAsset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

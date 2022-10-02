@@ -1,0 +1,26 @@
+{
+    "Materials": {
+        "Materials": [
+            {
+                "key": "Floor",
+                "value": {
+                    "Type": "MaterialDefinition",
+                    "Albedo": "Textures/floor_albedo.png",
+                    "Normal": "Textures/floor_normals.png",
+                    "Roughness": "Textures/floor_roughness.png",
+                    "Metalness": "Textures/floor_metal.png"
+                }
+            },
+            {
+                "key": "Bronze",
+                "value": {
+                    "Type": "MaterialDefinition",
+                    "Albedo": "Textures/bronze_albedo.png",
+                    "Normal": "Textures/bronze_normals.png",
+                    "Roughness": "Textures/bronze_roughness.png",
+                    "Metalness": "Textures/bronze_metal.png"
+                }
+            }
+        ]
+    }
+}

@@ -31,6 +31,11 @@
 #include <Windows.h>
 #include <fstream>
 
+#include <Configs/MaterialDatabase.h>
+#include <Types/ConfigAsset.h>
+#include <cereal/cereal.hpp>
+#include <cereal/archives/json.hpp>
+
 int main()
 {
     // Enabled memory leak detection
@@ -46,6 +51,27 @@ int main()
             SetCurrentDirectoryA(currentDir);
         }
     }
+    
+    //nv::asset::PBRMaterial bronzeMaterial =
+    //{
+    //    .mAlbedoTexture = { nv::asset::ASSET_TEXTURE, nv::ID("Textures/bronze_albedo.png")},
+    //    .mNormalTexture = { nv::asset::ASSET_TEXTURE, nv::ID("Textures/bronze_normals.png")},
+    //    .mRoughnessTexture = { nv::asset::ASSET_TEXTURE, nv::ID("Textures/bronze_roughness.png")},
+    //    .mMetalnessTexture = { nv::asset::ASSET_TEXTURE, nv::ID("Textures/bronze_metal.png")},
+    //};
+
+    //{
+    //    std::ifstream file("test.json", std::ios::binary);
+    //    nv::asset::Load<nv::asset::MaterialDatabase, nv::asset::SERIAL_JSON>(file, "MaterialsTest");
+    //}
+
+    //nv::asset::gMaterialDatabase.mMaterials["Floor"] = bronzeMaterial;
+    //nv::asset::gMaterialDatabase.mMaterials["Bronze"] = bronzeMaterial;
+
+    //{
+    //    std::ofstream file("test.json", std::ios::binary);
+    //    nv::asset::Export<nv::asset::MaterialDatabase, nv::asset::SERIAL_JSON>(file, "MaterialsTest");
+    //}
 
     constexpr int PIPELINE_ERROR = -1;
     constexpr int PIPELINE_SUCCESS = 0;

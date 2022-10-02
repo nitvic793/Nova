@@ -14,8 +14,8 @@ namespace nv::input
         void Init() override;
         void Update(float deltaTime, float totalTime) override;
         void Destroy() override;
-    private:
 
+    private:
         ScopedPtr<Keyboard, true>   mKeyboard;
         ScopedPtr<Mouse, true>      mMouse;
     };

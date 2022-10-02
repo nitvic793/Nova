@@ -150,9 +150,11 @@
     <ClInclude Include="AssetManager.h" />
     <ClInclude Include="AssetBase.h" />
     <ClInclude Include="AssetReload.h" />
+    <ClInclude Include="Configs\MaterialDatabase.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="AssetSystem.h" />
+    <ClInclude Include="Types\ConfigAsset.h" />
     <ClInclude Include="Types\MeshAsset.h" />
     <ClInclude Include="Types\Serializers.h" />
     <ClInclude Include="Types\ShaderAsset.h" />
@@ -168,6 +170,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Types\ConfigAsset.cpp" />
     <ClCompile Include="Types\MeshAsset.cpp" />
     <ClCompile Include="Types\ShaderAsset.cpp" />
     <ClCompile Include="Types\TextureAsset.cpp" />
