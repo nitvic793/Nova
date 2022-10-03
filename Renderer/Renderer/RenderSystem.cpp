@@ -164,7 +164,7 @@ namespace nv::graphics
     void RenderSystem::Update(float deltaTime, float totalTime)
     {
         UpdateRenderData();
-        std::this_thread::sleep_for(std::chrono::milliseconds(3));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(3));
     }
 
     void RenderSystem::Destroy()
@@ -312,7 +312,7 @@ namespace nv::graphics
 
     void RenderSystem::UpdateRenderData()
     {
-        constexpr uint32_t CONSUME_OFFSET = 0; // FIXME: Initial frame flickering. 
+        constexpr uint32_t CONSUME_OFFSET = 0; // FIXME: Initial frame flickering. Probably need to redo the constant buffer creation logic - mostly data is being overwritten while being read by the GPU
         if (mRenderData.GetConsumedCount() < (mRenderData.GetProducedCount() + CONSUME_OFFSET) && mRenderData.GetProducedCount() > 0)
             return;
 
