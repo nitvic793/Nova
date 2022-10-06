@@ -17,6 +17,7 @@ namespace nv
         T           Pop(bool wait = false);
         void        Pop(T& val, bool wait = false);
         const T&    Peek();
+        size_t      Size() const { return mQueue.size(); }
 
         bool    IsEmpty() const;
     private:
@@ -56,7 +57,7 @@ namespace nv
     {
         {
             UniqueLock lock(mMutex);
-            mQueue.push(val);
+            mQueue.push(std::move(val));
             lock.unlock();
         }
 
@@ -92,9 +93,8 @@ namespace nv
         if (IsEmpty())
             return;
 
-        val = mQueue.front();
+        val = std::move(mQueue.front());
         mQueue.pop();
-        return val;
     }
 
     template<typename T>

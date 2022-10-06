@@ -70,6 +70,7 @@ namespace nv::graphics
         ConcurrentQueue<Handle<PipelineState>*> mPsoReloadQueue;
 
         RenderDataArray         mRenderData;
+        RenderData              mCurrentRenderData;
     };
 }
 

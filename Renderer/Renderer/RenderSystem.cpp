@@ -163,6 +163,7 @@ namespace nv::graphics
 
     void RenderSystem::Update(float deltaTime, float totalTime)
     {
+        mRenderData.QueueRenderData();
         //UpdateRenderData();
         //std::this_thread::sleep_for(std::chrono::milliseconds(3));
     }
@@ -213,9 +214,8 @@ namespace nv::graphics
             gRenderer->StartFrame();
 
             Context* ctx = gRenderer->GetContext();
-            auto objectCbs = mRenderData.GetObjectCBs();
-            auto materialCbs = mRenderData.GetMaterialCBs();
-            auto meshes = mRenderData.GetMeshes();
+            auto objectCbs = mRenderData.GetObjectDescriptors();
+            auto materialCbs = mRenderData.GetMaterialDescriptors();
             const auto bindAndDrawObject = [&](ConstantBufferView objCb, ConstantBufferView matCb, Mesh* mesh)
             {
                 ctx->BindConstantBuffer(0, (uint32_t)objCb.mHeapIndex);
@@ -258,7 +258,7 @@ namespace nv::graphics
             {
                 const auto& objectCb = objectCbs[i];
                 const auto& matCb = materialCbs[i];
-                const auto mesh = meshes[i];
+                const auto mesh = mCurrentRenderData[i].mpMesh;
                 bindAndDrawObject(objectCb, matCb, mesh);
             }
 
@@ -274,7 +274,7 @@ namespace nv::graphics
 
     void RenderSystem::UploadDrawData()
     {
-        UpdateRenderData(); 
+        UpdateRenderData();
         mCamera.SetPosition({ 0,0, -5 });
         mCamera.UpdateViewProjection();
         auto view = mCamera.GetViewTransposed();
@@ -282,27 +282,25 @@ namespace nv::graphics
         FrameData data = { .View = view, .Projection = proj};
         gRenderer->UploadToConstantBuffer(mFrameCB, (uint8_t*)&data, sizeof(data));
 
-        auto objectCbs = mRenderData.GetObjectCBs();
-        auto materialCbs = mRenderData.GetMaterialCBs();
-        auto objectData = mRenderData.GetObjectData();
-        auto materials = mRenderData.GetMaterials();
+        auto objectCbs = mRenderData.GetObjectDescriptors();
+        auto materialCbs = mRenderData.GetMaterialDescriptors();
+        //auto objectData = mRenderData.GetObjectData();
+        //auto materials = mRenderData.GetMaterials();
 
         for (size_t i = 0; i < objectCbs.Size(); ++i)
         {
             auto& objectCb = objectCbs[i];
-            auto& data = objectData[i];
-            auto& mat = materials[i];
+            auto& objdata = mCurrentRenderData[i].mObjectData;
+            auto& mat = mCurrentRenderData[i].mpMaterial;
             auto& matCb = materialCbs[i];
 
-            gRenderer->UploadToConstantBuffer(objectCb, (uint8_t*)&data, sizeof(ObjectData));
+            gRenderer->UploadToConstantBuffer(objectCb, (uint8_t*)&objdata, sizeof(ObjectData));
 
             MaterialData matData;
             matData.AlbedoOffset = gResourceManager->GetTexture(mat->mTextures[0])->GetHeapIndex();
             gRenderer->UploadToConstantBuffer(matCb, (uint8_t*)&matData, sizeof(MaterialData));
         }
 
-        if (mRenderData.GetProducedCount() != 0)
-            mRenderData.IncrementConsumed();
         //Transform transform = {};
         //mObjectDrawData.mData.World = transform.GetTransformMatrixTransposed();
         //gRenderer->UploadToConstantBuffer(mObjectDrawData.mObjectCBView, (uint8_t*)&mObjectDrawData.mData, sizeof(ObjectData));
@@ -313,34 +311,7 @@ namespace nv::graphics
 
     void RenderSystem::UpdateRenderData()
     {
-        constexpr uint32_t CONSUME_OFFSET = 0; 
-        if (mRenderData.GetConsumedCount() < (mRenderData.GetProducedCount() + CONSUME_OFFSET) && mRenderData.GetProducedCount() > 0)
-            return;
-
-        mRenderData.Clear(); // FIXME: Do not double buffer mRenderData. Add a separate step to copy entity data? Maybe copy data to thread safe queue?
-        auto renderables = ecs::gComponentManager.GetComponents<components::Renderable>();
-
-        if (renderables.Size() > 0)
-        {
-            auto positions = ecs::gComponentManager.GetComponents<Position>();
-            auto scales = ecs::gComponentManager.GetComponents<Scale>();
-            auto rotations = ecs::gComponentManager.GetComponents<Rotation>();
-
-            for (size_t i = 0; i < renderables.Size(); ++i)
-            {
-                auto& renderable = renderables[i];
-                auto mesh = gResourceManager->GetMesh(renderable.mMesh);
-                auto mat = gResourceManager->GetMaterial(renderable.mMaterial);
-
-                auto pos = &positions[i];
-                auto scale = &scales[i];
-                auto rotation = &rotations[i];
-                TransformRef transform = { pos->mPosition, rotation->mRotation, scale->mScale };
-
-                mRenderData.Insert(mesh, mat, transform);
-            }
-        }
-
-        mRenderData.IncrementProduced();
+        if(mRenderData.PopRenderData(mCurrentRenderData))
+            mRenderData.GenerateDescriptors(mCurrentRenderData);
     }
 }

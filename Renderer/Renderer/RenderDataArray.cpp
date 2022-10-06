@@ -4,49 +4,77 @@
 #include <Renderer/ResourceManager.h>
 #include <Renderer/ConstantBufferPool.h>
 #include <Renderer/Device.h>
+#include <Engine/EntityComponent.h>
+#include <Components/Renderable.h>
+#include <Components/Material.h>
 
 namespace nv::graphics
 {
     ConstantBufferPool* gpConstantBufferPool = nullptr;
+    constexpr size_t MAX_OBJECT_COUNT = 1024;
+    constexpr size_t MAX_OBJECT_DESCRIPTOR_COUNT = MAX_OBJECT_COUNT;
 
-    RenderDataArray::RenderDataArray():
-        mCurrentBuffer(1),
-        mProduced(0),
-        mConsumed(0)
+    RenderDataArray::RenderDataArray()
     {
     }
 
     void RenderDataArray::Clear()
     {
-        // Switch buffer and clear non-current buffer. 
-        const uint32_t idx = mCurrentBuffer.load();
-        mCurrentBuffer.store((mCurrentBuffer.load() + 1) % MAX_RENDER_BUFFER);
-        mRenderBuffer[idx].mData.Clear();
-        mRenderBuffer[idx].mObjectCBs.Clear();
-        mRenderBuffer[idx].mMaterialCBs.Clear();
-        mRenderBuffer[idx].mMaterials.Clear();
-        mRenderBuffer[idx].mMeshes.Clear();
+        mRenderDescriptors.mObjectCBs.Clear();
+        mRenderDescriptors.mMaterialCBs.Clear();
     }
 
-    void RenderDataArray::Insert(Mesh* mesh, Material* material, const TransformRef& transform)
+    void RenderDataArray::QueueRenderData()
     {
-        constexpr size_t MAX_OBJECT_COUNT = 1024;
-        constexpr size_t MAX_OBJECT_DESCRIPTOR_COUNT = MAX_OBJECT_COUNT;
-
-        assert(mRenderBuffer[mCurrentBuffer].mData.Size() <= MAX_OBJECT_COUNT); // Currently only supports 1k objects.
-
-        auto objectCb = gpConstantBufferPool->GetConstantBuffer<ObjectData, MAX_OBJECT_DESCRIPTOR_COUNT>();
-        auto matCb = gpConstantBufferPool->GetConstantBuffer<MaterialData, MAX_OBJECT_DESCRIPTOR_COUNT>();
-        ObjectData objData = { transform.GetTransformMatrixTransposed() };
-
+        constexpr size_t MAX_QUEUED_RENDER_DATA = 3;
+        if (mRenderDataQueue.Size() > MAX_QUEUED_RENDER_DATA)
         {
-            // Insert into non current buffer
-            const uint32_t idx = (mCurrentBuffer.load() + 1) % MAX_RENDER_BUFFER; 
-            mRenderBuffer[idx].mData.Push(objData);
-            mRenderBuffer[idx].mObjectCBs.Push(objectCb);
-            mRenderBuffer[idx].mMaterialCBs.Push(matCb);
-            mRenderBuffer[idx].mMaterials.Push(material);
-            mRenderBuffer[idx].mMeshes.Push(mesh);
+            // Ensure data in queue is fresh by dequeing old data if we're at threshold.
+            // TODO: Test with more objects.
+            RenderData renderData;
+            mRenderDataQueue.Pop(renderData); 
+        }
+
+        auto renderables = ecs::gComponentManager.GetComponents<components::Renderable>();
+
+        if (renderables.Size() > 0)
+        {
+            RenderData renderData(renderables.Size());
+
+            auto positions = ecs::gComponentManager.GetComponents<Position>();
+            auto scales = ecs::gComponentManager.GetComponents<Scale>();
+            auto rotations = ecs::gComponentManager.GetComponents<Rotation>();
+
+            for (size_t i = 0; i < renderables.Size(); ++i)
+            {
+                auto& renderable = renderables[i];
+                auto mesh = gResourceManager->GetMesh(renderable.mMesh);
+                auto mat = gResourceManager->GetMaterial(renderable.mMaterial);
+
+                auto pos = &positions[i];
+                auto scale = &scales[i];
+                auto rotation = &rotations[i];
+                TransformRef transform = { pos->mPosition, rotation->mRotation, scale->mScale };
+
+                auto rd = renderData[i];
+                rd.mObjectData.World = transform.GetTransformMatrixTransposed();
+                rd.mpMesh = mesh;
+                rd.mpMaterial = mat;
+            }
+
+            mRenderDataQueue.Push(renderData);
+        }
+    }
+
+    void RenderDataArray::GenerateDescriptors(RenderData& rd)
+    {
+        Clear();
+        for (uint32_t i = 0; i < rd.mSize; ++i)
+        {
+            auto objectCb = gpConstantBufferPool->GetConstantBuffer<ObjectData, MAX_OBJECT_DESCRIPTOR_COUNT>();
+            auto matCb = gpConstantBufferPool->GetConstantBuffer<MaterialData, MAX_OBJECT_DESCRIPTOR_COUNT>();
+            mRenderDescriptors.mObjectCBs.Push(objectCb);
+            mRenderDescriptors.mMaterialCBs.Push(matCb);
         }
     }
 }

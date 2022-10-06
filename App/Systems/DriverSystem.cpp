@@ -45,7 +45,7 @@ namespace nv
     void DriverSystem::Update(float deltaTime, float totalTime)
     {
         auto transform = entity->GetTransform();
-        transform.mPosition.y = sin(totalTime);
+        transform.mPosition.y = sin(totalTime * 2.f);
 
         auto kb = input::GetInputState().mpKeyboardInstance->GetState();
 
