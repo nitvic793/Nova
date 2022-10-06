@@ -124,6 +124,8 @@ namespace nv::graphics
             {
                 debug::ReportError("Unable to retrieve Swap Chain buffers");
             }
+
+            backBufferResources[i]->GetResource()->SetName(L"Backbuffer Resource");
         }
 
         for (int i = 0; i < FRAMEBUFFER_COUNT; i++)

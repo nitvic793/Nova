@@ -26,6 +26,8 @@ namespace nv
 			mSize(_countof(items))
 		{}
 
+		static constexpr Span<T> Empty() { return { nullptr, 0 }; }
+
 		static constexpr Span<T> Create(std::initializer_list<T> items)
 		{
 			return { items.begin(), items.size() };

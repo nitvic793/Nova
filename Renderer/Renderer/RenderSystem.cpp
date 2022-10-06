@@ -163,7 +163,7 @@ namespace nv::graphics
 
     void RenderSystem::Update(float deltaTime, float totalTime)
     {
-        UpdateRenderData();
+        //UpdateRenderData();
         //std::this_thread::sleep_for(std::chrono::milliseconds(3));
     }
 
@@ -274,6 +274,7 @@ namespace nv::graphics
 
     void RenderSystem::UploadDrawData()
     {
+        UpdateRenderData(); 
         mCamera.SetPosition({ 0,0, -5 });
         mCamera.UpdateViewProjection();
         auto view = mCamera.GetViewTransposed();
@@ -312,29 +313,32 @@ namespace nv::graphics
 
     void RenderSystem::UpdateRenderData()
     {
-        constexpr uint32_t CONSUME_OFFSET = 0; // FIXME: Initial frame flickering. Probably need to redo the constant buffer creation logic - mostly data is being overwritten while being read by the GPU
+        constexpr uint32_t CONSUME_OFFSET = 0; 
         if (mRenderData.GetConsumedCount() < (mRenderData.GetProducedCount() + CONSUME_OFFSET) && mRenderData.GetProducedCount() > 0)
             return;
 
-        mRenderData.Clear();
+        mRenderData.Clear(); // FIXME: Do not double buffer mRenderData. Add a separate step to copy entity data? Maybe copy data to thread safe queue?
         auto renderables = ecs::gComponentManager.GetComponents<components::Renderable>();
 
-        auto positions = ecs::gComponentManager.GetComponents<Position>();
-        auto scales = ecs::gComponentManager.GetComponents<Scale>();
-        auto rotations = ecs::gComponentManager.GetComponents<Rotation>();
-
-        for (size_t i = 0; i < renderables.Size(); ++i)
+        if (renderables.Size() > 0)
         {
-            auto& renderable = renderables[i];
-            auto mesh = gResourceManager->GetMesh(renderable.mMesh);
-            auto mat = gResourceManager->GetMaterial(renderable.mMaterial);
+            auto positions = ecs::gComponentManager.GetComponents<Position>();
+            auto scales = ecs::gComponentManager.GetComponents<Scale>();
+            auto rotations = ecs::gComponentManager.GetComponents<Rotation>();
 
-            auto pos = &positions[i];
-            auto scale = &scales[i];
-            auto rotation = &rotations[i];
-            TransformRef transform = { pos->mPosition, rotation->mRotation, scale->mScale };
+            for (size_t i = 0; i < renderables.Size(); ++i)
+            {
+                auto& renderable = renderables[i];
+                auto mesh = gResourceManager->GetMesh(renderable.mMesh);
+                auto mat = gResourceManager->GetMaterial(renderable.mMaterial);
 
-            mRenderData.Insert(mesh, mat, transform);
+                auto pos = &positions[i];
+                auto scale = &scales[i];
+                auto rotation = &rotations[i];
+                TransformRef transform = { pos->mPosition, rotation->mRotation, scale->mScale };
+
+                mRenderData.Insert(mesh, mat, transform);
+            }
         }
 
         mRenderData.IncrementProduced();

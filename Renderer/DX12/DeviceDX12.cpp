@@ -79,11 +79,20 @@ namespace nv::graphics
 				d3dInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
 				d3dInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
 
-				D3D12_MESSAGE_ID blockedIds[] = { D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,
-				  D3D12_MESSAGE_ID_CLEARDEPTHSTENCILVIEW_MISMATCHINGCLEARVALUE, D3D12_MESSAGE_ID_COPY_DESCRIPTORS_INVALID_RANGES };
+				D3D12_MESSAGE_ID blockedIds[] =
+				{
+					// Workaround for descriptor copy error
+					D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,
+					D3D12_MESSAGE_ID_CLEARDEPTHSTENCILVIEW_MISMATCHINGCLEARVALUE,
+					D3D12_MESSAGE_ID_COPY_DESCRIPTORS_INVALID_RANGES,
+					// Workarounds for debug layer issues on hybrid-graphics systems
+					D3D12_MESSAGE_ID_EXECUTECOMMANDLISTS_WRONGSWAPCHAINBUFFERREFERENCE,
+					D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE,
+				};
+
 				D3D12_INFO_QUEUE_FILTER filter = {};
 				filter.DenyList.pIDList = blockedIds;
-				filter.DenyList.NumIDs = 3;
+				filter.DenyList.NumIDs = _countof(blockedIds);
 				d3dInfoQueue->AddRetrievalFilterEntries(&filter);
 				d3dInfoQueue->AddStorageFilterEntries(&filter);
 			}

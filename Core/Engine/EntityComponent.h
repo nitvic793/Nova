@@ -175,7 +175,11 @@ namespace nv::ecs
         Span<TComp> GetComponents()
         {
             constexpr StringID compId = GetComponentID<TComp>();
-            auto& pool = mComponentPools.at(compId);
+            auto it = mComponentPools.find(compId);
+            if (it == mComponentPools.end())
+                return Span<TComp>::Empty();
+
+            auto& pool = it->second;
             ComponentPool<TComp>* cPool = pool.As<ComponentPool<TComp>>();
             return cPool->mComponents.Span();
         }
