@@ -6,6 +6,7 @@
 #include "Memory.h"
 #include <Lib/Map.h>
 #include <vector>
+#include <mutex>
 
 namespace nv
 {
@@ -39,6 +40,7 @@ namespace nv
 
 	class EventBus
 	{
+		using SubscriberMap = HashMap<std::string_view, std::vector<ScopedPtr<EventHandlerBase, true>>>;
 	public:
 		template<typename EventType>
 		void Publish(EventType* event);
@@ -47,7 +49,8 @@ namespace nv
 		void Subscribe(T* mInstance, void (T::* memberFunction)(EventType*));
 
 	private:
-		HashMap<std::string_view, std::vector<ScopedPtr<EventHandlerBase, true>>> mSubscribers;
+		SubscriberMap	mSubscribers;
+		std::mutex		mMutex;
 	};
 
 	template<typename EventType>
@@ -66,14 +69,16 @@ namespace nv
 	inline void EventBus::Subscribe(T* mInstance, void(T::* memberFunction)(EventType*))
 	{
 		constexpr auto typeName = TypeName<EventType>();
-		std::vector<ScopedPtr<EventHandlerBase, true>>& handlers = mSubscribers[typeName];
-
 		void* buffer = Alloc(sizeof(EventHandler<T, EventType>));
 
 		EventHandler<T, EventType>* handler = new(buffer) EventHandler<T, EventType>(mInstance, memberFunction);
 		ScopedPtr<EventHandlerBase, true> eventHandler = ScopedPtr<EventHandlerBase, true>((EventHandlerBase*)handler);
 
-		handlers.push_back(std::move(eventHandler));
+		{
+			std::unique_lock<std::mutex> lock(mMutex);
+			std::vector<ScopedPtr<EventHandlerBase, true>>& handlers = mSubscribers[typeName];
+			handlers.push_back(std::move(eventHandler));
+		}
 	}
 
 	template<typename T, typename EventType>

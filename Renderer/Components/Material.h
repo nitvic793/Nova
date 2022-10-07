@@ -33,6 +33,14 @@ namespace nv::graphics
 
     struct Material
     {
+        enum Offset
+        {
+            ALBEDO = 0,
+            NORMAL,
+            ROUGHNESS,
+            METALNESS
+        };
+
         MaterialType mType = MATERIAL_PBR;
         Handle<Texture> mTextures[MAX_MATERIAL_TEXTURES];
     };

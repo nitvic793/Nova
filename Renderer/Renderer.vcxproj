@@ -179,6 +179,7 @@
     <ClInclude Include="Renderer\PipelineState.h" />
     <ClInclude Include="Renderer\RenderDataArray.h" />
     <ClInclude Include="Renderer\Renderer.h" />
+    <ClInclude Include="Renderer\RenderPass.h" />
     <ClInclude Include="Renderer\RenderSystem.h" />
     <ClInclude Include="Renderer\ResourceManager.h" />
     <ClInclude Include="Renderer\ResourceTracker.h" />

@@ -16,3 +16,4 @@ struct PixelInput
 	float3 Tangent		: TANGENT;
 	float3 WorldPos		: POSITION0;
 };
+

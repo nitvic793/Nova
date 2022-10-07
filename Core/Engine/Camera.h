@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Math/Math.h>
+#include <Engine/Component.h>
 
 namespace nv
 {
@@ -52,5 +53,10 @@ namespace nv
         float4x4    mView;
 
         CameraDesc  mDesc;
+    };
+
+    struct CameraComponent : public ecs::IComponent
+    {
+        Camera mCamera;
     };
 }

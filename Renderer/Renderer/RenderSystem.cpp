@@ -15,6 +15,7 @@
 #include <Types/MeshAsset.h>
 #include <Types/ShaderAsset.h>
 #include <Types/TextureAsset.h>
+#include <Configs/MaterialDatabase.h>
 
 #include <Renderer/ResourceManager.h>
 #include <Renderer/Context.h>
@@ -108,21 +109,8 @@ namespace nv::graphics
         loadMesh(ID("Mesh/cube.obj"));
         mMesh = loadMesh(ID("Mesh/torus.obj"));
 
-        PBRMaterial material = 
-        { 
-            .mAlbedoTexture     = { asset::ASSET_TEXTURE, ID("Textures/floor_albedo.png")},
-            .mNormalTexture     = { asset::ASSET_TEXTURE, ID("Textures/floor_normals.png")},
-            .mRoughnessTexture  = { asset::ASSET_TEXTURE, ID("Textures/floor_roughness.png")},
-            .mMetalnessTexture  = { asset::ASSET_TEXTURE, ID("Textures/floor_metal.png")},
-        };
-
-        PBRMaterial bronzeMaterial = 
-        { 
-            .mAlbedoTexture     = { asset::ASSET_TEXTURE, ID("Textures/bronze_albedo.png")},
-            .mNormalTexture     = { asset::ASSET_TEXTURE, ID("Textures/bronze_normals.png")},
-            .mRoughnessTexture  = { asset::ASSET_TEXTURE, ID("Textures/bronze_roughness.png")},
-            .mMetalnessTexture  = { asset::ASSET_TEXTURE, ID("Textures/bronze_metal.png")},
-        };
+        auto material = asset::gMaterialDatabase.mMaterials["Floor"];
+        auto bronzeMaterial = asset::gMaterialDatabase.mMaterials["Bronze"];
 
         auto matHandle = gResourceManager->CreateMaterial(material, ID("Floor"));
         auto matHandle2 = gResourceManager->CreateMaterial(bronzeMaterial, ID("Bronze")); 
@@ -164,8 +152,6 @@ namespace nv::graphics
     void RenderSystem::Update(float deltaTime, float totalTime)
     {
         mRenderData.QueueRenderData();
-        //UpdateRenderData();
-        //std::this_thread::sleep_for(std::chrono::milliseconds(3));
     }
 
     void RenderSystem::Destroy()
@@ -243,23 +229,15 @@ namespace nv::graphics
 
             ctx->SetRenderTarget({ targets, _countof(targets) }, depthTarget);
             ctx->SetPipeline(mPso);
-            //ctx->Bind(0, BIND_BUFFER, (uint32_t)mObjectDrawData.mObjectCBView.mHeapIndex);
             ctx->Bind(4, BIND_BUFFER, (uint32_t)mFrameCB.mHeapIndex);
-            //ctx->BindConstantBuffer(1, (uint32_t)mObjectDrawData.mMaterialCBView.mHeapIndex);
-           // ctx->BindTexture(2, mTexture);
-            ctx->SetMesh(mMesh);
-            auto mesh = gResourceManager->GetMesh(mMesh);
-            //for (auto entry : mesh->GetDesc().mMeshEntries)
-            //{
-            //    ctx->DrawIndexedInstanced(entry.mNumIndices, 1, entry.mBaseIndex, entry.mBaseVertex, 0);
-            //}
 
             for (size_t i = 0; i < objectCbs.Size(); ++i)
             {
                 const auto& objectCb = objectCbs[i];
                 const auto& matCb = materialCbs[i];
                 const auto mesh = mCurrentRenderData[i].mpMesh;
-                bindAndDrawObject(objectCb, matCb, mesh);
+                if(mesh)
+                    bindAndDrawObject(objectCb, matCb, mesh);
             }
 
             // TODO:
@@ -275,6 +253,7 @@ namespace nv::graphics
     void RenderSystem::UploadDrawData()
     {
         UpdateRenderData();
+
         mCamera.SetPosition({ 0,0, -5 });
         mCamera.UpdateViewProjection();
         auto view = mCamera.GetViewTransposed();
@@ -284,8 +263,6 @@ namespace nv::graphics
 
         auto objectCbs = mRenderData.GetObjectDescriptors();
         auto materialCbs = mRenderData.GetMaterialDescriptors();
-        //auto objectData = mRenderData.GetObjectData();
-        //auto materials = mRenderData.GetMaterials();
 
         for (size_t i = 0; i < objectCbs.Size(); ++i)
         {
@@ -296,17 +273,16 @@ namespace nv::graphics
 
             gRenderer->UploadToConstantBuffer(objectCb, (uint8_t*)&objdata, sizeof(ObjectData));
 
-            MaterialData matData;
-            matData.AlbedoOffset = gResourceManager->GetTexture(mat->mTextures[0])->GetHeapIndex();
-            gRenderer->UploadToConstantBuffer(matCb, (uint8_t*)&matData, sizeof(MaterialData));
+            if (mat)
+            {
+                MaterialData matData;
+                matData.AlbedoOffset = gResourceManager->GetTexture(mat->mTextures[Material::ALBEDO])->GetHeapIndex();
+                matData.NormalOffset = gResourceManager->GetTexture(mat->mTextures[Material::NORMAL])->GetHeapIndex();
+                matData.RoughnessOffset = gResourceManager->GetTexture(mat->mTextures[Material::ROUGHNESS])->GetHeapIndex();
+                matData.MetalnessOffset = gResourceManager->GetTexture(mat->mTextures[Material::METALNESS])->GetHeapIndex();
+                gRenderer->UploadToConstantBuffer(matCb, (uint8_t*)&matData, sizeof(MaterialData));
+            }
         }
-
-        //Transform transform = {};
-        //mObjectDrawData.mData.World = transform.GetTransformMatrixTransposed();
-        //gRenderer->UploadToConstantBuffer(mObjectDrawData.mObjectCBView, (uint8_t*)&mObjectDrawData.mData, sizeof(ObjectData));
-
-        //mObjectDrawData.mMaterial.AlbedoOffset = gResourceManager->GetTexture(mTexture)->GetHeapIndex();
-        //gRenderer->UploadToConstantBuffer(mObjectDrawData.mMaterialCBView, (uint8_t*)&mObjectDrawData.mMaterial, sizeof(MaterialData));
     }
 
     void RenderSystem::UpdateRenderData()

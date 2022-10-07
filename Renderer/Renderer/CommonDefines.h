@@ -8,10 +8,16 @@ namespace nv::graphics
     
     using ResID = StringID;
 
+    constexpr ResID RES_ID_NULL = 0;
+
     struct ConstantBufferView
     {
-        uint64_t mMemoryOffset = 0;
-        uint64_t mHeapIndex = 0;
+        static constexpr uint64_t INVALID_OFFSET = UINT64_MAX;
+
+        uint64_t mMemoryOffset = INVALID_OFFSET;
+        uint64_t mHeapIndex = INVALID_OFFSET;
+
+        constexpr bool IsValid() const { return (mMemoryOffset != INVALID_OFFSET) && (mHeapIndex != INVALID_OFFSET); }
     };
 
     enum ContextType : uint8_t

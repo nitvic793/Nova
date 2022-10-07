@@ -7,6 +7,7 @@
 #include <Engine/EntityComponent.h>
 #include <Input/Input.h>
 #include <Engine/Log.h>
+#include <Interop/ShaderInteropTypes.h>
 
 namespace nv
 {
@@ -33,6 +34,12 @@ namespace nv
 
         Entity* entity1 = createEntity(ID("Mesh/torus.obj"), ID("Floor"));
         Entity* entity2 = createEntity(ID("Mesh/cube.obj"), ID("Bronze"));
+        auto e3 = createEntity(RES_ID_NULL, RES_ID_NULL);
+        auto directionalLight = e3->Add<DirectionalLight>();
+        directionalLight->Color = float3(0.5, 0.5, 0.5);
+        directionalLight->Intensity = 1.f;
+        Store(Vector3Normalize(VectorSet(-1, -1, 0, 0)), directionalLight->Direction);
+
         entity = entity1;
 
         auto pos = entity1->Get<Position>();

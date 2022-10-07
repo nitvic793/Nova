@@ -2,10 +2,14 @@
 
 #ifdef __cplusplus
 #include <Math/Math.h>
+#include <Engine/Component.h>
+#define NV_COMPONENT : public nv::ecs::IComponent
 
 namespace nv::graphics
 {
     using namespace math;
+#else
+    #define NV_COMPONENT
 #endif
     struct Vertex
     {
@@ -23,6 +27,34 @@ namespace nv::graphics
     struct MaterialData
     {
         uint32_t AlbedoOffset;
+        uint32_t NormalOffset;
+        uint32_t RoughnessOffset;
+        uint32_t MetalnessOffset;
+    };
+
+    struct DirectionalLight NV_COMPONENT
+    {
+        float3  Direction;
+        float3  Color;
+        float   Intensity;
+    };
+
+    struct PointLight NV_COMPONENT
+    {
+        float3  Position;
+        float   Intensity;
+        float3  Color;
+        float   Range;
+    };
+
+    struct SpotLight NV_COMPONENT
+    {
+        float3 Color;
+        float Intensity;
+        float3 Position;
+        float Range;
+        float3 Direction;
+        float SpotFalloff;
     };
 
     struct FrameData
@@ -30,6 +62,7 @@ namespace nv::graphics
         float4x4 View;
         float4x4 Projection;
     };
+
 #ifdef __cplusplus
 }
 #endif
