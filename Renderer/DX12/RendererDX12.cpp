@@ -90,6 +90,7 @@ namespace nv::graphics
 
     void RendererDX12::Present()
     {
+        NV_EVENT("Renderer/Present");
         auto device = (DeviceDX12*)mDevice.Get();
         device->Present();
     }
@@ -187,6 +188,7 @@ namespace nv::graphics
 
     void RendererDX12::Wait()
     {
+        NV_EVENT("Renderer/Wait");
         auto dxDevice = mDevice.As<DeviceDX12>();
         auto pSwapChain = dxDevice->mSwapChain.Get();
         uint32_t backBufferIndex = GetBackBufferIndex();
@@ -259,6 +261,7 @@ namespace nv::graphics
 
     void RendererDX12::StartFrame()
     {
+        NV_EVENT("Renderer/StartFrame");
         auto context = (ContextDX12*)GetContext();
         auto pCmdAllocator = GetAllocator();
         //pCmdAllocator->Reset();
@@ -274,6 +277,7 @@ namespace nv::graphics
 
     void RendererDX12::EndFrame()
     {
+        NV_EVENT("Renderer/EndFrame");
         auto context = GetContext();
         TransitionToPresent();
         context->End();

@@ -213,36 +213,38 @@ namespace nv::graphics
                 }
             };
 
-            GPUBeginEvent(ctx, "Frame");
-
-            const auto topology = PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-            const auto renderTarget = gRenderer->GetDefaultRenderTarget();
-            const auto depthTarget = gRenderer->GetDefaultDepthTarget();
-            const auto gpuHeap = gRenderer->GetGPUDescriptorHeap();
-            Handle<Texture> targets[] = { renderTarget };
-            Handle<DescriptorHeap> heaps[] = { gpuHeap };
-
-            ctx->SetScissorRect(1, &mRect);
-            ctx->SetViewports(1, &mViewport);
-            ctx->SetPrimitiveTopology(topology);
-            ctx->SetDescriptorHeap({ heaps, _countof(heaps) });
-
-            ctx->SetRenderTarget({ targets, _countof(targets) }, depthTarget);
-            ctx->SetPipeline(mPso);
-            ctx->Bind(4, BIND_BUFFER, (uint32_t)mFrameCB.mHeapIndex);
-
-            for (size_t i = 0; i < objectCbs.Size(); ++i)
             {
-                const auto& objectCb = objectCbs[i];
-                const auto& matCb = materialCbs[i];
-                const auto mesh = mCurrentRenderData[i].mpMesh;
-                if(mesh)
-                    bindAndDrawObject(objectCb, matCb, mesh);
-            }
+                GPUBeginEvent(ctx, "Frame");
+                NV_EVENT("Renderer/Frame");
+                const auto topology = PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+                const auto renderTarget = gRenderer->GetDefaultRenderTarget();
+                const auto depthTarget = gRenderer->GetDefaultDepthTarget();
+                const auto gpuHeap = gRenderer->GetGPUDescriptorHeap();
+                Handle<Texture> targets[] = { renderTarget };
+                Handle<DescriptorHeap> heaps[] = { gpuHeap };
 
-            // TODO:
-            // Indirect Draw
-            GPUEndEvent(ctx);
+                ctx->SetScissorRect(1, &mRect);
+                ctx->SetViewports(1, &mViewport);
+                ctx->SetPrimitiveTopology(topology);
+                ctx->SetDescriptorHeap({ heaps, _countof(heaps) });
+
+                ctx->SetRenderTarget({ targets, _countof(targets) }, depthTarget);
+                ctx->SetPipeline(mPso);
+                ctx->Bind(4, BIND_BUFFER, (uint32_t)mFrameCB.mHeapIndex);
+
+                for (size_t i = 0; i < objectCbs.Size(); ++i)
+                {
+                    const auto& objectCb = objectCbs[i];
+                    const auto& matCb = materialCbs[i];
+                    const auto mesh = mCurrentRenderData[i].mpMesh;
+                    if (mesh)
+                        bindAndDrawObject(objectCb, matCb, mesh);
+                }
+
+                // TODO:
+                // Indirect Draw
+                GPUEndEvent(ctx);
+            }
 
             gRenderer->EndFrame();
             gRenderer->Present();
