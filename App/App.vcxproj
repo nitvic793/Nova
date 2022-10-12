@@ -149,6 +149,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="Systems\CameraSystem.cpp" />
     <ClCompile Include="Systems\DriverSystem.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Systems\Register.cpp" />
@@ -168,6 +169,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Systems\CameraSystem.h" />
     <ClInclude Include="Systems\DriverSystem.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Systems\Register.h" />

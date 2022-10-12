@@ -20,7 +20,7 @@ namespace nv::ecs
 
     Handle<Entity> EntityManager::Create(Handle<Entity> parent)
     {
-        if (parent == Null<Entity>())
+        if (parent.IsNull())
         {
             parent = mRoot;
         }

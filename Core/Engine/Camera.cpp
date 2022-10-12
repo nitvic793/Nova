@@ -40,6 +40,7 @@ namespace nv
 
         auto dir = CalcDirection(mRotation, mDirection);
         auto view = MatrixLookToLH(Load(mPosition), dir, Load(UP_DIR));
+        Store(dir, mDirection);
         Store(view, mView);
 
         Matrix projection = {};

@@ -7,6 +7,7 @@
 namespace nv
 {
     using StringID = uint32_t;
+    constexpr StringID NULL_ID = 0;
 
     static constexpr uint32_t crc_table[256] =
     {

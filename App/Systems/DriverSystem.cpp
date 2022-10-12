@@ -29,24 +29,24 @@ namespace nv
             auto renderable = entity->Add<components::Renderable>();
             renderable->mMaterial = matHandle;
             renderable->mMesh = meshHandle;
-            return entity;
+            return e;
         };
 
-        Entity* entity1 = createEntity(ID("Mesh/torus.obj"), ID("Floor"));
-        Entity* entity2 = createEntity(ID("Mesh/cube.obj"), ID("Bronze"));
+        auto entity1 = createEntity(ID("Mesh/torus.obj"), ID("Floor"));
+        auto entity2 = createEntity(ID("Mesh/cube.obj"), ID("Bronze"));
         auto e3 = createEntity(RES_ID_NULL, RES_ID_NULL);
-        auto directionalLight = e3->Add<DirectionalLight>();
+        auto directionalLight = gEntityManager.GetEntity(e3)->Add<DirectionalLight>();
         directionalLight->Color = float3(0.5, 0.5, 0.5);
         directionalLight->Intensity = 1.f;
         Store(Vector3Normalize(VectorSet(-1, -1, 0, 0)), directionalLight->Direction);
 
-        entity = entity1;
+        entity = gEntityManager.GetEntity(entity2);
 
-        auto pos = entity1->Get<Position>();
+        auto pos = entity->Get<Position>();
         pos->mPosition.x += 1.f;
 
-        auto transform = entity1->GetTransform();
-        entity2->GetTransform().mPosition.x -= 1;
+        auto transform = entity->GetTransform();
+        gEntityManager.GetEntity(entity1)->GetTransform().mPosition.x -= 1;
     }
 
     void DriverSystem::Update(float deltaTime, float totalTime)

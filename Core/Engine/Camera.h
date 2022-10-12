@@ -28,6 +28,7 @@ namespace nv
         using float4x4 = math::float4x4;
     public:
         Camera(const CameraDesc& desc);
+        Camera() {}
 
         void UpdateViewProjection();
 

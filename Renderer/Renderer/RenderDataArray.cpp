@@ -29,7 +29,7 @@ namespace nv::graphics
         constexpr size_t MAX_QUEUED_RENDER_DATA = 3;
         if (mRenderDataQueue.Size() > MAX_QUEUED_RENDER_DATA)
         {
-            // Ensure data in queue is fresh by dequeing old data if we're at threshold.
+            // Ensure data in queue is fresh by dequeuing old data if we're at threshold.
             // TODO: Test with more objects.
             RenderData renderData;
             mRenderDataQueue.Pop(renderData); 

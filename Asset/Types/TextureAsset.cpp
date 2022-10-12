@@ -44,7 +44,7 @@ namespace nv::asset
         std::vector<D3D12_SUBRESOURCE_DATA> subresources;
         bool isCubeMap = false;
         auto hr = LoadDDSTextureFromMemoryEx(device->GetDevice(), data.mData, data.mSize, 0,
-            D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE, DDS_LOADER_FLAGS::DDS_LOADER_MIP_AUTOGEN, 
+            D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE, DDS_LOADER_FLAGS::DDS_LOADER_DEFAULT,
             resource->GetResource().ReleaseAndGetAddressOf(), subresources, nullptr, &isCubeMap);
 
         const UINT64 uploadBufferSize = GetRequiredIntermediateSize(resource->GetResource().Get(), 0,
@@ -71,6 +71,7 @@ namespace nv::asset
 
     void TextureAsset::Export(const AssetData& data, std::ostream& ostream, Type type)
     {
+        constexpr uint32_t MAX_MIP_LEVEL_GEN = 8;
 #if NV_RENDERER_DX12
         using namespace DirectX;
         TexMetadata metadata = {};
@@ -89,7 +90,7 @@ namespace nv::asset
             break;
         }
         
-        GenerateMipMaps(image.GetImages(), image.GetImageCount(), metadata, TEX_FILTER_FLAGS::TEX_FILTER_DEFAULT, 8, imageMipped);
+        GenerateMipMaps(image.GetImages(), image.GetImageCount(), metadata, TEX_FILTER_FLAGS::TEX_FILTER_DEFAULT, MAX_MIP_LEVEL_GEN, imageMipped);
         SaveToDDSMemory(imageMipped.GetImages(), imageMipped.GetImageCount(), imageMipped.GetMetadata(), DDS_FLAGS_NONE, blob);
         ostream.write((const char*)blob.GetBufferPointer(), blob.GetBufferSize());
 #endif

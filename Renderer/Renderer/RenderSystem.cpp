@@ -254,10 +254,16 @@ namespace nv::graphics
     {
         UpdateRenderData();
 
+        auto cams = ecs::gComponentManager.GetComponents<CameraComponent>();
+        if (cams.Size() == 0)
+            return;
+
+        auto& camera = cams[0].mCamera;
+
         mCamera.SetPosition({ 0,0, -5 });
         mCamera.UpdateViewProjection();
-        auto view = mCamera.GetViewTransposed();
-        auto proj = mCamera.GetProjTransposed();
+        auto view = camera.GetViewTransposed();
+        auto proj = camera.GetProjTransposed();
         FrameData data = { .View = view, .Projection = proj};
         gRenderer->UploadToConstantBuffer(mFrameCB, (uint8_t*)&data, sizeof(data));
 

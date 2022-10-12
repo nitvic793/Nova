@@ -6,7 +6,7 @@
 #include <Math/Types.h>
 
 #if NV_USE_DIRECTXMATH
-
+using namespace DirectX;
 // This code uses the DirectXMath library in abstracted form. 
 // Ideally DirectXMath would be replaced with custom definitions, 
 // but in interest of time and brevity, we use it as-is for now. 
@@ -108,6 +108,11 @@ inline Vector QuaternionRotationRollPitchYawFromVector(Vector vec) noexcept
 inline Vector VectorSet(float x, float y, float z, float w) noexcept
 {
     return DirectX::XMVectorSet(x, y, z, w);
+}
+
+inline void QuaternionToAxisAngle(Vector& axis, float& angle, Vector rotation)
+{
+    DirectX::XMQuaternionToAxisAngle(&axis, &angle, rotation);
 }
 
 }
