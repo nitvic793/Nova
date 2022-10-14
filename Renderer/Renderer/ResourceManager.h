@@ -4,6 +4,7 @@
 #include <Lib/Pool.h>
 #include <Renderer/CommonDefines.h>
 #include <AssetBase.h>
+#include <Renderer/ResourceTracker.h>
 
 namespace nv::graphics
 {
@@ -66,4 +67,5 @@ namespace nv::graphics
     };
 
     extern ResourceManager* gResourceManager;
+    extern ResourceTracker gResourceTracker;;
 }

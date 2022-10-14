@@ -20,6 +20,8 @@ namespace nv::graphics
 
     Handle<Texture> ResourceManager::CreateTexture(const TextureDesc& desc, ResID id)
     {
+        assert(!gResourceTracker.ExistsTexture(id));
+
         auto handle = CreateTexture(desc);
         gResourceTracker.Track(id, handle);
         return handle;

@@ -73,4 +73,28 @@ namespace nv::graphics
 
         mDeleteQueue.Clear();
     }
+
+    Viewport IRenderer::GetDefaultViewport() const
+    {
+        return
+        {
+            .mTopLeftX = 0,
+            .mTopLeftY = 0,
+            .mWidth = (float)gWindow->GetWidth(),
+            .mHeight = (float)gWindow->GetHeight(),
+            .mMinDepth = 0.0f,
+            .mMaxDepth = 1.0f
+        };
+    }
+
+    Rect IRenderer::GetDefaultScissorRect() const
+    {
+        return
+        {
+            .mLeft = 0,
+            .mTop = 0,
+            .mRight = (int32_t)gWindow->GetWidth(),
+            .mBottom = (int32_t)gWindow->GetHeight()
+        };
+    }
 }

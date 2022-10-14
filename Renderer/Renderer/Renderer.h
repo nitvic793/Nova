@@ -43,9 +43,11 @@ namespace nv::graphics
         virtual ConstantBufferView      CreateConstantBuffer(uint32_t size) = 0;
         virtual void                    UploadToConstantBuffer(ConstantBufferView view, uint8_t* data, uint32_t size) = 0;
 
-        Device* GetDevice() const;
-        void    QueueDestroy(Handle<GPUResource> resource);
-        void    ExecuteQueuedDestroy();
+        Device*     GetDevice() const;
+        void        QueueDestroy(Handle<GPUResource> resource);
+        void        ExecuteQueuedDestroy();
+        Viewport    GetDefaultViewport() const;
+        Rect        GetDefaultScissorRect() const;
 
     protected:
         ScopedPtr<Device, true>         mDevice;

@@ -187,6 +187,7 @@
     <ClInclude Include="Renderer\SwapChain.h" />
     <ClInclude Include="Renderer\Texture.h" />
     <ClInclude Include="Renderer\Window.h" />
+    <ClInclude Include="RenderPasses\ForwardPass.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DX12\ContextDX12.cpp" />
@@ -212,6 +213,7 @@
     <ClCompile Include="Renderer\RenderSystem.cpp" />
     <ClCompile Include="Renderer\ResourceManager.cpp" />
     <ClCompile Include="Renderer\ResourceTracker.cpp" />
+    <ClCompile Include="RenderPasses\ForwardPass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">

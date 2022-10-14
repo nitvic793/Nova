@@ -4,6 +4,7 @@
 #include <Renderer/CommonDefines.h>
 #include <Renderer/DescriptorHeap.h>
 #include <Renderer/Context.h>
+#include <Renderer/RenderDataArray.h>
 #include <Lib/Vector.h>
 #include <Interop/ShaderInteropTypes.h>
 
@@ -11,24 +12,30 @@ namespace nv::graphics
 {
     enum RenderPassType
     {
+        RENDERPASS_UNDEFINED = 0,
         RENDERPASS_OPAQUE,
+        RENDERPASS_EFFECTS,
         RENDERPASS_TRANSPARENT,
-        RENDERPASS_POSTPROCESS
+        RENDERPASS_POSTPROCESS,
+        RENDERPASS_UI,
+        RENDERPASS_DEBUG
     };
 
-    struct RenderPass
+    struct RenderPassData
     {
-        nv::Vector<Handle<Texture>> mRenderTargets;
-        Handle<DescriptorHeap>      mDescriptorHeaps;
-        Handle<Texture>             mDepthTarget        = Null<Texture>();
-        PrimitiveTopology           mPrimitiveTopology  = PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-        Viewport                    mViewport;
-        Rect                        mScissorRect;
-        FrameData                   mFrameData;
-        RenderPassType              mRenderPassType     = RENDERPASS_OPAQUE;
+        FrameData           mFrameData;
+        ConstantBufferView  mFrameDataCBV;
+        RenderData&         mRenderData;
+        RenderDataArray&    mRenderDataArray;
+    };
 
-        void Begin(Context* context) {};
-        virtual void RunPass() {};
+    class RenderPass
+    {
+    public:
+        virtual void Init() {}
+        virtual void Execute(const RenderPassData& renderPassData) = 0;
+        virtual void Destroy() {}
 
+        virtual RenderPassType GetRenderPassType() const { return RENDERPASS_OPAQUE; }
     };
 }

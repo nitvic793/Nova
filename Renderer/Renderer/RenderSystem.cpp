@@ -27,6 +27,8 @@
 #include <Components/Material.h>
 #include <Components/Renderable.h>
 
+#include <RenderPasses/ForwardPass.h>
+
 #include <thread>
 #include <functional>
 
@@ -72,33 +74,8 @@ namespace nv::graphics
         gEventBus.Subscribe(mReloadManager, &RenderReloadManager::OnReload);
     }
 
-    void RenderSystem::Init()
+    void LoadResources()
     {
-        mpConstantBufferPool = Alloc<ConstantBufferPool>();
-        gpConstantBufferPool = mpConstantBufferPool;
-
-        mViewport.mTopLeftX = 0;
-        mViewport.mTopLeftY = 0;
-        mViewport.mWidth = (float)gWindow->GetWidth();
-        mViewport.mHeight = (float)gWindow->GetHeight();
-        mViewport.mMinDepth = 0.0f;
-        mViewport.mMaxDepth = 1.0f;
-
-        mRect.mLeft = 0;
-        mRect.mTop = 0;
-        mRect.mRight = gWindow->GetWidth();
-        mRect.mBottom = gWindow->GetHeight();
-
-        mFrameCB = mpConstantBufferPool->GetConstantBuffer<FrameData>();
-        mObjectDrawData.mObjectCBView = mpConstantBufferPool->GetConstantBuffer<ObjectData>();
-        mObjectDrawData.mMaterialCBView = mpConstantBufferPool->GetConstantBuffer<MaterialData>();
-
-        // TODO:
-        // Refactor Resource Manager to take Resource ID as parameter
-        // Use Resource Tracker to track resource creation and ensure no duplication
-        // Create simple material system -> For each Material -> Pass only texture heap offsets index via Constant Buffer -> Use global ResourceHeapIndex in shader
-        // For each entity with Transform and Renderable -> Copy transform to Constant buffers, Bind mesh/materials and Draw
-
         const auto loadMesh = [&](ResID meshId)
         {
             auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_MESH, meshId });
@@ -106,38 +83,17 @@ namespace nv::graphics
             return gResourceManager->CreateMesh(m.GetData(), meshId);
         };
 
-        loadMesh(ID("Mesh/cube.obj"));
-        mMesh = loadMesh(ID("Mesh/torus.obj"));
+        nv::Vector<PBRMaterial> materials;
+        const auto loadMaterials = [&]()
+        {
+            for (const auto& mat : asset::gMaterialDatabase.mMaterials)
+            {
+                gResourceManager->CreateMaterial(mat.second, ID(mat.first.c_str()));
+                materials.Push(mat.second);
+            }
+        };
 
-        auto material = asset::gMaterialDatabase.mMaterials["Floor"];
-        auto bronzeMaterial = asset::gMaterialDatabase.mMaterials["Bronze"];
-
-        auto matHandle = gResourceManager->CreateMaterial(material, ID("Floor"));
-        auto matHandle2 = gResourceManager->CreateMaterial(bronzeMaterial, ID("Bronze")); 
-        Material* mat = gResourceManager->GetMaterial(matHandle);
-        Material* mat2 = gResourceManager->GetMaterial(matHandle2);
-
-        gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/SunnyCubeMap.dds") });
-
-        mTexture = mat2->mTextures[0];//gResourceManager->CreateTexture(tex.GetDesc(), texId);
-
-        auto ps = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultPS.hlsl") };
-        auto vs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultVS.hlsl") };
-
-        PipelineStateDesc psoDesc = {};
-        psoDesc.mPipelineType = PIPELINE_RASTER;
-        psoDesc.mPS = gResourceManager->CreateShader({ ps, shader::PIXEL });
-        psoDesc.mVS = gResourceManager->CreateShader({ vs, shader::VERTEX });
-        mPso = gResourceManager->CreatePipelineState(psoDesc);
-        mReloadManager->RegisterPSO(psoDesc, &mPso);
-
-        mRenderJobHandle = nv::jobs::Execute([this](void* ctx) 
-        { 
-            nv::log::Info("[Renderer] Start Render Job");
-            RenderThreadJob(ctx); 
-        });
-
-        auto unloadMaterial = [&](const PBRMaterial& material)
+        auto unloadMaterialAssets = [&](const PBRMaterial& material)
         {
             asset::gpAssetManager->UnloadAsset(material.mAlbedoTexture);
             asset::gpAssetManager->UnloadAsset(material.mNormalTexture);
@@ -145,8 +101,40 @@ namespace nv::graphics
             asset::gpAssetManager->UnloadAsset(material.mMetalnessTexture);
         };
 
-        unloadMaterial(material);
-        unloadMaterial(bronzeMaterial);
+        loadMesh(ID("Mesh/cube.obj"));
+        loadMesh(ID("Mesh/torus.obj"));
+        loadMaterials();
+        gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/SunnyCubeMap.dds") });
+
+        for (const auto& mat : materials)
+            unloadMaterialAssets(mat);
+    }
+
+    void RenderSystem::Init()
+    {
+        mpConstantBufferPool = Alloc<ConstantBufferPool>();
+        gpConstantBufferPool = mpConstantBufferPool;
+
+        mFrameCB = mpConstantBufferPool->GetConstantBuffer<FrameData>();
+        mObjectDrawData.mObjectCBView = mpConstantBufferPool->GetConstantBuffer<ObjectData>();
+        mObjectDrawData.mMaterialCBView = mpConstantBufferPool->GetConstantBuffer<MaterialData>();
+
+        LoadResources();
+
+        mRenderPasses.Emplace(new ForwardPass());
+
+        for (auto& pass : mRenderPasses)
+        {
+            pass->Init();
+        }
+
+        //mReloadManager->RegisterPSO(psoDesc, &mPso);
+
+        mRenderJobHandle = nv::jobs::Execute([this](void* ctx) 
+        { 
+            nv::log::Info("[Renderer] Start Render Job");
+            RenderThreadJob(ctx); 
+        });
     }
 
     void RenderSystem::Update(float deltaTime, float totalTime)
@@ -199,46 +187,21 @@ namespace nv::graphics
             gRenderer->Wait();
             gRenderer->StartFrame();
 
-            Context* ctx = gRenderer->GetContext();
-            auto objectCbs = mRenderData.GetObjectDescriptors();
-            auto materialCbs = mRenderData.GetMaterialDescriptors();
-            const auto bindAndDrawObject = [&](ConstantBufferView objCb, ConstantBufferView matCb, Mesh* mesh)
             {
-                ctx->BindConstantBuffer(0, (uint32_t)objCb.mHeapIndex);
-                ctx->BindConstantBuffer(1, (uint32_t)matCb.mHeapIndex);
-                ctx->SetMesh(mesh);
-                for (auto entry : mesh->GetDesc().mMeshEntries)
-                {
-                    ctx->DrawIndexedInstanced(entry.mNumIndices, 1, entry.mBaseIndex, entry.mBaseVertex, 0);
-                }
-            };
-
-            {
+                Context* ctx = gRenderer->GetContext();
                 GPUBeginEvent(ctx, "Frame");
                 NV_EVENT("Renderer/Frame");
-                const auto topology = PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-                const auto renderTarget = gRenderer->GetDefaultRenderTarget();
-                const auto depthTarget = gRenderer->GetDefaultDepthTarget();
-                const auto gpuHeap = gRenderer->GetGPUDescriptorHeap();
-                Handle<Texture> targets[] = { renderTarget };
-                Handle<DescriptorHeap> heaps[] = { gpuHeap };
 
-                ctx->SetScissorRect(1, &mRect);
-                ctx->SetViewports(1, &mViewport);
-                ctx->SetPrimitiveTopology(topology);
-                ctx->SetDescriptorHeap({ heaps, _countof(heaps) });
-
-                ctx->SetRenderTarget({ targets, _countof(targets) }, depthTarget);
-                ctx->SetPipeline(mPso);
-                ctx->Bind(4, BIND_BUFFER, (uint32_t)mFrameCB.mHeapIndex);
-
-                for (size_t i = 0; i < objectCbs.Size(); ++i)
+                for (auto& pass : mRenderPasses)
                 {
-                    const auto& objectCb = objectCbs[i];
-                    const auto& matCb = materialCbs[i];
-                    const auto mesh = mCurrentRenderData[i].mpMesh;
-                    if (mesh)
-                        bindAndDrawObject(objectCb, matCb, mesh);
+                    RenderPassData data =
+                    {
+                        .mFrameDataCBV = mFrameCB,
+                        .mRenderData = mCurrentRenderData,
+                        .mRenderDataArray = mRenderData
+                    };
+
+                    pass->Execute(data);
                 }
 
                 // TODO:

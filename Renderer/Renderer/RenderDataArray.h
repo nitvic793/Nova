@@ -132,17 +132,19 @@ namespace nv::graphics
         RenderDescriptors               mRenderDescriptors;
         ConcurrentQueue<RenderData>     mRenderDataQueue;
         uint32_t                        mRenderThreadId;
+        RenderData*                     mCurrentRenderData;
 
         RenderDataArray();
         void Clear(); // Switch buffer and clears non current buffer
 
         void QueueRenderData();
-        bool PopRenderData(RenderData& out) { if (mRenderDataQueue.IsEmpty()) return false; mRenderDataQueue.Pop(out); return true; }
+        bool PopRenderData(RenderData& out) { if (mRenderDataQueue.IsEmpty()) return false; mRenderDataQueue.Pop(out); mCurrentRenderData = &out; return true; }
         void GenerateDescriptors(RenderData& rd);
 
         // Get data from "current" buffer
-        constexpr Span<CBV>             GetObjectDescriptors()      const { return mRenderDescriptors.mObjectCBs.Span();}
-        constexpr Span<CBV>             GetMaterialDescriptors()    const { return mRenderDescriptors.mMaterialCBs.Span(); }
+        constexpr Span<CBV>     GetObjectDescriptors()      const { return mRenderDescriptors.mObjectCBs.Span();}
+        constexpr Span<CBV>     GetMaterialDescriptors()    const { return mRenderDescriptors.mMaterialCBs.Span(); }
+        constexpr RenderData&   GetRenderData()             const { return *mCurrentRenderData; }
     };
 
     extern ConstantBufferPool* gpConstantBufferPool;

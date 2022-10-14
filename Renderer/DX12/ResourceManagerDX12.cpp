@@ -108,6 +108,9 @@ namespace nv::graphics
 
     Handle<Shader> ResourceManagerDX12::CreateShader(const ShaderDesc& desc)
     {
+        if (gResourceTracker.ExistsShader(desc.mShader.mHash))
+            return gResourceTracker.GetShaderHandle(desc.mShader.mHash);
+
         Handle<Shader> handle;
         auto shader = mShaders.CreateInstance(handle, desc);
         shader->Load();

@@ -151,7 +151,7 @@ namespace nv::graphics
         for (int32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
         {
             TextureDesc rtvDesc = { .mUsage = tex::USAGE_RENDER_TARGET, .mFormat = format,.mBuffer = mpBackBuffers[i] };
-            mRenderTargets[i] = gResourceManager->CreateTexture(rtvDesc);
+            mRenderTargets[i] = gResourceManager->CreateTexture(rtvDesc, ID(fmt::format("SwapChainRenderTarget-{}", i).c_str()));
         }
         
         auto depthResource = gResourceManager->CreateResource(

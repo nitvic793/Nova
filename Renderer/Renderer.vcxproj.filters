@@ -138,6 +138,9 @@
     <ClInclude Include="Renderer\RenderPass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RenderPasses\ForwardPass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer\Renderer.cpp">
@@ -192,6 +195,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\RenderDataArray.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPasses\ForwardPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -5,6 +5,7 @@
 
 #include <Renderer/CommonDefines.h>
 #include <Renderer/RenderDataArray.h>
+#include <Renderer/RenderPass.h>
 #include <Engine/System.h>
 #include <Engine/Camera.h>
 #include <Lib/ConcurrentQueue.h>
@@ -71,6 +72,7 @@ namespace nv::graphics
 
         RenderDataArray         mRenderData;
         RenderData              mCurrentRenderData;
+        nv::Vector<ScopedPtr<RenderPass, true>> mRenderPasses;
     };
 }
 
