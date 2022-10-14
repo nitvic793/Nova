@@ -62,6 +62,20 @@ namespace nv::graphics
         return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
     }
 
+    constexpr D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveTopologyType(PrimitiveTopologyType topology)
+    {
+        switch (topology)
+        {
+            case PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED  : return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;    
+            case PRIMITIVE_TOPOLOGY_TYPE_POINT      : return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT    ;    
+            case PRIMITIVE_TOPOLOGY_TYPE_LINE       : return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE     ;    
+            case PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE   : return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE ;    
+            case PRIMITIVE_TOPOLOGY_TYPE_PATCH      : return D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH    ;    
+        }
+
+        return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
+    }
+
     static const D3D12_RESOURCE_FLAGS GetFlags(buffer::Flags bufferFlags)
     {
         D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE;

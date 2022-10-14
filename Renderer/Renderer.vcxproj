@@ -188,6 +188,7 @@
     <ClInclude Include="Renderer\Texture.h" />
     <ClInclude Include="Renderer\Window.h" />
     <ClInclude Include="RenderPasses\ForwardPass.h" />
+    <ClInclude Include="RenderPasses\Skybox.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DX12\ContextDX12.cpp" />
@@ -214,6 +215,7 @@
     <ClCompile Include="Renderer\ResourceManager.cpp" />
     <ClCompile Include="Renderer\ResourceTracker.cpp" />
     <ClCompile Include="RenderPasses\ForwardPass.cpp" />
+    <ClCompile Include="RenderPasses\Skybox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Lib/Handle.h>
+#include <Renderer/Format.h>
+#include <Renderer/CommonDefines.h>
 
 namespace nv::graphics
 {
@@ -19,6 +21,15 @@ namespace nv::graphics
         Handle<Shader>  mVS; // Vertex Shader
         Handle<Shader>  mPS; // Pixel Shader
         Handle<Shader>  mCS; // Compute Shader
+
+        DepthStencilState mDepthStencilState;
+        RasterizerState   mRasterizerState;
+        BlendState        mBlendState;
+
+        uint32_t                mNumRenderTargets   = 1;
+        format::SurfaceFormat   mRenderTargetFormats[MAX_RENDER_TARGET_COUNT];
+        format::SurfaceFormat   mDepthFormat        = format::D32_FLOAT;
+        PrimitiveTopologyType   mPrimitiveTopology  = PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     };
 
     class PipelineState
