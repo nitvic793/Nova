@@ -63,10 +63,11 @@ namespace nv::graphics
         virtual Context*                GetContext() const override;
         virtual ConstantBufferView      CreateConstantBuffer(uint32_t size) override;
         virtual void                    UploadToConstantBuffer(ConstantBufferView view, uint8_t* data, uint32_t size) override;
+        virtual format::SurfaceFormat   GetDepthSurfaceFormat() const override { return mDsvFormat; }
+        virtual format::SurfaceFormat   GetDefaultRenderTargetFormat() const override { return mBackbufferFormat; }
         ~RendererDX12();
 
     public:
-
         uint32_t                    GetBackBufferIndex() const;
         ID3D12CommandAllocator*     GetAllocator() const;
         ID3D12CommandQueue*         GetCommandQueue() const;

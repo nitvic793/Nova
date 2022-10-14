@@ -38,6 +38,8 @@ namespace nv::graphics
 
         virtual Handle<Texture>         GetDefaultRenderTarget() const = 0; // Return current final default render target
         virtual Handle<Texture>         GetDefaultDepthTarget() const = 0; // Return current final default depth target
+        virtual format::SurfaceFormat   GetDepthSurfaceFormat() const = 0;
+        virtual format::SurfaceFormat   GetDefaultRenderTargetFormat() const = 0;
         virtual Handle<DescriptorHeap>  GetGPUDescriptorHeap() const = 0;
         virtual Context*                GetContext() const = 0;
         virtual ConstantBufferView      CreateConstantBuffer(uint32_t size) = 0;

@@ -210,12 +210,16 @@ namespace nv::graphics
         uint32_t backBufferIndex = 0;
         for (int i = 0; i < FRAMEBUFFER_COUNT; ++i)
         {
+            backBufferIndex = i;
+            const uint64_t currentFenceVal = mFenceValues[backBufferIndex];
             mCommandQueue->Signal(mFences[backBufferIndex].Get(), mFenceValues[backBufferIndex]);
             if (mFences[backBufferIndex]->GetCompletedValue() < mFenceValues[backBufferIndex])
             {
                 auto hr = mFences[backBufferIndex]->SetEventOnCompletion(mFenceValues[backBufferIndex], mFenceEvents[backBufferIndex]);
                 WaitForSingleObjectEx(mFenceEvents[backBufferIndex], INFINITE, FALSE);
             }
+
+            mFenceValues[backBufferIndex] = currentFenceVal + 1;
         }
     }
 
