@@ -1,5 +1,7 @@
 #pragma once
 
+static const uint32_t MAX_DIRECTIONAL_LIGHTS = 2;
+
 #ifdef __cplusplus
 #include <Math/Math.h>
 #include <Engine/Component.h>
@@ -35,8 +37,9 @@ namespace nv::graphics
     struct DirectionalLight NV_COMPONENT
     {
         float3  Direction;
-        float3  Color;
         float   Intensity;
+        float3  Color;
+        float   _Padding;
     };
 
     struct PointLight NV_COMPONENT
@@ -59,8 +62,11 @@ namespace nv::graphics
 
     struct FrameData
     {
-        float4x4 View;
-        float4x4 Projection;
+        float4x4            View;
+        float4x4            Projection;
+        DirectionalLight    DirLights[MAX_DIRECTIONAL_LIGHTS];
+        uint32_t            DirLightsCount;
+        float               _Padding;
     };
 
 #ifdef __cplusplus

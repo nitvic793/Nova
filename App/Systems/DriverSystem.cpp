@@ -36,9 +36,9 @@ namespace nv
         auto entity2 = createEntity(ID("Mesh/cube.obj"), ID("Bronze"));
         auto e3 = createEntity(RES_ID_NULL, RES_ID_NULL);
         auto directionalLight = gEntityManager.GetEntity(e3)->Add<DirectionalLight>();
-        directionalLight->Color = float3(0.5, 0.5, 0.5);
+        directionalLight->Color = float3(0.9f, 0.9f, 0.9f);
         directionalLight->Intensity = 1.f;
-        Store(Vector3Normalize(VectorSet(-1, -1, 0, 0)), directionalLight->Direction);
+        Store(Vector3Normalize(VectorSet(1, -1, 1, 0)), directionalLight->Direction);
 
         entity = gEntityManager.GetEntity(entity2);
 

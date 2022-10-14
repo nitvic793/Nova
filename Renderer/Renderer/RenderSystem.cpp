@@ -229,7 +229,19 @@ namespace nv::graphics
         mCamera.UpdateViewProjection();
         auto view = camera.GetViewTransposed();
         auto proj = camera.GetProjTransposed();
-        FrameData data = { .View = view, .Projection = proj};
+        auto dirLights = ecs::gComponentManager.GetComponents<DirectionalLight>();
+
+        FrameData data = { .View = view, .Projection = proj };
+        if (dirLights.Size() > 0)
+        {
+            for (uint32_t i = 0; i < dirLights.Size() && i < MAX_DIRECTIONAL_LIGHTS; ++i)
+            {
+                data.DirLights[i] = dirLights[i];
+            }
+
+            data.DirLightsCount = std::min((uint32_t)MAX_DIRECTIONAL_LIGHTS, (uint32_t)dirLights.Size());
+        }
+
         gRenderer->UploadToConstantBuffer(mFrameCB, (uint8_t*)&data, sizeof(data));
 
         auto objectCbs = mRenderData.GetObjectDescriptors();
