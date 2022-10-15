@@ -20,6 +20,9 @@ namespace nv::graphics
         psoDesc.mPipelineType = PIPELINE_RASTER;
         psoDesc.mPS = gResourceManager->CreateShader({ ps, shader::PIXEL });
         psoDesc.mVS = gResourceManager->CreateShader({ vs, shader::VERTEX });
+        psoDesc.mNumRenderTargets = 1;
+        psoDesc.mRenderTargetFormats[0] = gRenderer->GetDefaultRenderTargetFormat();
+        psoDesc.mDepthFormat = gRenderer->GetDepthSurfaceFormat();
         mForwardPSO = gResourceManager->CreatePipelineState(psoDesc);
     }
 

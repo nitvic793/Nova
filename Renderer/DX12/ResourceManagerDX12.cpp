@@ -197,14 +197,15 @@ namespace nv::graphics
         psoDesc.VS = vs->GetByteCode();
         psoDesc.PS = ps->GetByteCode();
 
-        psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        psoDesc.DepthStencilState = GetDepthStencilDesc(desc.mDepthStencilState);
+        psoDesc.RasterizerState = GetRasterizerDesc(desc.mRasterizerState);
+        psoDesc.BlendState = GetBlendState(desc.mBlendState);
 
-        psoDesc.NumRenderTargets = 1;
-        psoDesc.DSVFormat = GetFormat(renderer->mDsvFormat);
-        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        psoDesc.RTVFormats[0] = GetFormat(renderer->mBackbufferFormat);
+        psoDesc.NumRenderTargets = desc.mNumRenderTargets;
+        psoDesc.DSVFormat = GetFormat(desc.mDepthFormat);
+        psoDesc.PrimitiveTopologyType = GetPrimitiveTopologyType(desc.mPrimitiveTopology);
+        for (uint32_t i = 0; i < MAX_RENDER_TARGET_COUNT; ++i)
+            psoDesc.RTVFormats[i] = GetFormat(desc.mRenderTargetFormats[i]);
         psoDesc.SampleDesc = sampleDesc;
         psoDesc.SampleMask = 0xffffffff;
 

@@ -6,6 +6,7 @@
 #include <Renderer/CommonDefines.h>
 #include <Renderer/Format.h>
 #include <d3d12.h>
+#include <DX12/d3dx12.h>
 #include <dxgiformat.h>
 
 namespace nv::graphics
@@ -83,23 +84,63 @@ namespace nv::graphics
             case DEPTH_WRITE_MASK_ZERO  : return D3D12_DEPTH_WRITE_MASK_ZERO;
             case DEPTH_WRITE_MASK_ALL   : return D3D12_DEPTH_WRITE_MASK_ALL;
         }
+
+        return D3D12_DEPTH_WRITE_MASK_ZERO;
     }
 
     constexpr D3D12_COMPARISON_FUNC GetComparisonFunc(ComparisonFunc func)
     {
         switch (func)
         {
-            case COMPARISON_FUNC_NONE         : D3D12_COMPARISON_FUNC_NONE         ;
-            case COMPARISON_FUNC_NEVER        : D3D12_COMPARISON_FUNC_NEVER        ;
-            case COMPARISON_FUNC_LESS         : D3D12_COMPARISON_FUNC_LESS         ;
-            case COMPARISON_FUNC_EQUAL        : D3D12_COMPARISON_FUNC_EQUAL        ;
-            case COMPARISON_FUNC_LESS_EQUAL   : D3D12_COMPARISON_FUNC_LESS_EQUAL   ;
-            case COMPARISON_FUNC_GREATER      : D3D12_COMPARISON_FUNC_GREATER      ;
-            case COMPARISON_FUNC_NOT_EQUAL    : D3D12_COMPARISON_FUNC_NOT_EQUAL    ;
-            case COMPARISON_FUNC_GREATER_EQUAL: D3D12_COMPARISON_FUNC_GREATER_EQUAL;
-            case COMPARISON_FUNC_ALWAYS       : D3D12_COMPARISON_FUNC_ALWAYS       ;
+            case COMPARISON_FUNC_NONE         : return D3D12_COMPARISON_FUNC_NONE         ;
+            case COMPARISON_FUNC_NEVER        : return D3D12_COMPARISON_FUNC_NEVER        ;
+            case COMPARISON_FUNC_LESS         : return D3D12_COMPARISON_FUNC_LESS         ;
+            case COMPARISON_FUNC_EQUAL        : return D3D12_COMPARISON_FUNC_EQUAL        ;
+            case COMPARISON_FUNC_LESS_EQUAL   : return D3D12_COMPARISON_FUNC_LESS_EQUAL   ;
+            case COMPARISON_FUNC_GREATER      : return D3D12_COMPARISON_FUNC_GREATER      ;
+            case COMPARISON_FUNC_NOT_EQUAL    : return D3D12_COMPARISON_FUNC_NOT_EQUAL    ;
+            case COMPARISON_FUNC_GREATER_EQUAL: return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+            case COMPARISON_FUNC_ALWAYS       : return D3D12_COMPARISON_FUNC_ALWAYS       ;
         }
+
+        return D3D12_COMPARISON_FUNC_NONE;
     }
+
+    constexpr D3D12_FILL_MODE GetFillMode(FillMode mode)
+    {
+        switch (mode)
+        {
+            case FILL_MODE_WIREFRAME : return D3D12_FILL_MODE_WIREFRAME;
+            case     FILL_MODE_SOLID : return D3D12_FILL_MODE_SOLID    ;
+        }
+
+        return D3D12_FILL_MODE_SOLID;
+    }
+
+    constexpr D3D12_CULL_MODE GetCullMode(CullMode mode)
+    {
+        switch (mode)
+        {
+            case CULL_MODE_NONE : return D3D12_CULL_MODE_NONE ;
+            case CULL_MODE_FRONT: return D3D12_CULL_MODE_FRONT;
+            case CULL_MODE_BACK : return D3D12_CULL_MODE_BACK ;
+        }
+
+        return D3D12_CULL_MODE_NONE;
+    }
+
+    constexpr D3D12_CONSERVATIVE_RASTERIZATION_MODE GetConservativeRasterMode(ConservativeRasterMode mode)
+    {
+        switch (mode)
+        {
+            case CONSERVATIVE_RASTERIZATION_MODE_OFF    : return D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+            case CONSERVATIVE_RASTERIZATION_MODE_ON     : return D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON;
+        }
+
+        return D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+    }
+
+
 
     static const D3D12_RESOURCE_FLAGS GetFlags(buffer::Flags bufferFlags)
     {
@@ -123,6 +164,154 @@ namespace nv::graphics
         }
 
         return D3D12_HEAP_TYPE_DEFAULT;
+    }
+
+    constexpr D3D12_DEPTH_STENCIL_DESC GetDepthStencilDesc(const DepthStencilState& ds)
+    {
+        CD3DX12_DEPTH_STENCIL_DESC desc = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+        desc.DepthEnable = ds.mDepthEnable;
+        desc.DepthWriteMask = GetDepthWriteMask(ds.mDepthWriteMask);
+        desc.DepthFunc = GetComparisonFunc(ds.mDepthFunc);
+        desc.StencilEnable = ds.mStencilEnable;
+
+        return desc;
+    }
+
+    constexpr D3D12_RASTERIZER_DESC GetRasterizerDesc(const RasterizerState& rs)
+    {
+        auto desc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        desc.FillMode = GetFillMode(rs.mFillMode);
+        desc.CullMode = GetCullMode(rs.mCullMode);
+        desc.FrontCounterClockwise = rs.mFrontCounterClockwise;
+        desc.DepthBias = rs.mDepthBias;
+        desc.DepthBiasClamp = rs.mDepthBiasClamp;
+        desc.SlopeScaledDepthBias = rs.mSlopeScaledDepthBias;
+        desc.DepthClipEnable = rs.mDepthClipEnable;
+        desc.MultisampleEnable = rs.mMultisampleEnable;
+        desc.AntialiasedLineEnable = rs.mAntialiasedLineEnable;
+        desc.ForcedSampleCount = rs.mForcedSampleCount;
+        desc.ConservativeRaster = GetConservativeRasterMode(rs.mConservativeRasterMode);
+
+        return desc;
+    }
+
+    constexpr D3D12_BLEND GetBlend(Blend blend)
+    {
+        switch (blend)
+        {
+            case BLEND_ZERO             : return D3D12_BLEND_ZERO            ;
+            case BLEND_ONE              : return D3D12_BLEND_ONE             ;
+            case BLEND_SRC_COLOR        : return D3D12_BLEND_SRC_COLOR       ;
+            case BLEND_INV_SRC_COLOR    : return D3D12_BLEND_INV_SRC_COLOR   ;
+            case BLEND_SRC_ALPHA        : return D3D12_BLEND_SRC_ALPHA       ;
+            case BLEND_INV_SRC_ALPHA    : return D3D12_BLEND_INV_SRC_ALPHA   ;
+            case BLEND_DEST_ALPHA       : return D3D12_BLEND_DEST_ALPHA      ;
+            case BLEND_INV_DEST_ALPHA   : return D3D12_BLEND_INV_DEST_ALPHA  ;
+            case BLEND_DEST_COLOR       : return D3D12_BLEND_DEST_COLOR      ;
+            case BLEND_INV_DEST_COLOR   : return D3D12_BLEND_INV_DEST_COLOR  ;
+            case BLEND_SRC_ALPHA_SAT    : return D3D12_BLEND_SRC_ALPHA_SAT   ;
+            case BLEND_BLEND_FACTOR     : return D3D12_BLEND_BLEND_FACTOR    ;
+            case BLEND_INV_BLEND_FACTOR : return D3D12_BLEND_INV_BLEND_FACTOR;
+            case BLEND_SRC1_COLOR       : return D3D12_BLEND_SRC1_COLOR      ;
+            case BLEND_INV_SRC1_COLOR   : return D3D12_BLEND_INV_SRC1_COLOR  ;
+            case BLEND_SRC1_ALPHA       : return D3D12_BLEND_SRC1_ALPHA      ;
+            case BLEND_INV_SRC1_ALPHA   : return D3D12_BLEND_INV_SRC1_ALPHA  ;
+            case BLEND_ALPHA_FACTOR     : return D3D12_BLEND_ALPHA_FACTOR    ;
+            case BLEND_INV_ALPHA_FACTOR : return D3D12_BLEND_INV_ALPHA_FACTOR;
+        }
+
+        return D3D12_BLEND_ZERO;
+    }
+
+    constexpr D3D12_LOGIC_OP GetLogicOp(LogicOp op)
+    {
+        switch (op)
+        {
+            case LOGIC_OP_CLEAR         : return D3D12_LOGIC_OP_CLEAR        ;
+            case LOGIC_OP_SET           : return D3D12_LOGIC_OP_SET          ;
+            case LOGIC_OP_COPY          : return D3D12_LOGIC_OP_COPY         ;
+            case LOGIC_OP_COPY_INVERTED : return D3D12_LOGIC_OP_COPY_INVERTED;
+            case LOGIC_OP_NOOP          : return D3D12_LOGIC_OP_NOOP         ;
+            case LOGIC_OP_INVERT        : return D3D12_LOGIC_OP_INVERT       ;
+            case LOGIC_OP_AND           : return D3D12_LOGIC_OP_AND          ;
+            case LOGIC_OP_NAND          : return D3D12_LOGIC_OP_NAND         ;
+            case LOGIC_OP_OR            : return D3D12_LOGIC_OP_OR           ;
+            case LOGIC_OP_NOR           : return D3D12_LOGIC_OP_NOR          ;
+            case LOGIC_OP_XOR           : return D3D12_LOGIC_OP_XOR          ;
+            case LOGIC_OP_EQUIV         : return D3D12_LOGIC_OP_EQUIV        ;
+            case LOGIC_OP_AND_REVERSE   : return D3D12_LOGIC_OP_AND_REVERSE  ;
+            case LOGIC_OP_AND_INVERTED  : return D3D12_LOGIC_OP_AND_INVERTED ;
+            case LOGIC_OP_OR_REVERSE    : return D3D12_LOGIC_OP_OR_REVERSE   ;
+            case LOGIC_OP_OR_INVERTED   : return D3D12_LOGIC_OP_OR_INVERTED  ;
+        }
+
+        return D3D12_LOGIC_OP_CLEAR;
+    }
+
+    constexpr D3D12_BLEND_OP GetBlendOp(BlendOp op)
+    {
+        switch (op)
+        {
+            case BLEND_OP_ADD          : return D3D12_BLEND_OP_ADD         ;
+            case BLEND_OP_SUBTRACT     : return D3D12_BLEND_OP_SUBTRACT    ;
+            case BLEND_OP_REV_SUBTRACT : return D3D12_BLEND_OP_REV_SUBTRACT;
+            case BLEND_OP_MIN          : return D3D12_BLEND_OP_MIN         ;
+            case BLEND_OP_MAX          : return D3D12_BLEND_OP_MAX         ;
+        }
+
+        return D3D12_BLEND_OP_ADD;
+    }
+
+    constexpr D3D12_COLOR_WRITE_ENABLE GetColorWriteEnable(ColorWriteEnable cw)
+    {
+        switch (cw)
+        {
+            case COLOR_WRITE_ENABLE_RED   : return D3D12_COLOR_WRITE_ENABLE_RED  ;
+            case COLOR_WRITE_ENABLE_GREEN : return D3D12_COLOR_WRITE_ENABLE_GREEN;
+            case COLOR_WRITE_ENABLE_BLUE  : return D3D12_COLOR_WRITE_ENABLE_BLUE ;
+            case COLOR_WRITE_ENABLE_ALPHA : return D3D12_COLOR_WRITE_ENABLE_ALPHA;
+            case COLOR_WRITE_ENABLE_ALL   : return D3D12_COLOR_WRITE_ENABLE_ALL  ;
+        }
+
+        return D3D12_COLOR_WRITE_ENABLE_ALL;
+    }
+
+    constexpr D3D12_RENDER_TARGET_BLEND_DESC GetRTBlendDesc(const RenderTargetBlendDesc& desc)
+    {
+        D3D12_RENDER_TARGET_BLEND_DESC outDesc =
+        {
+            FALSE,FALSE,
+            D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+            D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+            D3D12_LOGIC_OP_NOOP,
+            D3D12_COLOR_WRITE_ENABLE_ALL,
+        };
+
+        outDesc.BlendEnable           = desc.mBlendEnable;
+        outDesc.LogicOpEnable         = desc.mLogicOpEnable;
+        outDesc.SrcBlend              = GetBlend(desc.mSrcBlend);
+        outDesc.DestBlend             = GetBlend(desc.mDestBlend);
+        outDesc.BlendOp               = GetBlendOp(desc.mBlendOp);
+        outDesc.SrcBlendAlpha         = GetBlend(desc.mSrcBlendAlpha);
+        outDesc.DestBlendAlpha        = GetBlend(desc.mDestBlendAlpha);
+        outDesc.BlendOpAlpha          = GetBlendOp(desc.mBlendOpAlpha);
+        outDesc.LogicOp               = GetLogicOp(desc.mLogicOp);
+        outDesc.RenderTargetWriteMask = desc.mRenderTargetWriteMask;
+        
+        return outDesc;
+    }
+
+    constexpr D3D12_BLEND_DESC GetBlendState(const BlendState& bs)
+    {
+        auto desc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        desc.AlphaToCoverageEnable = bs.mAlphaToCoverageEnable;
+        desc.IndependentBlendEnable = bs.mIndependentBlendEnable;
+        for (uint32_t i = 0; i < MAX_RENDER_TARGET_COUNT; ++i)
+        {
+            desc.RenderTarget[i] = GetRTBlendDesc(bs.mRenderTarget[i]);
+        }
+
+        return desc;
     }
 
     constexpr D3D12_COMMAND_LIST_TYPE GetCommandListType(ContextType context)

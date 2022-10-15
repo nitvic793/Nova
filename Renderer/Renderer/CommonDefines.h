@@ -113,63 +113,63 @@ namespace nv::graphics
 
     enum Blend
     {
-        BLEND_ZERO = 1,
-        BLEND_ONE = 2,
-        BLEND_SRC_COLOR = 3,
-        BLEND_INV_SRC_COLOR = 4,
-        BLEND_SRC_ALPHA = 5,
-        BLEND_INV_SRC_ALPHA = 6,
-        BLEND_DEST_ALPHA = 7,
-        BLEND_INV_DEST_ALPHA = 8,
-        BLEND_DEST_COLOR = 9,
-        BLEND_INV_DEST_COLOR = 10,
-        BLEND_SRC_ALPHA_SAT = 11,
-        BLEND_BLEND_FACTOR = 14,
-        BLEND_INV_BLEND_FACTOR = 15,
-        BLEND_SRC1_COLOR = 16,
-        BLEND_INV_SRC1_COLOR = 17,
-        BLEND_SRC1_ALPHA = 18,
-        BLEND_INV_SRC1_ALPHA = 19,
-        BLEND_ALPHA_FACTOR = 20,
-        BLEND_INV_ALPHA_FACTOR = 21
+        BLEND_ZERO              = 1,
+        BLEND_ONE               = 2,
+        BLEND_SRC_COLOR         = 3,
+        BLEND_INV_SRC_COLOR     = 4,
+        BLEND_SRC_ALPHA         = 5,
+        BLEND_INV_SRC_ALPHA     = 6,
+        BLEND_DEST_ALPHA        = 7,
+        BLEND_INV_DEST_ALPHA    = 8,
+        BLEND_DEST_COLOR        = 9,
+        BLEND_INV_DEST_COLOR    = 10,
+        BLEND_SRC_ALPHA_SAT     = 11,
+        BLEND_BLEND_FACTOR      = 14,
+        BLEND_INV_BLEND_FACTOR  = 15,
+        BLEND_SRC1_COLOR        = 16,
+        BLEND_INV_SRC1_COLOR    = 17,
+        BLEND_SRC1_ALPHA        = 18,
+        BLEND_INV_SRC1_ALPHA    = 19,
+        BLEND_ALPHA_FACTOR      = 20,
+        BLEND_INV_ALPHA_FACTOR  = 21
     };
 
     enum LogicOp
     {
-        LOGIC_OP_CLEAR = 0,
-        LOGIC_OP_SET = (LOGIC_OP_CLEAR + 1),
-        LOGIC_OP_COPY = (LOGIC_OP_SET + 1),
-        LOGIC_OP_COPY_INVERTED = (LOGIC_OP_COPY + 1),
-        LOGIC_OP_NOOP = (LOGIC_OP_COPY_INVERTED + 1),
-        LOGIC_OP_INVERT = (LOGIC_OP_NOOP + 1),
-        LOGIC_OP_AND = (LOGIC_OP_INVERT + 1),
-        LOGIC_OP_NAND = (LOGIC_OP_AND + 1),
-        LOGIC_OP_OR = (LOGIC_OP_NAND + 1),
-        LOGIC_OP_NOR = (LOGIC_OP_OR + 1),
-        LOGIC_OP_XOR = (LOGIC_OP_NOR + 1),
-        LOGIC_OP_EQUIV = (LOGIC_OP_XOR + 1),
-        LOGIC_OP_AND_REVERSE = (LOGIC_OP_EQUIV + 1),
-        LOGIC_OP_AND_INVERTED = (LOGIC_OP_AND_REVERSE + 1),
-        LOGIC_OP_OR_REVERSE = (LOGIC_OP_AND_INVERTED + 1),
-        LOGIC_OP_OR_INVERTED = (LOGIC_OP_OR_REVERSE + 1)
+        LOGIC_OP_CLEAR          = 0,
+        LOGIC_OP_SET            = (LOGIC_OP_CLEAR + 1),
+        LOGIC_OP_COPY           = (LOGIC_OP_SET + 1),
+        LOGIC_OP_COPY_INVERTED  = (LOGIC_OP_COPY + 1),
+        LOGIC_OP_NOOP           = (LOGIC_OP_COPY_INVERTED + 1),
+        LOGIC_OP_INVERT         = (LOGIC_OP_NOOP + 1),
+        LOGIC_OP_AND            = (LOGIC_OP_INVERT + 1),
+        LOGIC_OP_NAND           = (LOGIC_OP_AND + 1),
+        LOGIC_OP_OR             = (LOGIC_OP_NAND + 1),
+        LOGIC_OP_NOR            = (LOGIC_OP_OR + 1),
+        LOGIC_OP_XOR            = (LOGIC_OP_NOR + 1),
+        LOGIC_OP_EQUIV          = (LOGIC_OP_XOR + 1),
+        LOGIC_OP_AND_REVERSE    = (LOGIC_OP_EQUIV + 1),
+        LOGIC_OP_AND_INVERTED   = (LOGIC_OP_AND_REVERSE + 1),
+        LOGIC_OP_OR_REVERSE     = (LOGIC_OP_AND_INVERTED + 1),
+        LOGIC_OP_OR_INVERTED    = (LOGIC_OP_OR_REVERSE + 1)
     };
 
     enum BlendOp
     {
-        BLEND_OP_ADD = 1,
-        BLEND_OP_SUBTRACT = 2,
-        BLEND_OP_REV_SUBTRACT = 3,
-        BLEND_OP_MIN = 4,
-        BLEND_OP_MAX = 5
+        BLEND_OP_ADD            = 1,
+        BLEND_OP_SUBTRACT       = 2,
+        BLEND_OP_REV_SUBTRACT   = 3,
+        BLEND_OP_MIN            = 4,
+        BLEND_OP_MAX            = 5
     };
 
     enum ColorWriteEnable : uint8_t
     {
-        COLOR_WRITE_ENABLE_RED = 1,
-        COLOR_WRITE_ENABLE_GREEN = 2,
-        COLOR_WRITE_ENABLE_BLUE = 4,
-        COLOR_WRITE_ENABLE_ALPHA = 8,
-        COLOR_WRITE_ENABLE_ALL = (((COLOR_WRITE_ENABLE_RED | COLOR_WRITE_ENABLE_GREEN) | COLOR_WRITE_ENABLE_BLUE) | COLOR_WRITE_ENABLE_ALPHA)
+        COLOR_WRITE_ENABLE_RED      = 1,
+        COLOR_WRITE_ENABLE_GREEN    = 2,
+        COLOR_WRITE_ENABLE_BLUE     = 4,
+        COLOR_WRITE_ENABLE_ALPHA    = 8,
+        COLOR_WRITE_ENABLE_ALL      = (((COLOR_WRITE_ENABLE_RED | COLOR_WRITE_ENABLE_GREEN) | COLOR_WRITE_ENABLE_BLUE) | COLOR_WRITE_ENABLE_ALPHA)
     };
 
     struct RenderTargetBlendDesc
