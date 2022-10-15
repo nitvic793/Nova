@@ -51,40 +51,40 @@ namespace nv::graphics
 
     enum DepthWriteMask
     {
-        DEPTH_WRITE_MASK_ZERO = 0,
-        DEPTH_WRITE_MASK_ALL = 1
+        DEPTH_WRITE_MASK_ZERO   = 0,
+        DEPTH_WRITE_MASK_ALL    = 1
     };
 
     enum ComparisonFunc
     {
-        COMPARISON_FUNC_NONE = 0,
-        COMPARISON_FUNC_NEVER = 1,
-        COMPARISON_FUNC_LESS = 2,
-        COMPARISON_FUNC_EQUAL = 3,
-        COMPARISON_FUNC_LESS_EQUAL = 4,
-        COMPARISON_FUNC_GREATER = 5,
-        COMPARISON_FUNC_NOT_EQUAL = 6,
-        COMPARISON_FUNC_GREATER_EQUAL = 7,
-        COMPARISON_FUNC_ALWAYS = 8
+        COMPARISON_FUNC_NONE            = 0,
+        COMPARISON_FUNC_NEVER           = 1,
+        COMPARISON_FUNC_LESS            = 2,
+        COMPARISON_FUNC_EQUAL           = 3,
+        COMPARISON_FUNC_LESS_EQUAL      = 4,
+        COMPARISON_FUNC_GREATER         = 5,
+        COMPARISON_FUNC_NOT_EQUAL       = 6,
+        COMPARISON_FUNC_GREATER_EQUAL   = 7,
+        COMPARISON_FUNC_ALWAYS          = 8
     };
 
     enum FillMode
     {
         FILL_MODE_WIREFRAME = 2,
-        FILL_MODE_SOLID = 3
+        FILL_MODE_SOLID     = 3
     };
 
     enum CullMode
     {
-        CULL_MODE_NONE = 1,
+        CULL_MODE_NONE  = 1,
         CULL_MODE_FRONT = 2,
-        CULL_MODE_BACK = 3
+        CULL_MODE_BACK  = 3
     };
 
     enum ConservativeRasterMode
     {
         CONSERVATIVE_RASTERIZATION_MODE_OFF = 0,
-        CONSERVATIVE_RASTERIZATION_MODE_ON = 1
+        CONSERVATIVE_RASTERIZATION_MODE_ON  = 1
     };
 
     struct DepthStencilState

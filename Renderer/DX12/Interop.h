@@ -76,6 +76,31 @@ namespace nv::graphics
         return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
     }
 
+    constexpr D3D12_DEPTH_WRITE_MASK GetDepthWriteMask(DepthWriteMask mask)
+    {
+        switch (mask)
+        {
+            case DEPTH_WRITE_MASK_ZERO  : return D3D12_DEPTH_WRITE_MASK_ZERO;
+            case DEPTH_WRITE_MASK_ALL   : return D3D12_DEPTH_WRITE_MASK_ALL;
+        }
+    }
+
+    constexpr D3D12_COMPARISON_FUNC GetComparisonFunc(ComparisonFunc func)
+    {
+        switch (func)
+        {
+            case COMPARISON_FUNC_NONE         : D3D12_COMPARISON_FUNC_NONE         ;
+            case COMPARISON_FUNC_NEVER        : D3D12_COMPARISON_FUNC_NEVER        ;
+            case COMPARISON_FUNC_LESS         : D3D12_COMPARISON_FUNC_LESS         ;
+            case COMPARISON_FUNC_EQUAL        : D3D12_COMPARISON_FUNC_EQUAL        ;
+            case COMPARISON_FUNC_LESS_EQUAL   : D3D12_COMPARISON_FUNC_LESS_EQUAL   ;
+            case COMPARISON_FUNC_GREATER      : D3D12_COMPARISON_FUNC_GREATER      ;
+            case COMPARISON_FUNC_NOT_EQUAL    : D3D12_COMPARISON_FUNC_NOT_EQUAL    ;
+            case COMPARISON_FUNC_GREATER_EQUAL: D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+            case COMPARISON_FUNC_ALWAYS       : D3D12_COMPARISON_FUNC_ALWAYS       ;
+        }
+    }
+
     static const D3D12_RESOURCE_FLAGS GetFlags(buffer::Flags bufferFlags)
     {
         D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE;
