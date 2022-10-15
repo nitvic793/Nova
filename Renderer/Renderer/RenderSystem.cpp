@@ -194,6 +194,7 @@ namespace nv::graphics
 
                 for (auto& pass : mRenderPasses)
                 {
+                    GPUBeginEvent(ctx, pass->GetName());
                     RenderPassData data =
                     {
                         .mFrameDataCBV = mFrameCB,
@@ -202,6 +203,7 @@ namespace nv::graphics
                     };
 
                     pass->Execute(data);
+                    GPUEndEvent(ctx);
                 }
 
                 // TODO:

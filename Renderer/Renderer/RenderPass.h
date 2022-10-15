@@ -32,10 +32,16 @@ namespace nv::graphics
     class RenderPass
     {
     public:
+        virtual const char* GetName() const { return "RenderPass"; }
         virtual void Init() {}
         virtual void Execute(const RenderPassData& renderPassData) = 0;
         virtual void Destroy() {}
 
         virtual RenderPassType GetRenderPassType() const { return RENDERPASS_OPAQUE; }
     };
+
+#ifndef NV_RENDER_PASS_NAME
+#define NV_RENDER_PASS_NAME(name) virtual const char* GetName() const override { return #name; }
+#endif
+
 }

@@ -9,6 +9,7 @@ namespace nv::graphics
     class ForwardPass : public RenderPass
     {
     public:
+        NV_RENDER_PASS_NAME(ForwardPass)
         void Init() override;
         void Execute(const RenderPassData& renderPassData) override;
         void Destroy() override;

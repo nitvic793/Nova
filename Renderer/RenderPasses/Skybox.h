@@ -9,6 +9,7 @@ namespace nv::graphics
     class Skybox : public RenderPass
     {
     public:
+        NV_RENDER_PASS_NAME(Skybox)
         void Init() override;
         void Execute(const RenderPassData& renderPassData) override;
         void Destroy() override;
