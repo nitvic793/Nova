@@ -122,8 +122,8 @@ namespace nv::graphics
 
         LoadResources();
 
-        mRenderPasses.Emplace(new ForwardPass());
-        mRenderPasses.Emplace(new Skybox());
+        mRenderPasses.Emplace(Alloc<ForwardPass>());
+        mRenderPasses.Emplace(Alloc<Skybox>());
 
         for (auto& pass : mRenderPasses)
         {
@@ -234,7 +234,7 @@ namespace nv::graphics
         auto view = camera.GetViewTransposed();
         auto proj = camera.GetProjTransposed();
         auto dirLights = ecs::gComponentManager.GetComponents<DirectionalLight>();
-
+        
         FrameData data = { .View = view, .Projection = proj };
         if (dirLights.Size() > 0)
         {
