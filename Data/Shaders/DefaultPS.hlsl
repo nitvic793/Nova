@@ -1,7 +1,7 @@
 #include "Common.hlsli"
 #include "Lighting.hlsli"
 
-ConstantBuffer<MaterialData> Material : register(b0);
+ConstantBuffer<ObjectData>   Object : register(b0);
 ConstantBuffer<FrameData>    Frame    : register(b1);
 
 Texture2D<float4> Albedo : register(t0);
@@ -11,6 +11,7 @@ SamplerState    LinearWrapSampler	: register(s2);
 
 float4 main(PixelInput input) : SV_TARGET
 {
+    ConstantBuffer<MaterialData> Material = ResourceDescriptorHeap[Object.MaterialIndex];
     Texture2D<float4> albedoTex = ResourceDescriptorHeap[Material.AlbedoOffset]; 
     float3 albedo = albedoTex.Sample(LinearWrapSampler, input.UV).xyz; 
 

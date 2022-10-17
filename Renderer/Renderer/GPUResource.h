@@ -58,12 +58,16 @@ namespace nv::graphics
     public:
         GPUResource(const GPUResourceDesc& desc) :
             mDesc(desc),
-            mMappedAddress(nullptr)
+            mMappedAddress(nullptr),
+            mCurrentState(desc.mInitialState)
         {}
+
         virtual ~GPUResource() {}
 
         constexpr const GPUResourceDesc&    GetDesc() const { return mDesc; }
         constexpr uint8_t*                  GetMappedMemory() const { return mMappedAddress; };
+        constexpr buffer::State             GetResourceState() const { return mCurrentState; }
+        constexpr void                      UpdateResourceState(buffer::State state) { mCurrentState = state; }
 
         virtual void                        MapMemory() = 0;
         virtual void                        UploadMapped(uint8_t* bytes, size_t size, size_t offset = 0) = 0;
@@ -71,5 +75,6 @@ namespace nv::graphics
     protected:
         GPUResourceDesc mDesc;
         uint8_t*        mMappedAddress;
+        buffer::State   mCurrentState;
     };
 }

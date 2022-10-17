@@ -31,6 +31,8 @@ namespace nv::graphics
             mDesc(desc) {}
         virtual ~Mesh() {}
         constexpr const MeshDesc& GetDesc() const { return mDesc; }
+        constexpr size_t GetVertexCount() const { return mDesc.mVertices.size(); }
+        constexpr size_t GetIndexCount() const { return mDesc.mIndices.size(); }
 
     protected:
         MeshDesc mDesc;

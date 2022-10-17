@@ -162,6 +162,12 @@
     <ClInclude Include="DX12\NvidiaDXR\TopLevelASGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RenderPasses\RaytracePass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12\DXR.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer\Renderer.cpp">
@@ -243,6 +249,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DX12\NvidiaDXR\TopLevelASGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPasses\RaytracePass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

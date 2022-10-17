@@ -185,6 +185,11 @@ namespace nv::graphics
         mCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
     }
 
+    uint32_t RendererDX12::GetHeapIndex(const ConstantBufferView& cbv)
+    {
+        return mGpuHeapState.mConstBufferOffset + (uint32_t)cbv.mHeapIndex;
+    }
+
     RendererDX12::~RendererDX12()
     {
         Free(mConstantBuffer);
@@ -354,11 +359,7 @@ namespace nv::graphics
         enum RootParameterSlot 
         {
             RootSigCBVertex0 = 0,
-            RootSigComputeCB = 0,
-            RootSigCBPixel0,
-            RootSigComputeUAV = 1,
             RootSigSRVPixel1,
-            RootSigComputeSRV = 2,
             RootSigSRVPixel2,
             RootSigCBAll1,
             RootSigCBAll2,
@@ -372,7 +373,7 @@ namespace nv::graphics
         //view dependent CBV
         range[RootSigCBVertex0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
         //light dependent CBV
-        range[RootSigCBPixel0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+        //range[RootSigCBPixel0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
         //G-Buffer inputs
         range[RootSigSRVPixel1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 8, 0);
         //Extra Textures
@@ -387,8 +388,7 @@ namespace nv::graphics
         range[RootSigUAV0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 4, 0);
 
         CD3DX12_ROOT_PARAMETER rootParameters[RootSigParamCount] = {};
-        rootParameters[RootSigCBVertex0].InitAsDescriptorTable(1, &range[RootSigCBVertex0], D3D12_SHADER_VISIBILITY_VERTEX);
-        rootParameters[RootSigCBPixel0].InitAsDescriptorTable(1, &range[RootSigCBPixel0], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[RootSigCBVertex0].InitAsDescriptorTable(1, &range[RootSigCBVertex0], D3D12_SHADER_VISIBILITY_ALL);
         rootParameters[RootSigSRVPixel1].InitAsDescriptorTable(1, &range[RootSigSRVPixel1], D3D12_SHADER_VISIBILITY_PIXEL);
         rootParameters[RootSigSRVPixel2].InitAsDescriptorTable(1, &range[RootSigSRVPixel2], D3D12_SHADER_VISIBILITY_PIXEL);
         rootParameters[RootSigCBAll1].InitAsDescriptorTable(1, &range[RootSigCBAll1], D3D12_SHADER_VISIBILITY_ALL);

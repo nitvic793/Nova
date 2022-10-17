@@ -44,6 +44,7 @@ namespace nv::graphics
         virtual Context*                GetContext() const = 0;
         virtual ConstantBufferView      CreateConstantBuffer(uint32_t size) = 0;
         virtual void                    UploadToConstantBuffer(ConstantBufferView view, uint8_t* data, uint32_t size) = 0;
+        virtual uint32_t                GetHeapIndex(const ConstantBufferView& cbv) = 0;
 
         Device*     GetDevice() const;
         void        QueueDestroy(Handle<GPUResource> resource);

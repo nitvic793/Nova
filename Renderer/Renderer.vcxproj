@@ -155,6 +155,7 @@
     <ClInclude Include="DX12\DescriptorHeapDX12.h" />
     <ClInclude Include="DX12\DeviceDX12.h" />
     <ClInclude Include="DX12\DirectXIncludes.h" />
+    <ClInclude Include="DX12\DXR.h" />
     <ClInclude Include="DX12\GPUResourceDX12.h" />
     <ClInclude Include="DX12\InputLayout.h" />
     <ClInclude Include="DX12\Interop.h" />
@@ -194,6 +195,7 @@
     <ClInclude Include="Renderer\Window.h" />
     <ClInclude Include="RenderPasses\ForwardPass.h" />
     <ClInclude Include="RenderPasses\GBuffer.h" />
+    <ClInclude Include="RenderPasses\RaytracePass.h" />
     <ClInclude Include="RenderPasses\Skybox.h" />
   </ItemGroup>
   <ItemGroup>
@@ -228,6 +230,7 @@
     <ClCompile Include="Renderer\ResourceTracker.cpp" />
     <ClCompile Include="RenderPasses\ForwardPass.cpp" />
     <ClCompile Include="RenderPasses\GBuffer.cpp" />
+    <ClCompile Include="RenderPasses\RaytracePass.cpp" />
     <ClCompile Include="RenderPasses\Skybox.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -109,7 +109,7 @@ namespace nv::graphics
 	void DeviceDX12::Present()
 	{
 		NV_GPU_FLIP(mSwapChain.Get());
-		mSwapChain->Present(1, 0);
+		mSwapChain->Present(0, 0);
 	}
 
 	DeviceDX12::~DeviceDX12()

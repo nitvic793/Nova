@@ -32,7 +32,7 @@ namespace nv::graphics
         const auto bindAndDrawObject = [&](ConstantBufferView objCb, ConstantBufferView matCb, Mesh* mesh)
         {
             ctx->BindConstantBuffer(0, (uint32_t)objCb.mHeapIndex);
-            ctx->BindConstantBuffer(1, (uint32_t)matCb.mHeapIndex);
+            //ctx->BindConstantBuffer(4, (uint32_t)matCb.mHeapIndex);
             ctx->SetMesh(mesh);
             for (auto entry : mesh->GetDesc().mMeshEntries)
             {
@@ -42,7 +42,7 @@ namespace nv::graphics
 
         SetContextDefault(ctx);
         ctx->SetPipeline(mForwardPSO);
-        ctx->Bind(4, BIND_BUFFER, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
+        ctx->Bind(3, BIND_BUFFER, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
 
         auto objectCbs = renderPassData.mRenderDataArray.GetObjectDescriptors();
         auto materialCbs = renderPassData.mRenderDataArray.GetMaterialDescriptors();

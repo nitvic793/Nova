@@ -27,6 +27,8 @@ namespace nv::graphics
     struct ObjectData
     {
         float4x4 World;
+        uint32_t MaterialIndex;
+        float    _Padding;
     };
 
     struct MaterialData

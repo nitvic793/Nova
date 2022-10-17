@@ -22,9 +22,9 @@ namespace nv::graphics
     namespace util
     {
         // TODO: Move to DX Utils file and dxutils namespace
-        static ID3D12Resource* GetResource(Handle<GPUResource> handle)
+        static GPUResourceDX12* GetResource(Handle<GPUResource> handle)
         {
-            return ((GPUResourceDX12*)gResourceManager->GetGPUResource(handle))->GetResource().Get();
+            return ((GPUResourceDX12*)gResourceManager->GetGPUResource(handle));
         }
 
         static ID3D12Resource* GetResource(Handle<Texture> handle)
@@ -126,9 +126,12 @@ namespace nv::graphics
         dxBarriers.Reserve((uint32_t)barriers.Size());
         for (auto barrier : barriers)
         {
-            ID3D12Resource* pResource = util::GetResource(barrier.mResource);
-            auto from = GetState(barrier.mFrom);
+            auto dxResource = util::GetResource(barrier.mResource);
+            ID3D12Resource* pResource = dxResource->GetResource().Get();
+            auto from = GetState(dxResource->GetResourceState());
             auto to = GetState(barrier.mTo);
+            
+            dxResource->UpdateResourceState(barrier.mTo);
             dxBarriers.Push(CD3DX12_RESOURCE_BARRIER::Transition(pResource, from, to));
         }
 
@@ -137,8 +140,8 @@ namespace nv::graphics
 
     void ContextDX12::UpdateSubresources(Handle<GPUResource> dest, Handle<GPUResource> staging, const SubResourceDesc& desc)
     {
-        ID3D12Resource* pDest = util::GetResource(dest);
-        ID3D12Resource* pStaging = util::GetResource(staging);
+        ID3D12Resource* pDest = util::GetResource(dest)->GetResource().Get();
+        ID3D12Resource* pStaging = util::GetResource(staging)->GetResource().Get();
         D3D12_SUBRESOURCE_DATA subData = { .pData = desc.mpData, .RowPitch = desc.mRowPitch, .SlicePitch = desc.mSlicePitch };
 
         ::UpdateSubresources(mCommandList.Get(), pDest, pStaging, desc.mIntermediateOffset, desc.mFirstSubresource, desc.mNumSubresources, &subData);

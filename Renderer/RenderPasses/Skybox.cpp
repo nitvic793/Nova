@@ -52,8 +52,8 @@ namespace nv::graphics
             SetContextDefault(ctx);
             ctx->SetPipeline(mSkyboxPSO);
 
-            ctx->BindTexture(2, skybox);
-            ctx->BindConstantBuffer(4, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
+            ctx->BindTexture(1, skybox);
+            ctx->BindConstantBuffer(3, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
 
             ctx->SetMesh(mesh);
             for (auto entry : mesh->GetDesc().mMeshEntries)

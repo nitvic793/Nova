@@ -65,6 +65,7 @@ namespace nv::graphics
         virtual void                    UploadToConstantBuffer(ConstantBufferView view, uint8_t* data, uint32_t size) override;
         virtual format::SurfaceFormat   GetDepthSurfaceFormat() const override { return mDsvFormat; }
         virtual format::SurfaceFormat   GetDefaultRenderTargetFormat() const override { return mBackbufferFormat; }
+        virtual uint32_t                GetHeapIndex(const ConstantBufferView& cbv) override;
         ~RendererDX12();
 
     public:

@@ -186,9 +186,10 @@ namespace nv::graphics
                 }
             }
 
-            UploadDrawData();
+            UpdateRenderData(); // Generates descriptors
             gRenderer->Wait();
             gRenderer->StartFrame();
+            UploadDrawData();
 
             {
                 Context* ctx = gRenderer->GetContext();
@@ -222,8 +223,6 @@ namespace nv::graphics
 
     void RenderSystem::UploadDrawData()
     {
-        UpdateRenderData();
-
         auto cams = ecs::gComponentManager.GetComponents<CameraComponent>();
         if (cams.Size() == 0)
             return;
@@ -259,6 +258,7 @@ namespace nv::graphics
             auto& mat = mCurrentRenderData[i].mpMaterial;
             auto& matCb = materialCbs[i];
 
+            objdata.MaterialIndex = gRenderer->GetHeapIndex(matCb);
             gRenderer->UploadToConstantBuffer(objectCb, (uint8_t*)&objdata, sizeof(ObjectData));
 
             if (mat)
