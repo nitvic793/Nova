@@ -53,7 +53,7 @@ namespace nv::graphics
         }
     };
 
-    class GPUResource
+    class GPUResource : public ResourceBase
     {
     public:
         GPUResource(const GPUResourceDesc& desc) :

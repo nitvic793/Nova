@@ -56,5 +56,17 @@ namespace nv::graphics
 
         return geometryDesc;
     }
+
+    ID3D12Resource* MeshDX12::GetVertexBuffer() const
+    {
+        auto resource = (GPUResourceDX12*)gResourceManager->GetGPUResource(mVertexBuffer);
+        return resource->GetResource().Get();
+    }
+
+    ID3D12Resource* MeshDX12::GetIndexBuffer() const
+    {
+        auto resource = (GPUResourceDX12*)gResourceManager->GetGPUResource(mIndexBuffer);
+        return resource->GetResource().Get();
+    }
 }
 

@@ -14,6 +14,4 @@ namespace nv::graphics
         ComPtr<ID3D12Resource> mResult;
         ComPtr<ID3D12Resource> mInstanceDesc;
     };
-
-
 }

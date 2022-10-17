@@ -10,6 +10,12 @@ namespace nv::graphics
 
     constexpr ResID RES_ID_NULL = 0;
 
+    struct ResourceBase
+    {
+        template<typename T>
+        constexpr T* As() { return (T*)this; }
+    };
+
     struct ConstantBufferView
     {
         static constexpr uint64_t INVALID_OFFSET = UINT64_MAX;

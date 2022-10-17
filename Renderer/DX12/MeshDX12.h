@@ -27,6 +27,8 @@ namespace nv::graphics
 
         void                            GenerateRTGeometryDescs();
         D3D12_RAYTRACING_GEOMETRY_DESC  GetGeometryDescs();
+        ID3D12Resource*                 GetVertexBuffer() const;
+        ID3D12Resource*                 GetIndexBuffer() const;
 
     private:
         Handle<GPUResource> mVertexBuffer;

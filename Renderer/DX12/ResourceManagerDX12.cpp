@@ -151,7 +151,7 @@ namespace nv::graphics
         switch (desc.mType)
         {
         case buffer::TYPE_BUFFER:
-            bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(desc.mWidth);
+            bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(desc.mWidth, flags);
             resourceName = L"Buffer";
             outClearValue = nullptr;
             break;

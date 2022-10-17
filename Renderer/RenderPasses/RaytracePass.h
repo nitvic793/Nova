@@ -15,7 +15,7 @@ namespace nv::graphics
         void Destroy() override;
 
     private:
-        void CreateRaytracingStructures();
+        void CreateRaytracingStructures(const RenderPassData& renderPassData);
 
     private:
         
