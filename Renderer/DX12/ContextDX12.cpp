@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "ContextDX12.h"
+
+#include <Engine/Log.h>
+
 #include <DX12/Interop.h>
 #include <DX12/RendererDX12.h>
 #include <DX12/DeviceDX12.h>
@@ -34,6 +37,10 @@ namespace nv::graphics
     {
         auto clistType = GetCommandListType(mDesc.mType);
         auto hr = pDevice->CreateCommandList(0, clistType, pCommandAllocator, nullptr, IID_PPV_ARGS(mCommandList.ReleaseAndGetAddressOf()));
+
+        if (mDesc.mType == CONTEXT_RAYTRACING)
+            InitRaytracingContext();
+
         if (FAILED(hr)) return false;
 
         return true;
@@ -42,6 +49,15 @@ namespace nv::graphics
     void ContextDX12::Begin(ID3D12CommandAllocator* pCommandAllocator)
     {
         mCommandList->Reset(pCommandAllocator, nullptr);
+    }
+
+    void ContextDX12::InitRaytracingContext()
+    {
+        auto hr = mCommandList->QueryInterface(IID_PPV_ARGS(mDXRCommandList.GetAddressOf()));
+        if (FAILED(hr))
+        {
+            log::Error("Unable to create ray tracing command context.");
+        }
     }
 
     void ContextDX12::Begin()

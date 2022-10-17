@@ -4,10 +4,6 @@
 #include <Renderer/Mesh.h>
 #include <d3d12.h>
 
-//struct ID3D12Resource;
-//struct D3D12_VERTEX_BUFFER_VIEW;
-//struct D3D12_INDEX_BUFFER_VIEW;
-
 namespace nv::graphics
 {
     class GPUResource;
@@ -29,10 +25,14 @@ namespace nv::graphics
         const D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView() const { return mVertexBufferView; }
         const std::vector<MeshEntry>&   GetMeshEntries() const { return mDesc.mMeshEntries; }
 
+        void                            GenerateRTGeometryDescs();
+        D3D12_RAYTRACING_GEOMETRY_DESC  GetGeometryDescs();
+
     private:
         Handle<GPUResource> mVertexBuffer;
         Handle<GPUResource> mIndexBuffer;
         D3D12_INDEX_BUFFER_VIEW mIndexBufferView;
         D3D12_VERTEX_BUFFER_VIEW mVertexBufferView;
+        std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> mRTGeometryDescs;
     };
 }

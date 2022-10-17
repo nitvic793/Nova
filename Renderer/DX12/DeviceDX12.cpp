@@ -127,6 +127,11 @@ namespace nv::graphics
 		return mDevice.Get();
 	}
 
+	ID3D12Device9* DeviceDX12::GetDXRDevice() const
+	{
+		return mDXRDevice.Get();
+	}
+
 	D3D12MA::Allocator* DeviceDX12::GetAllocator() const
 	{
 		return mGpuAllocator.Get();
@@ -174,6 +179,15 @@ namespace nv::graphics
 
 		
 		return true;
+	}
+
+	void DeviceDX12::InitRaytracingContext()
+	{
+		auto hr = mDevice->QueryInterface(IID_PPV_ARGS(mDXRDevice.GetAddressOf()));
+		if (FAILED(hr))
+		{
+			log::Error("Unable to create ray tracing device context.");
+		}
 	}
 }
 

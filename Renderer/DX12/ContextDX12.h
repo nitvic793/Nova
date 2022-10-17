@@ -4,6 +4,7 @@
 #include <Renderer/Context.h>
 
 struct ID3D12GraphicsCommandList4;
+struct ID3D12GraphicsCommandList5;
 struct ID3D12CommandAllocator;
 struct ID3D12RootSignature;
 struct ID3D12Device;
@@ -24,6 +25,7 @@ namespace nv::graphics
         void Begin(ID3D12CommandAllocator* pCommandAllocator);
 
         // Inherited via Context
+        virtual void InitRaytracingContext() override;
         virtual void Begin() override;
         virtual void End() override;
         virtual void SetMesh(Handle<Mesh> mesh) override;
@@ -45,6 +47,7 @@ namespace nv::graphics
 
     public:
         ID3D12GraphicsCommandList4* GetCommandList() const { return mCommandList.Get(); }
+        ID3D12GraphicsCommandList5* GetDXRCommandList() const { return mDXRCommandList.Get(); }
         void SetRootSignature(ID3D12RootSignature* pRootSig);
 
     private:
@@ -52,6 +55,7 @@ namespace nv::graphics
         using ComPtr = Microsoft::WRL::ComPtr<T>;
 
         ComPtr<ID3D12GraphicsCommandList4>  mCommandList;
+        ComPtr<ID3D12GraphicsCommandList5>  mDXRCommandList;
 
         friend class RendererDX12;
     };

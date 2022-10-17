@@ -121,6 +121,7 @@ namespace nv::graphics
         mObjectDrawData.mMaterialCBView = mpConstantBufferPool->GetConstantBuffer<MaterialData>();
 
         LoadResources();
+        gRenderer->GetDevice()->InitRaytracingContext();
 
         mRenderPasses.Emplace(Alloc<ForwardPass>());
         mRenderPasses.Emplace(Alloc<Skybox>());
@@ -134,7 +135,7 @@ namespace nv::graphics
 
         mRenderJobHandle = nv::jobs::Execute([this](void* ctx) 
         { 
-            nv::log::Info("[Renderer] Start Render Job");
+            log::Info("[Renderer] Start Render Job");
             RenderThreadJob(ctx); 
         });
     }

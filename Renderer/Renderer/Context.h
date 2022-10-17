@@ -43,6 +43,7 @@ namespace nv::graphics
             mDesc(desc) {}
         virtual ~Context() {}
 
+        virtual void InitRaytracingContext() = 0;
         virtual void Begin() {}
         virtual void End() {}
         virtual void SetMesh(Handle<Mesh> mesh) = 0;

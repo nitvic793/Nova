@@ -45,6 +45,14 @@ namespace nv::graphics
         return handle;
     }
 
+    Handle<GPUResource> ResourceManager::CreateResource(const GPUResourceDesc& desc, ResID id)
+    {
+        assert(!gResourceTracker.ExistsResource(id));
+        auto handle = CreateResource(desc);
+        gResourceTracker.Track(id, handle);
+        return handle;
+    }
+
     Handle<Material> ResourceManager::CreateMaterial(const PBRMaterial& matDesc, ResID id)
     {
         if (gResourceTracker.ExistsMaterial(id))

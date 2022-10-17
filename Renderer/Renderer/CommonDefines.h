@@ -216,6 +216,7 @@ namespace nv::graphics
             TEXTURE_2D,
             TEXTURE_3D,
             TEXTURE_CUBE,
+            RT_ACCELERATION_STRUCT
         };
 
         enum Usage : uint8_t
@@ -224,7 +225,8 @@ namespace nv::graphics
             USAGE_SHADER = 1,
             USAGE_UNORDERED = 1 << 1,
             USAGE_RENDER_TARGET = 1 << 2,
-            USAGE_DEPTH_STENCIL = 1 << 3
+            USAGE_DEPTH_STENCIL = 1 << 3,
+            USAGE_RT_ACCELERATION = 1 << 4
         };
     }
 
@@ -272,7 +274,8 @@ namespace nv::graphics
             STATE_INDIRECT_ARG,
             STATE_RENDER_TARGET,
             STATE_PRESENT,
-            STATE_GENERIC_READ
+            STATE_GENERIC_READ,
+            STATE_RAYTRACING_STRUCTURE
         };
     }
 

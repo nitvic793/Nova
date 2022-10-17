@@ -74,6 +74,8 @@ namespace nv::graphics
 
         D3D12_FEATURE_DATA_SHADER_MODEL shaderModelSupport = { D3D_SHADER_MODEL_6_6 };
         auto hr = pDevice->CheckFeatureSupport((D3D12_FEATURE)D3D12_FEATURE_SHADER_MODEL, &shaderModelSupport, sizeof(shaderModelSupport));
+        if (FAILED(hr))
+            debug::ReportError("Required shader model (SM 6.6) not supported.");
 
         CreateRootSignature();
     }
@@ -138,6 +140,8 @@ namespace nv::graphics
             {
                 debug::ReportError("Unable to create command context");
             }
+
+            pContext->InitRaytracingContext();
             pContext->End();
         }
 

@@ -78,6 +78,11 @@ namespace nv::graphics
         return mShaderResMap.find(id) != mShaderResMap.end();
     }
 
+    bool ResourceTracker::ExistsResource(ResID id) const
+    {
+        return mGpuResourceResMap.find(id) != mGpuResourceResMap.end();
+    }
+
     Handle<Shader> ResourceTracker::GetShaderHandle(ResID id) const
     {
         return mShaderResMap.at(id);

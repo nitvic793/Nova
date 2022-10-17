@@ -1,3 +1,6 @@
+#ifndef NV_INTEROP_SHADERINTEROPTYPES_H
+#define NV_INTEROP_SHADERINTEROPTYPES_H
+
 #pragma once
 
 static const uint32_t MAX_DIRECTIONAL_LIGHTS = 2;
@@ -72,3 +75,5 @@ namespace nv::graphics
 #ifdef __cplusplus
 }
 #endif
+
+#endif // NV_INTEROP_SHADERINTEROPTYPES_H

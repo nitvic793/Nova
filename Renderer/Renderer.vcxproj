@@ -159,6 +159,11 @@
     <ClInclude Include="DX12\InputLayout.h" />
     <ClInclude Include="DX12\Interop.h" />
     <ClInclude Include="DX12\MeshDX12.h" />
+    <ClInclude Include="DX12\NvidiaDXR\BottomLevelASGenerator.h" />
+    <ClInclude Include="DX12\NvidiaDXR\RaytracingPipelineGenerator.h" />
+    <ClInclude Include="DX12\NvidiaDXR\RootSignatureGenerator.h" />
+    <ClInclude Include="DX12\NvidiaDXR\ShaderBindingTableGenerator.h" />
+    <ClInclude Include="DX12\NvidiaDXR\TopLevelASGenerator.h" />
     <ClInclude Include="DX12\PipelineStateDX12.h" />
     <ClInclude Include="DX12\RendererDX12.h" />
     <ClInclude Include="DX12\ResourceManagerDX12.h" />
@@ -188,6 +193,7 @@
     <ClInclude Include="Renderer\Texture.h" />
     <ClInclude Include="Renderer\Window.h" />
     <ClInclude Include="RenderPasses\ForwardPass.h" />
+    <ClInclude Include="RenderPasses\GBuffer.h" />
     <ClInclude Include="RenderPasses\Skybox.h" />
   </ItemGroup>
   <ItemGroup>
@@ -196,6 +202,11 @@
     <ClCompile Include="DX12\DeviceDX12.cpp" />
     <ClCompile Include="DX12\GPUResourceDX12.cpp" />
     <ClCompile Include="DX12\MeshDX12.cpp" />
+    <ClCompile Include="DX12\NvidiaDXR\BottomLevelASGenerator.cpp" />
+    <ClCompile Include="DX12\NvidiaDXR\RaytracingPipelineGenerator.cpp" />
+    <ClCompile Include="DX12\NvidiaDXR\RootSignatureGenerator.cpp" />
+    <ClCompile Include="DX12\NvidiaDXR\ShaderBindingTableGenerator.cpp" />
+    <ClCompile Include="DX12\NvidiaDXR\TopLevelASGenerator.cpp" />
     <ClCompile Include="DX12\PipelineStateDX12.cpp" />
     <ClCompile Include="DX12\RendererDX12.cpp" />
     <ClCompile Include="DX12\ResourceManagerDX12.cpp" />
@@ -216,6 +227,7 @@
     <ClCompile Include="Renderer\ResourceManager.cpp" />
     <ClCompile Include="Renderer\ResourceTracker.cpp" />
     <ClCompile Include="RenderPasses\ForwardPass.cpp" />
+    <ClCompile Include="RenderPasses\GBuffer.cpp" />
     <ClCompile Include="RenderPasses\Skybox.cpp" />
   </ItemGroup>
   <ItemGroup>

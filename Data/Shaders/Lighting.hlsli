@@ -1,6 +1,5 @@
 #include "Interop/ShaderInteropTypes.h"
 
-
 float Attenuate(float3 position, float range, float3 worldPos)
 {
     float dist = distance(position, worldPos);

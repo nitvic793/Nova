@@ -41,6 +41,7 @@ namespace nv::graphics
 
         virtual GPUResource*            Emplace(Handle<GPUResource>& handle) = 0;
 
+        Handle<GPUResource>             CreateResource(const GPUResourceDesc& desc, ResID id);
         Handle<Material>                CreateMaterial(const PBRMaterial& matDesc, ResID id);
         Handle<Material>                GetMaterialHandle(ResID id);
         Handle<Mesh>                    GetMeshHandle(ResID id);

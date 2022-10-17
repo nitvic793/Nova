@@ -36,6 +36,7 @@ namespace nv::graphics
         bool ExistsMaterial(ResID id) const;
         bool ExistsMesh(ResID id) const;
         bool ExistsShader(ResID id) const;
+        bool ExistsResource(ResID id) const;
 
         Handle<Shader>         GetShaderHandle(ResID id) const;
         Handle<GPUResource>    GetGPUResourceHandle(ResID id) const;

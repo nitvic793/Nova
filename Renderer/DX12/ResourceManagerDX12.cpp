@@ -284,6 +284,20 @@ namespace nv::graphics
             device->CreateRenderTargetView(resource->GetResource().Get(), &rtvDesc, cpuHandle);
             break;
         }
+        case tex::USAGE_RT_ACCELERATION:
+        {
+            view = VIEW_RT_ACCELERATION;
+            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
+            srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
+            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            srvDesc.RaytracingAccelerationStructure.Location = resource->GetResource()->GetGPUVirtualAddress();
+
+            heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mTextureHeap);
+            cpuHandle = heap->PushCPU();
+            device->CreateShaderResourceView(nullptr, &srvDesc, cpuHandle);
+            break;
+        }
         default:
             break;
         }

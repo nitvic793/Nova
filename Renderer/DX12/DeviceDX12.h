@@ -5,6 +5,7 @@
 
 struct IDXGIFactory4;
 struct ID3D12Device;
+struct ID3D12Device9;
 struct IDXGISwapChain4;
 struct ID3D12CommandQueue;
 
@@ -34,14 +35,17 @@ namespace nv::graphics
         ~DeviceDX12();
 
         bool InitSwapChain(const Window& window, const format::SurfaceFormat format) override;
+        void InitRaytracingContext() override;
 
-        ID3D12Device* GetDevice() const;
-        D3D12MA::Allocator* GetAllocator() const;
+        ID3D12Device*               GetDevice() const;
+        ID3D12Device9*              GetDXRDevice() const;
+        D3D12MA::Allocator*         GetAllocator() const;
         ComPtr<ID3D12CommandQueue>  GetCommandQueue() const;
 
     private:
         ComPtr<IDXGIFactory4>       mDxgiFactory;
         ComPtr<ID3D12Device>        mDevice;
+        ComPtr<ID3D12Device9>       mDXRDevice;
         ComPtr<IDXGISwapChain4>     mSwapChain;
         ComPtr<ID3D12CommandQueue>  mCommandQueue;
         ComPtr<D3D12MA::Allocator>  mGpuAllocator;

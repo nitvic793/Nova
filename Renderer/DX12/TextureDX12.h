@@ -17,6 +17,7 @@ namespace nv::graphics
         VIEW_UNORDERED_ACCESS,
         VIEW_CONSTANT_BUFFER,
         VIEW_DEPTH_STENCIL,
+        VIEW_RT_ACCELERATION,
         VIEWS_COUNT
     };
 

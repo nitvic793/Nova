@@ -28,5 +28,33 @@ namespace nv::graphics
         mIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
         mIndexBufferView.SizeInBytes = indexBufferSize;
     }
+
+    void MeshDX12::GenerateRTGeometryDescs() 
+    {
+        mRTGeometryDescs.clear();
+    }
+
+    D3D12_RAYTRACING_GEOMETRY_DESC MeshDX12::GetGeometryDescs()
+    {
+        if (mRTGeometryDescs.empty())
+            GenerateRTGeometryDescs();
+
+        auto vb = (GPUResourceDX12*)gResourceManager->GetGPUResource(mVertexBuffer);
+        auto ib = (GPUResourceDX12*)gResourceManager->GetGPUResource(mIndexBuffer);
+
+        D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = {};
+        geometryDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+        geometryDesc.Triangles.IndexBuffer = ib->GetResource()->GetGPUVirtualAddress();
+        geometryDesc.Triangles.IndexCount = static_cast<UINT>(ib->GetResource()->GetDesc().Width) / sizeof(uint32_t);
+        geometryDesc.Triangles.IndexFormat = DXGI_FORMAT_R32_UINT;
+        geometryDesc.Triangles.Transform3x4 = 0;
+        geometryDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+        geometryDesc.Triangles.VertexCount = static_cast<UINT>(vb->GetResource()->GetDesc().Width) / sizeof(Vertex);
+        geometryDesc.Triangles.VertexBuffer.StartAddress = vb->GetResource()->GetGPUVirtualAddress();
+        geometryDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(Vertex);
+        geometryDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+
+        return geometryDesc;
+    }
 }
 
