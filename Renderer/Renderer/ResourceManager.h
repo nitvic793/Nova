@@ -44,6 +44,7 @@ namespace nv::graphics
         Handle<Material>                CreateMaterial(const PBRMaterial& matDesc, ResID id);
         Handle<Material>                GetMaterialHandle(ResID id);
         Handle<Mesh>                    GetMeshHandle(ResID id);
+        Handle<Texture>                 GetTextureHandle(ResID id);
         Material*                       GetMaterial(Handle<Material> handle);
         Material*                       GetMaterial(ResID id);
 

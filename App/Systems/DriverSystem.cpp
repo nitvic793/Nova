@@ -12,10 +12,12 @@
 namespace nv
 {
     ecs::Entity* entity;
+
     void DriverSystem::Init()
     {
         using namespace ecs;
         using namespace graphics;
+        using namespace components;
 
         const auto createEntity = [&](ResID mesh, ResID mat, const Transform& transform = Transform())
         {
@@ -38,6 +40,10 @@ namespace nv
         auto directionalLight = gEntityManager.GetEntity(e3)->Add<DirectionalLight>();
         directionalLight->Color = float3(0.9f, 0.9f, 0.9f);
         directionalLight->Intensity = 1.f;
+
+        auto skybox = gEntityManager.GetEntity(e3)->Add<SkyboxComponent>();
+        skybox->mSkybox = gResourceManager->GetTextureHandle(ID("Textures/SunnyCubeMap.dds"));
+
         Store(Vector3Normalize(VectorSet(1, -1, 1, 0)), directionalLight->Direction);
 
         entity = gEntityManager.GetEntity(entity2);

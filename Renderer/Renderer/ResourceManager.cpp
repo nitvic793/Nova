@@ -92,6 +92,16 @@ namespace nv::graphics
         return Null<Mesh>();
     }
 
+    Handle<Texture> ResourceManager::GetTextureHandle(ResID id)
+    {
+        if (gResourceTracker.ExistsTexture(id))
+        {
+            return gResourceTracker.GetTextureHandle(id);
+        }
+
+        return Null<Texture>();
+    }
+
     Material* ResourceManager::GetMaterial(Handle<Material> handle)
     {
         return mMaterialPool.Get(handle);

@@ -28,6 +28,7 @@
 #include <Components/Renderable.h>
 
 #include <RenderPasses/ForwardPass.h>
+#include <RenderPasses/Skybox.h>
 
 #include <thread>
 #include <functional>
@@ -122,6 +123,7 @@ namespace nv::graphics
         LoadResources();
 
         mRenderPasses.Emplace(new ForwardPass());
+        mRenderPasses.Emplace(new Skybox());
 
         for (auto& pass : mRenderPasses)
         {

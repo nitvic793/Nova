@@ -13,7 +13,7 @@ namespace nv::graphics::components
         Handle<Material>    mMaterial   = Null<Material>();
     };
 
-    struct Skybox : public ecs::IComponent
+    struct SkyboxComponent : public ecs::IComponent
     {
         Handle<Texture> mSkybox = Null<Texture>();
     };

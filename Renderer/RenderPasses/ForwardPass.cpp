@@ -40,22 +40,7 @@ namespace nv::graphics
             }
         };
 
-        const auto topology = PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-        const auto renderTarget = gRenderer->GetDefaultRenderTarget();
-        const auto depthTarget = gRenderer->GetDefaultDepthTarget();
-        const auto gpuHeap = gRenderer->GetGPUDescriptorHeap();
-        Handle<Texture> targets[] = { renderTarget };
-        Handle<DescriptorHeap> heaps[] = { gpuHeap };
-
-        auto rect = gRenderer->GetDefaultScissorRect();
-        auto viewport = gRenderer->GetDefaultViewport();
-
-        ctx->SetScissorRect(1, &rect);
-        ctx->SetViewports(1, &viewport);
-        ctx->SetPrimitiveTopology(topology);
-        ctx->SetDescriptorHeap({ heaps, _countof(heaps) });
-
-        ctx->SetRenderTarget({ targets, _countof(targets) }, depthTarget);
+        SetContextDefault(ctx);
         ctx->SetPipeline(mForwardPSO);
         ctx->Bind(4, BIND_BUFFER, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
 
