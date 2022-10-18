@@ -10,7 +10,8 @@ namespace nv::graphics
         {
             VERTEX,
             PIXEL,
-            COMPUTE
+            COMPUTE,
+            LIB
         };
 
         enum ShaderModel : uint8_t

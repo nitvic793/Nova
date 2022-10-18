@@ -170,6 +170,12 @@ namespace nv::graphics
 
         auto outputBufferTexture = gResourceManager->CreateTexture(texDesc, ID("RTPass/OutputBufferTex"));
     }
+    void RaytracePass::CreatePipeline()
+    {
+    }
+    void RaytracePass::CreateShaderBindingTable()
+    {
+    }
 #endif // NV_RENDERER_DX12
 }
 

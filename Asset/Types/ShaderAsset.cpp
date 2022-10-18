@@ -23,16 +23,18 @@ namespace nv
 
     static const nv::HashMap<shader::Type, std::string> sgShaderTypeMap =
     {
-        { shader::PIXEL,    "PixelShader" },
-        { shader::VERTEX,   "VertexShader" },
-        { shader::COMPUTE,  "ComputeShader" }
+        { shader::PIXEL,    "PixelShader"   },
+        { shader::VERTEX,   "VertexShader"  },
+        { shader::COMPUTE,  "ComputeShader" },
+        { shader::LIB,      "Lib"           }
     };
 
     static const nv::HashMap<std::string, shader::Type> sgShaderTypeMapStr =
     {
-        { "PixelShader",     shader::PIXEL,    },
-        { "VertexShader",    shader::VERTEX,   },
-        { "ComputeShader",   shader::COMPUTE,   }
+        { "PixelShader",     shader::PIXEL,     },
+        { "VertexShader",    shader::VERTEX,    },
+        { "ComputeShader",   shader::COMPUTE,   },
+        { "Lib",             shader::LIB,       }
     };
 
     static const nv::HashMap<shader::ShaderModel, std::string> sgShaderModelMap =
@@ -53,7 +55,8 @@ namespace nv
     {
         { shader::PIXEL,    L"ps" },
         { shader::VERTEX,   L"vs" },
-        { shader::COMPUTE,  L"cs" }
+        { shader::COMPUTE,  L"cs" },
+        { shader::LIB,      L"lib" }
     };
 
     static const nv::HashMap<shader::ShaderModel, std::wstring> sgShaderModelProfileMap =
@@ -195,7 +198,7 @@ namespace nv::asset
             hr = compiler->Compile(
                 sourceBlob, // pSource
                 srcName.c_str(), // pSourceName
-                mainEntry, // pEntryPoint
+                config.mShaderType == shader::LIB ? L"" : mainEntry,  // pEntryPoint
                 profile.c_str(), // pTargetProfile
                 args.data(), (UINT)args.size(), // pArguments, argCount
                 NULL, 0, // pDefines, defineCount
