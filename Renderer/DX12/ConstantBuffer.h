@@ -54,6 +54,12 @@ namespace nv::graphics
 			return resource->GetResource()->GetGPUVirtualAddress() + (size_t)mAlignedCBSize * index;
 		}
 
+		ID3D12Resource* GetInternalResource() const
+		{
+			auto resource = (GPUResourceDX12*)gResourceManager->GetGPUResource(mResourceHandle);
+			return resource->GetResource().Get();
+		}
+
 		~GPUConstantBuffer() {}
 
 	private:

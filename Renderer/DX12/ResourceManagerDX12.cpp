@@ -158,6 +158,10 @@ namespace nv::graphics
         case buffer::TYPE_TEXTURE_2D: 
             bufferDesc = CD3DX12_RESOURCE_DESC::Tex2D(format, desc.mWidth, desc.mHeight, desc.mArraySize, desc.mMipLevels, desc.mSampleCount, desc.mSampleQuality, flags);
             resourceName = L"Texture2D";
+            bool isNullClearValue = !(((resource->GetDesc().mFlags & buffer::FLAG_ALLOW_RENDER_TARGET) == buffer::FLAG_ALLOW_RENDER_TARGET) || 
+                ((resource->GetDesc().mFlags & buffer::FLAG_ALLOW_DEPTH) == buffer::FLAG_ALLOW_DEPTH));
+            if (isNullClearValue)
+                outClearValue = nullptr;
             break;
         }
 

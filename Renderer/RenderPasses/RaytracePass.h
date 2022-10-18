@@ -16,6 +16,9 @@ namespace nv::graphics
 
     private:
         void CreateRaytracingStructures(const RenderPassData& renderPassData);
+        void CreateOutputBuffer();
+        void CreatePipeline();
+        void CreateShaderBindingTable();
 
     private:
         

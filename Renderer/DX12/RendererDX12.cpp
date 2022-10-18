@@ -319,6 +319,11 @@ namespace nv::graphics
         return mCommandQueue.Get();
     }
 
+    ID3D12Resource* RendererDX12::GetConstBuffer() const
+    {
+        return mConstantBuffer->GetInternalResource();
+    }
+
     D3D12_GPU_DESCRIPTOR_HANDLE RendererDX12::GetConstBufferHandle(uint32_t index) const
     {
         auto heap = mDescriptorHeapPool.GetAsDerived(mGpuHeap);

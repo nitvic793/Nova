@@ -110,6 +110,16 @@ namespace nv::graphics
         return Null<Texture>();
     }
 
+    Handle<GPUResource> ResourceManager::GetGPUResourceHandle(ResID id)
+    {
+        if (gResourceTracker.ExistsResource(id))
+        {
+            return gResourceTracker.GetGPUResourceHandle(id);
+        }
+
+        return Null<GPUResource>();
+    }
+
     Material* ResourceManager::GetMaterial(Handle<Material> handle)
     {
         return mMaterialPool.Get(handle);

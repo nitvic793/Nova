@@ -28,6 +28,7 @@
 #include <Components/Renderable.h>
 
 #include <RenderPasses/ForwardPass.h>
+#include <RenderPasses/RaytracePass.h>
 #include <RenderPasses/Skybox.h>
 
 #include <thread>
@@ -125,6 +126,7 @@ namespace nv::graphics
 
         mRenderPasses.Emplace(Alloc<ForwardPass>());
         mRenderPasses.Emplace(Alloc<Skybox>());
+        mRenderPasses.Emplace(Alloc<RaytracePass>());
 
         for (auto& pass : mRenderPasses)
         {

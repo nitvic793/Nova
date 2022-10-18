@@ -38,7 +38,7 @@ namespace nv::graphics
         auto clistType = GetCommandListType(mDesc.mType);
         auto hr = pDevice->CreateCommandList(0, clistType, pCommandAllocator, nullptr, IID_PPV_ARGS(mCommandList.ReleaseAndGetAddressOf()));
 
-        if (mDesc.mType == CONTEXT_RAYTRACING)
+        if (mDesc.mType == CONTEXT_RAYTRACING || true)
             InitRaytracingContext();
 
         if (FAILED(hr)) return false;
@@ -53,6 +53,7 @@ namespace nv::graphics
 
     void ContextDX12::InitRaytracingContext()
     {
+        mDXRCommandList.Reset();
         auto hr = mCommandList->QueryInterface(IID_PPV_ARGS(mDXRCommandList.GetAddressOf()));
         if (FAILED(hr))
         {
