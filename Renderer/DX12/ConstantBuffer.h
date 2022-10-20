@@ -48,10 +48,16 @@ namespace nv::graphics
 			GetResource()->UploadMapped(ptr, size);
 		}
 
-		D3D12_GPU_VIRTUAL_ADDRESS GetAddress(uint32_t index = 0) const
+		D3D12_GPU_VIRTUAL_ADDRESS GetAddress(uint32_t index) const
 		{
-			auto resource = (GPUResourceDX12*)gResourceManager->GetGPUResource(mResourceHandle);
-			return resource->GetResource()->GetGPUVirtualAddress() + (size_t)mAlignedCBSize * index;
+			auto resource = GetInternalResource();
+			return resource->GetGPUVirtualAddress() + (size_t)mAlignedCBSize * index;
+		}
+
+		D3D12_GPU_VIRTUAL_ADDRESS GetAddress() const
+		{
+			auto resource = GetInternalResource();
+			return resource->GetGPUVirtualAddress();
 		}
 
 		ID3D12Resource* GetInternalResource() const

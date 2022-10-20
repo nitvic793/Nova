@@ -122,7 +122,7 @@ namespace nv::graphics
         mObjectDrawData.mMaterialCBView = mpConstantBufferPool->GetConstantBuffer<MaterialData>();
 
         LoadResources();
-        gRenderer->GetDevice()->InitRaytracingContext();
+        //gRenderer->GetDevice()->InitRaytracingContext();
 
         mRenderPasses.Emplace(Alloc<ForwardPass>());
         mRenderPasses.Emplace(Alloc<Skybox>());
@@ -151,6 +151,11 @@ namespace nv::graphics
     {
         nv::jobs::Wait(mRenderJobHandle);
         gRenderer->Wait();
+        for (auto& pass : mRenderPasses)
+        {
+            pass->Destroy();
+        }
+
         Free(mReloadManager);
         Free(mpConstantBufferPool);
     }
@@ -235,9 +240,11 @@ namespace nv::graphics
         mCamera.UpdateViewProjection();
         auto view = camera.GetViewTransposed();
         auto proj = camera.GetProjTransposed();
+        auto projI = camera.GetProjInverseTransposed();
+        auto viewI = camera.GetViewInverseTransposed();
         auto dirLights = ecs::gComponentManager.GetComponents<DirectionalLight>();
         
-        FrameData data = { .View = view, .Projection = proj };
+        FrameData data = { .View = view, .Projection = proj, .ViewInverse = viewI, .ProjectionInverse = projI };
         if (dirLights.Size() > 0)
         {
             for (uint32_t i = 0; i < dirLights.Size() && i < MAX_DIRECTIONAL_LIGHTS; ++i)

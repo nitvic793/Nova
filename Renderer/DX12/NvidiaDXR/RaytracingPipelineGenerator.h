@@ -119,7 +119,16 @@ namespace nv_helpers_dx12
 		void SetMaxRecursionDepth(UINT maxDepth);
 
 		/// Compiles the raytracing state object
-		ID3D12StateObject* Generate();
+		void Generate(ID3D12StateObject** ppStateObject);
+
+		~RayTracingPipelineGenerator()
+		{
+			if (m_dummyLocalRootSignature)
+				m_dummyLocalRootSignature->Release();
+
+			if (m_dummyGlobalRootSignature)
+				m_dummyGlobalRootSignature->Release();
+		}
 
 	private:
 		/// Storage for DXIL libraries and their exported symbols

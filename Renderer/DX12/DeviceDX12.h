@@ -42,10 +42,16 @@ namespace nv::graphics
         D3D12MA::Allocator*         GetAllocator() const;
         ComPtr<ID3D12CommandQueue>  GetCommandQueue() const;
 
+        template<typename U>
+        void                        GetDeviceAs(ComPtr<U>* ptr) const
+        {
+            mDevice.As(ptr);
+        }
+
     private:
-        ComPtr<IDXGIFactory4>       mDxgiFactory;
         ComPtr<ID3D12Device>        mDevice;
         ComPtr<ID3D12Device9>       mDXRDevice;
+        ComPtr<IDXGIFactory4>       mDxgiFactory;
         ComPtr<IDXGISwapChain4>     mSwapChain;
         ComPtr<ID3D12CommandQueue>  mCommandQueue;
         ComPtr<D3D12MA::Allocator>  mGpuAllocator;

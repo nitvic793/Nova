@@ -183,7 +183,7 @@ namespace nv::graphics
 
 	void DeviceDX12::InitRaytracingContext()
 	{
-		auto hr = mDevice->QueryInterface(IID_PPV_ARGS(mDXRDevice.GetAddressOf()));
+		auto hr = mDevice->QueryInterface(IID_PPV_ARGS(mDXRDevice.ReleaseAndGetAddressOf()));
 		if (FAILED(hr))
 		{
 			log::Error("Unable to create ray tracing device context.");

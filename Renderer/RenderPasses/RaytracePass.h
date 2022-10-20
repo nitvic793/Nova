@@ -5,6 +5,7 @@
 namespace nv::graphics
 {
     class PipelineState;
+    struct RTObjects;
 
     class RaytracePass : public RenderPass
     {
@@ -21,6 +22,6 @@ namespace nv::graphics
         void CreateShaderBindingTable();
 
     private:
-        
+        RTObjects* mRtObjects;
     };
 }

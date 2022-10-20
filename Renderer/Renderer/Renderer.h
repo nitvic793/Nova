@@ -16,6 +16,12 @@ namespace nv::graphics
     class DescriptorHeap;
     class Context;
 
+    struct ConstBufferDesc
+    {
+        uint32_t    mSize = 0;
+        bool        mUseRayTracingHeap = false;
+    };
+
     class IRenderer
     {
     public:
@@ -42,7 +48,7 @@ namespace nv::graphics
         virtual format::SurfaceFormat   GetDefaultRenderTargetFormat() const = 0;
         virtual Handle<DescriptorHeap>  GetGPUDescriptorHeap() const = 0;
         virtual Context*                GetContext() const = 0;
-        virtual ConstantBufferView      CreateConstantBuffer(uint32_t size) = 0;
+        virtual ConstantBufferView      CreateConstantBuffer(ConstBufferDesc desc) = 0;
         virtual void                    UploadToConstantBuffer(ConstantBufferView view, uint8_t* data, uint32_t size) = 0;
         virtual uint32_t                GetHeapIndex(const ConstantBufferView& cbv) = 0;
 

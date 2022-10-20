@@ -14,6 +14,7 @@ namespace nv::graphics
         format::SurfaceFormat   mFormat = format::FORMAT_UNKNOWN;
         Handle<GPUResource>     mBuffer = Handle<GPUResource>();
         tex::Type               mType = tex::TEXTURE_2D;
+        bool                    mUseRayTracingHeap = false;
     };
 
     class Texture

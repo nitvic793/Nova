@@ -38,6 +38,7 @@ namespace nv::graphics
         virtual void Destroy() {}
 
         virtual RenderPassType GetRenderPassType() const { return RENDERPASS_OPAQUE; }
+        virtual ~RenderPass() {}
 
     protected:
         void SetContextDefault(Context* context);

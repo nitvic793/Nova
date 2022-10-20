@@ -12,6 +12,7 @@ struct ID3D12Fence;
 struct ID3D12Resource;
 struct D3D12_GPU_DESCRIPTOR_HANDLE;
 using HANDLE = void*;
+using D3D12_GPU_VIRTUAL_ADDRESS = uint64_t;
 
 namespace nv::graphics
 {
@@ -30,12 +31,14 @@ namespace nv::graphics
         uint32_t mCurrentCount      = 0;
         uint32_t mConstBufferOffset = 0;
         uint32_t mTextureOffset     = 0;
+        uint32_t mRTObjectsOffset   = 0;
 
         constexpr void Reset()
         {
             mCurrentCount = 0;
             mConstBufferOffset = 0;
-            mTextureOffset = 0;
+            mTextureOffset = 0; 
+            mRTObjectsOffset = 0;
         }
     };
 
@@ -62,7 +65,7 @@ namespace nv::graphics
         virtual Handle<Texture>         GetDefaultRenderTarget() const override;
         virtual Handle<DescriptorHeap>  GetGPUDescriptorHeap() const override;
         virtual Context*                GetContext() const override;
-        virtual ConstantBufferView      CreateConstantBuffer(uint32_t size) override;
+        virtual ConstantBufferView      CreateConstantBuffer(ConstBufferDesc desc) override;
         virtual void                    UploadToConstantBuffer(ConstantBufferView view, uint8_t* data, uint32_t size) override;
         virtual format::SurfaceFormat   GetDepthSurfaceFormat() const override { return mDsvFormat; }
         virtual format::SurfaceFormat   GetDefaultRenderTargetFormat() const override { return mBackbufferFormat; }
@@ -77,6 +80,7 @@ namespace nv::graphics
         D3D12_GPU_DESCRIPTOR_HANDLE GetConstBufferHandle(uint32_t index) const;
         D3D12_GPU_DESCRIPTOR_HANDLE GetTextureHandle(uint32_t index) const;
         const GpuHeapState&         GetGPUHeapState() const { return mGpuHeapState; }
+        D3D12_GPU_VIRTUAL_ADDRESS   GetConstBufferAddress(const ConstantBufferView& view);
 
     private:
         void                    CreateRootSignature();
@@ -92,6 +96,7 @@ namespace nv::graphics
         Handle<DescriptorHeap>                      mGpuHeap;
         Handle<DescriptorHeap>                      mTextureHeap;
         Handle<DescriptorHeap>                      mConstantBufferHeap;
+        Handle<DescriptorHeap>                      mRayTracingHeap;
         Handle<Context>                             mContexts[FRAMEBUFFER_COUNT];
         ComPtr<ID3D12CommandAllocator>              mCommandAllocators[FRAMEBUFFER_COUNT];
         ComPtr<ID3D12CommandQueue>                  mCommandQueue;

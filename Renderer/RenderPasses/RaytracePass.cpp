@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "RaytracePass.h"
-#include <DX12/NvidiaDXR/BottomLevelASGenerator.h>
-#include <DX12/NvidiaDXR/TopLevelASGenerator.h>
+
 #include <Renderer/CommonDefines.h>
 #include <Renderer/ResourceManager.h>
+#include <Renderer/Shader.h>
 #include <Renderer/Window.h>
 #include <fmt/format.h>
 
@@ -15,6 +15,14 @@
 #include <D3D12MemAlloc.h>
 #include <DX12/DXR.h>
 #include <DX12/ContextDX12.h>
+#include <DX12/ShaderDX12.h>
+
+// Nvidia DXR Helpers
+#include <DX12/NvidiaDXR/BottomLevelASGenerator.h>
+#include <DX12/NvidiaDXR/TopLevelASGenerator.h>
+#include <DX12/NvidiaDXR/RaytracingPipelineGenerator.h>
+#include <DX12/NvidiaDXR/RootSignatureGenerator.h>
+#include <DX12/NvidiaDXR/ShaderBindingTableGenerator.h>
 #endif
 
 namespace nv::graphics
@@ -23,9 +31,23 @@ namespace nv::graphics
     using namespace buffer;
 
 #if NV_RENDERER_DX12
+    struct RTObjects
+    {
+        ComPtr<ID3D12RootSignature>         mRayGenSig;
+        ComPtr<ID3D12RootSignature>         mMissShaderSig;
+        ComPtr<ID3D12RootSignature>         mHitShaderSig;
+        ComPtr<ID3D12StateObject>           mRtStateObject;
+        ComPtr<ID3D12StateObjectProperties> mRtStateobjectProperties;
+
+        ShaderBindingTableGenerator         mSbtHelper;
+    };
+
     void RaytracePass::Init()
     {
+        mRtObjects = Alloc<RTObjects>();
         CreateOutputBuffer();
+        CreatePipeline();
+        CreateShaderBindingTable();
     }
 
     bool done = false;
@@ -37,6 +59,7 @@ namespace nv::graphics
 
     void RaytracePass::Destroy()
     {
+        Free(mRtObjects);
     }
 
     void RaytracePass::CreateRaytracingStructures(const RenderPassData& renderPassData)
@@ -166,16 +189,96 @@ namespace nv::graphics
             .mUsage = tex::USAGE_UNORDERED,
             .mBuffer = outputBuffer, 
             .mType = tex::TEXTURE_2D,
+            .mUseRayTracingHeap = true
         };
 
         auto outputBufferTexture = gResourceManager->CreateTexture(texDesc, ID("RTPass/OutputBufferTex"));
+
+        //TODO: Create camera frame data in RT Heap
     }
+
+    void CreateLocalRootSignatures(ID3D12Device5* pDevice, ID3D12RootSignature** ppRayGenSig, ID3D12RootSignature** ppMissSig, ID3D12RootSignature** ppHitSig)
+    {
+        RootSignatureGenerator rsc;
+        rsc.AddHeapRangesParameter(
+            {
+                {
+                    0 /*u0*/,
+                    1 /*1 descriptor */,
+                    0 /*use the implicit register space 0*/,
+                    D3D12_DESCRIPTOR_RANGE_TYPE_UAV /* UAV representing the output buffer*/,
+                    0 /*heap slot where the UAV is defined*/
+                },
+                {
+                    0 /*t0*/,
+                    1,
+                    0,
+                    D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/,
+                    1
+                },
+                {
+                    0 /*b0*/,
+                    1,
+                    0,
+                    D3D12_DESCRIPTOR_RANGE_TYPE_CBV /*Camera parameters*/,
+                    2
+                }
+            });
+
+        *ppRayGenSig = rsc.Generate(pDevice, true);
+
+        RootSignatureGenerator missRsc;
+        *ppMissSig = missRsc.Generate(pDevice, true);
+
+
+        RootSignatureGenerator hitRsc;
+        hitRsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV, 0);
+        *ppHitSig = hitRsc.Generate(pDevice, true);
+    }
+
     void RaytracePass::CreatePipeline()
     {
+        auto device = (DeviceDX12*)gRenderer->GetDevice();
+
+        ID3D12Device5* pDevice = (ID3D12Device5*)device->GetDevice();
+        RayTracingPipelineGenerator pipeline(pDevice);
+
+        auto rgId = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/RT/RayGen.hlsl") };
+        auto missId = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/RT/Miss.hlsl") };
+        auto hitId = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/RT/Hit.hlsl") };
+
+        auto rayGenShaderHandle = gResourceManager->CreateShader({ rgId, shader::LIB });
+        auto missShaderHandle = gResourceManager->CreateShader({ missId, shader::LIB });
+        auto hitShaderHandle = gResourceManager->CreateShader({ hitId, shader::LIB });
+
+        auto rayGenShader = (ShaderDX12*)gResourceManager->GetShader(rayGenShaderHandle);
+        auto missShader = (ShaderDX12*)gResourceManager->GetShader(missShaderHandle);
+        auto hitShader = (ShaderDX12*)gResourceManager->GetShader(hitShaderHandle);
+
+        pipeline.AddLibrary(rayGenShader->GetBlob(), { L"RayGen" });
+        pipeline.AddLibrary(missShader->GetBlob(), { L"Miss" });
+        pipeline.AddLibrary(hitShader->GetBlob(), { L"ClosestHit", L"PlaneClosestHit" });
+        pipeline.AddHitGroup(L"HitGroup", L"ClosestHit");
+        pipeline.AddHitGroup(L"PlaneHitGroup", L"PlaneClosestHit");
+
+        CreateLocalRootSignatures(pDevice, mRtObjects->mRayGenSig.GetAddressOf(), mRtObjects->mMissShaderSig.GetAddressOf(), mRtObjects->mHitShaderSig.GetAddressOf());
+        pipeline.AddRootSignatureAssociation(mRtObjects->mRayGenSig.Get(), { L"RayGen" });
+        pipeline.AddRootSignatureAssociation(mRtObjects->mMissShaderSig.Get(), { L"Miss" });
+        pipeline.AddRootSignatureAssociation(mRtObjects->mHitShaderSig.Get(), { L"HitGroup", L"PlaneHitGroup" });
+        pipeline.SetMaxPayloadSize(4 * sizeof(float)); // RGB + Distance
+        pipeline.SetMaxAttributeSize(2 * sizeof(float));
+        pipeline.SetMaxRecursionDepth(1);
+
+        pipeline.Generate(mRtObjects->mRtStateObject.GetAddressOf());
+        mRtObjects->mRtStateObject->QueryInterface(IID_PPV_ARGS(&mRtObjects->mRtStateobjectProperties));
     }
+
     void RaytracePass::CreateShaderBindingTable()
     {
+        auto& sbtHelper = mRtObjects->mSbtHelper;
+        sbtHelper.Reset();
     }
+
 #endif // NV_RENDERER_DX12
 }
 

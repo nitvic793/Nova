@@ -123,13 +123,25 @@ namespace nv::asset
             public:
                 HRESULT STDMETHODCALLTYPE LoadSource(_In_ LPCWSTR pFilename, _COM_Outptr_result_maybenull_ IDxcBlob** ppIncludeSource) override
                 {
+                    *ppIncludeSource = nullptr;
                     CComPtr<IDxcBlobEncoding> pEncoding;
                     std::string path = ToString(pFilename);
                     constexpr auto toErase = "./";
                     path.erase(0,2);
+                    auto pos = path.find("../");
+                    if (pos != std::string::npos)
+                    {
+                        path.erase(0, pos + 3);
+                        path = "Shaders/" + path;
+                    }
 
                     const auto id = AssetID{ ASSET_SHADER, ID(path.c_str()) };
                     auto asset = gpAssetManager->GetAsset(id);
+                    if (asset == nullptr)
+                    {
+                        return S_FALSE;
+                    }
+
                     if (asset->GetState() == STATE_UNLOADED)
                     {
                         gpAssetManager->LoadAsset(id, nullptr, true);

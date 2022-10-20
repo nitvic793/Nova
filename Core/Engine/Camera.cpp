@@ -85,6 +85,14 @@ namespace nv
         return viewT;
     }
 
+    float4x4 Camera::GetViewInverseTransposed() const
+    {
+        float4x4 viewT;
+        auto viewInverse = MatrixTranspose(MatrixInverse(Load(mView)));
+        Store(viewInverse, viewT);
+        return viewT;
+    }
+
     float4x4 Camera::GetProjTransposed() const
     {
         float4x4 projT;
@@ -92,6 +100,14 @@ namespace nv
         auto proj = MatrixTranspose(Load(mProjection));
         Store(proj, projT);
 
+        return projT;
+    }
+
+    float4x4 Camera::GetProjInverseTransposed() const
+    {
+        float4x4 projT;
+        auto projInv = MatrixTranspose(MatrixInverse(Load(mProjection)));
+        Store(projInv, projT);
         return projT;
     }
 }

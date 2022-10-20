@@ -136,7 +136,7 @@ namespace nv_helpers_dx12
 	//--------------------------------------------------------------------------------------------------
 	//
 	// Compiles the raytracing state object
-	ID3D12StateObject* RayTracingPipelineGenerator::Generate()
+	void RayTracingPipelineGenerator::Generate(ID3D12StateObject** ppStateObject)
 	{
 		// The pipeline is made of a set of sub-objects, representing the DXIL libraries, hit group
 		// declarations, root signature associations, plus some configuration objects
@@ -270,15 +270,12 @@ namespace nv_helpers_dx12
 		pipelineDesc.NumSubobjects = currentIndex; // static_cast<UINT>(subobjects.size());
 		pipelineDesc.pSubobjects = subobjects.data();
 
-		ID3D12StateObject* rtStateObject = nullptr;
-
 		// Create the state object
-		const HRESULT hr = m_device->CreateStateObject(&pipelineDesc, IID_PPV_ARGS(&rtStateObject));
+		const HRESULT hr = m_device->CreateStateObject(&pipelineDesc, IID_PPV_ARGS(ppStateObject));
 		if (FAILED(hr))
 		{
 			throw std::logic_error("Could not create the raytracing state object");
 		}
-		return rtStateObject;
 	}
 
 	//--------------------------------------------------------------------------------------------------

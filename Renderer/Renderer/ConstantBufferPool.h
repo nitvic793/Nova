@@ -71,7 +71,7 @@ namespace nv::graphics
             size_t maxSize = TMaxSize;
             if (size < maxSize) // Fill up buffer upto max size
             {
-                ConstantBufferView view = gRenderer->CreateConstantBuffer(sizeof(T));
+                ConstantBufferView view = gRenderer->CreateConstantBuffer({ .mSize = sizeof(T) });
                 data.mRingBuffer.Insert(view);
                 return view;
             }

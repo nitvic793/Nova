@@ -69,6 +69,8 @@ namespace nv::graphics
     {
         float4x4            View;
         float4x4            Projection;
+        float4x4            ViewInverse;
+        float4x4            ProjectionInverse;
         DirectionalLight    DirLights[MAX_DIRECTIONAL_LIGHTS];
         uint32_t            DirLightsCount;
         float               _Padding;

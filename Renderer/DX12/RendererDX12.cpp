@@ -51,6 +51,7 @@ namespace nv::graphics
         initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultGPUDescriptorCount, mGpuHeap, true);
         initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultFrameDescriptorCount, mTextureHeap);
         initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultFrameDescriptorCount, mConstantBufferHeap);
+        initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultFrameDescriptorCount, mRayTracingHeap);
 
         for (uint32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
         {
@@ -336,19 +337,25 @@ namespace nv::graphics
         return heap->HandleGPU(mGpuHeapState.mTextureOffset + index);
     }
 
-    ConstantBufferView RendererDX12::CreateConstantBuffer(uint32_t size)
+    D3D12_GPU_VIRTUAL_ADDRESS RendererDX12::GetConstBufferAddress(const ConstantBufferView& view)
     {
-        auto heap = mDescriptorHeapPool.GetAsDerived(mConstantBufferHeap);
+        return mConstantBuffer->GetAddress() + view.mMemoryOffset;
+    }
+
+    ConstantBufferView RendererDX12::CreateConstantBuffer(ConstBufferDesc desc)
+    {
+        auto heapHandle = desc.mUseRayTracingHeap ? mRayTracingHeap : mConstantBufferHeap;
+        auto heap = mDescriptorHeapPool.GetAsDerived(heapHandle);
         auto pDevice = mDevice.As<DeviceDX12>()->GetDevice();
-        const uint32_t bufferSize = (size + CONST_BUFFER_ALIGNMENT_SIZE - 1) & ~(CONST_BUFFER_ALIGNMENT_SIZE - 1);
+        const uint32_t bufferSize = (desc.mSize + CONST_BUFFER_ALIGNMENT_SIZE - 1) & ~(CONST_BUFFER_ALIGNMENT_SIZE - 1);
         const uint32_t cbIndex = mCbState.mCurrentCount;
         const uint64_t cbMemOffset = mCbState.mCurrentMemoryOffset;
 
         mCbState.mCurrentCount++;
         mCbState.mCurrentMemoryOffset += bufferSize;
 
-        D3D12_CONSTANT_BUFFER_VIEW_DESC	desc = { .BufferLocation = mConstantBuffer->GetAddress() + cbMemOffset, .SizeInBytes = bufferSize };
-        pDevice->CreateConstantBufferView(&desc, heap->HandleCPU(cbIndex));
+        D3D12_CONSTANT_BUFFER_VIEW_DESC	constDesc = { .BufferLocation = mConstantBuffer->GetAddress() + cbMemOffset, .SizeInBytes = bufferSize };
+        pDevice->CreateConstantBufferView(&constDesc, heap->HandleCPU(cbIndex));
         heap->PushCPU();
 
         return ConstantBufferView{ cbMemOffset, cbIndex };
@@ -466,6 +473,7 @@ namespace nv::graphics
 
         mGpuHeapState.mConstBufferOffset = copyDescriptors(mConstantBufferHeap);
         mGpuHeapState.mTextureOffset = copyDescriptors(mTextureHeap);
+        mGpuHeapState.mRTObjectsOffset = copyDescriptors(mRayTracingHeap);
     }
 
     void RendererDX12::Draw()
@@ -496,11 +504,10 @@ namespace nv::graphics
     void ReportLeaksDX12()
     {
 #ifdef _DEBUG
-        IDXGIDebug1* pDebug = nullptr;
+        Microsoft::WRL::ComPtr<IDXGIDebug1> pDebug = nullptr;
         if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDebug))))
         {
             pDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_SUMMARY | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
-            pDebug->Release();
         }
 #endif
     }

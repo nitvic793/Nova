@@ -27,6 +27,27 @@
                 "Type": "VertexShader",
                 "ShaderModel": "6_6"
             }
+        },
+        {
+            "key": "Shaders/RT/Hit.hlsl",
+            "value": {
+                "Type": "Lib",
+                "ShaderModel": "6_6"
+            }
+        },
+        {
+            "key": "Shaders/RT/RayGen.hlsl",
+            "value": {
+                "Type": "Lib",
+                "ShaderModel": "6_6"
+            }
+        },
+        {
+            "key": "Shaders/RT/Miss.hlsl",
+            "value": {
+                "Type": "Lib",
+                "ShaderModel": "6_6"
+            }
         }
     ]
 }

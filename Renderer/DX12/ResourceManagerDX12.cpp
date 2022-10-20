@@ -242,7 +242,8 @@ namespace nv::graphics
         case tex::USAGE_SHADER:
         {
             view = VIEW_SHADER_RESOURCE;
-            heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mTextureHeap);
+            auto heapHandle = desc.mUseRayTracingHeap ? renderer->mRayTracingHeap : renderer->mTextureHeap;
+            heap = renderer->mDescriptorHeapPool.GetAsDerived(heapHandle);
             cpuHandle = heap->PushCPU();
             DirectX::CreateShaderResourceView(device, resource->GetResource().Get(), cpuHandle, tex::TEXTURE_CUBE == desc.mType);
             break;
@@ -250,7 +251,8 @@ namespace nv::graphics
         case tex::USAGE_UNORDERED:
         {
             view = VIEW_UNORDERED_ACCESS;
-            heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mTextureHeap);
+            auto heapHandle = desc.mUseRayTracingHeap ? renderer->mRayTracingHeap : renderer->mTextureHeap;
+            heap = renderer->mDescriptorHeapPool.GetAsDerived(heapHandle);
             cpuHandle = heap->PushCPU();
 
             D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
@@ -297,7 +299,7 @@ namespace nv::graphics
             srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
             srvDesc.RaytracingAccelerationStructure.Location = resource->GetResource()->GetGPUVirtualAddress();
 
-            heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mTextureHeap);
+            heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mRayTracingHeap);
             cpuHandle = heap->PushCPU();
             device->CreateShaderResourceView(nullptr, &srvDesc, cpuHandle);
             break;
