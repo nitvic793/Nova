@@ -337,6 +337,12 @@ namespace nv::graphics
         return heap->HandleGPU(mGpuHeapState.mTextureOffset + index);
     }
 
+    D3D12_GPU_DESCRIPTOR_HANDLE RendererDX12::GetRTDescriptorHandle(uint32_t index) const
+    {
+        auto heap = mDescriptorHeapPool.GetAsDerived(mGpuHeap);
+        return heap->HandleGPU(mGpuHeapState.mRTObjectsOffset + index);
+    }
+
     D3D12_GPU_VIRTUAL_ADDRESS RendererDX12::GetConstBufferAddress(const ConstantBufferView& view)
     {
         return mConstantBuffer->GetAddress() + view.mMemoryOffset;

@@ -203,16 +203,16 @@ namespace nv::graphics
                 GPUBeginEvent(ctx, "Frame");
                 NV_EVENT("Renderer/Frame");
 
+                const RenderPassData data =
+                {
+                    .mFrameDataCBV      = mFrameCB,
+                    .mRenderData        = mCurrentRenderData,
+                    .mRenderDataArray   = mRenderData
+                };
+
                 for (auto& pass : mRenderPasses)
                 {
                     GPUBeginEvent(ctx, pass->GetName());
-                    RenderPassData data =
-                    {
-                        .mFrameDataCBV = mFrameCB,
-                        .mRenderData = mCurrentRenderData,
-                        .mRenderDataArray = mRenderData
-                    };
-
                     pass->Execute(data);
                     GPUEndEvent(ctx);
                 }

@@ -5,6 +5,8 @@
 #include <Renderer/ResourceManager.h>
 #include <Renderer/Shader.h>
 #include <Renderer/Window.h>
+#include <Engine/Camera.h>
+#include <Engine/EntityComponent.h>
 #include <fmt/format.h>
 
 #if NV_RENDERER_DX12
@@ -31,6 +33,13 @@ namespace nv::graphics
     using namespace buffer;
 
 #if NV_RENDERER_DX12
+
+    struct Object
+    {
+        AccelerationStructureBuffers    mBlas;
+        ObjectData                      mData;
+    };
+
     struct RTObjects
     {
         ComPtr<ID3D12RootSignature>         mRayGenSig;
@@ -40,21 +49,114 @@ namespace nv::graphics
         ComPtr<ID3D12StateObjectProperties> mRtStateobjectProperties;
 
         ShaderBindingTableGenerator         mSbtHelper;
+
+        Handle<GPUResource>                 mOutputBuffer;
+        std::vector<Object>                 mBlasList;
     };
+
+    void CheckRaytracingSupport(ID3D12Device* pDevice)
+    {
+        D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {};
+        pDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5,
+            &options5, sizeof(options5));
+        if (options5.RaytracingTier < D3D12_RAYTRACING_TIER_1_0)
+            throw std::runtime_error("Raytracing not supported on device");
+    }
 
     void RaytracePass::Init()
     {
         mRtObjects = Alloc<RTObjects>();
         CreateOutputBuffer();
         CreatePipeline();
-        CreateShaderBindingTable();
+        auto device = (DeviceDX12*)gRenderer->GetDevice();
+        CheckRaytracingSupport(device->GetDevice());
     }
 
     bool done = false;
+    ConstantBufferView cameraCbv;
     void RaytracePass::Execute(const RenderPassData& renderPassData)
     {
-        if(!done)
+        auto renderer = (RendererDX12*)gRenderer;
+        const auto updateCameraParams = [&]()
+        {
+            auto camera = ecs::gComponentManager.GetComponents<CameraComponent>()[0].mCamera;
+            auto view = camera.GetViewTransposed();
+            auto proj = camera.GetProjTransposed();
+            auto projI = camera.GetProjInverseTransposed();
+            auto viewI = camera.GetViewInverseTransposed();
+            auto dirLights = ecs::gComponentManager.GetComponents<DirectionalLight>();
+
+            FrameData data = { .View = view, .Projection = proj, .ViewInverse = viewI, .ProjectionInverse = projI };
+            if (dirLights.Size() > 0)
+            {
+                for (uint32_t i = 0; i < dirLights.Size() && i < MAX_DIRECTIONAL_LIGHTS; ++i)
+                {
+                    data.DirLights[i] = dirLights[i];
+                }
+
+                data.DirLightsCount = min((uint32_t)MAX_DIRECTIONAL_LIGHTS, (uint32_t)dirLights.Size());
+            }
+
+            renderer->UploadToConstantBuffer(cameraCbv, (uint8_t*)&data, sizeof(FrameData));
+        };
+
+        if (!done && renderPassData.mRenderData.mSize > 0)
+        {
             CreateRaytracingStructures(renderPassData);
+            CreateShaderBindingTable(renderPassData);
+            // FIXME: Causes flickering. Raytracing heap not working as expected. 
+            //cameraCbv =  renderer->CreateConstantBuffer({ .mSize = sizeof(FrameData), .mUseRayTracingHeap = true }); 
+        }
+
+        if (done)
+        {
+            auto ctx = (ContextDX12*)renderer->GetContext();
+            const auto dispatchRays = [&]()
+            {
+                auto& sbtHelper = mRtObjects->mSbtHelper;
+                auto commandList = ctx->GetDXRCommandList();
+                auto handle = gResourceManager->GetGPUResourceHandle(ID("RT/ShaderBindingTable"));
+                auto sbtStorage = ((GPUResourceDX12*)gResourceManager->GetGPUResource(handle))->GetResource().Get();;
+
+                D3D12_DISPATCH_RAYS_DESC desc = {};
+                const uint32_t rayGenerationSectionSizeInBytes =
+                    sbtHelper.GetRayGenSectionSize();
+                desc.RayGenerationShaderRecord.StartAddress =
+                    sbtStorage->GetGPUVirtualAddress();
+                desc.RayGenerationShaderRecord.SizeInBytes =
+                    rayGenerationSectionSizeInBytes;
+
+                const uint32_t missSectionSizeInBytes = sbtHelper.GetMissSectionSize();
+                desc.MissShaderTable.StartAddress =
+                    sbtStorage->GetGPUVirtualAddress() + rayGenerationSectionSizeInBytes;
+                desc.MissShaderTable.SizeInBytes = missSectionSizeInBytes;
+                desc.MissShaderTable.StrideInBytes = sbtHelper.GetMissEntrySize();
+
+                const uint32_t hitGroupsSectionSize = sbtHelper.GetHitGroupSectionSize();
+                desc.HitGroupTable.StartAddress = sbtStorage->GetGPUVirtualAddress() +
+                    rayGenerationSectionSizeInBytes +
+                    missSectionSizeInBytes;
+                desc.HitGroupTable.SizeInBytes = hitGroupsSectionSize;
+                desc.HitGroupTable.StrideInBytes = sbtHelper.GetHitGroupEntrySize();
+
+                desc.Width = gWindow->GetWidth();
+                desc.Height = gWindow->GetHeight();
+                desc.Depth = 1;
+
+                commandList->SetPipelineState1(mRtObjects->mRtStateObject.Get());
+                //commandList->DispatchRays(&desc);
+            };
+
+            SetContextDefault(ctx);
+            TransitionBarrier initBarriers[] = { {.mTo = STATE_UNORDERED_ACCESS, .mResource = mRtObjects->mOutputBuffer } };
+            ctx->ResourceBarrier({ &initBarriers[0] , ArrayCountOf(initBarriers) });
+
+            //updateCameraParams();
+            dispatchRays();
+
+            TransitionBarrier endBarriers[] = { {.mTo = STATE_COPY_SOURCE, .mResource = mRtObjects->mOutputBuffer } };
+            ctx->ResourceBarrier({ &endBarriers[0] , ArrayCountOf(endBarriers) });
+        }
     }
 
     void RaytracePass::Destroy()
@@ -102,14 +204,6 @@ namespace nv::graphics
             return buffers;
         };
 
-        struct Object
-        {
-            AccelerationStructureBuffers    mBlas;
-            ObjectData                      mData;
-        };
-
-        std::vector<Object> blasList;
-
         const auto addToTlas = [&](Object& objData, uint32_t instanceId, uint32_t hitGroup)
         {
             auto transform = Load(objData.mData.World);
@@ -144,7 +238,7 @@ namespace nv::graphics
             {
                 auto blas = createBlas(rd, (uint32_t)i);
                 auto obj = Object{ blas, rd.mObjectData };
-                blasList.push_back(obj);
+                mRtObjects->mBlasList.push_back(obj);
                 addToTlas(obj, (uint32_t)i, (uint32_t)0);
             }
         }
@@ -183,7 +277,7 @@ namespace nv::graphics
         };
 
         auto outputBuffer = gResourceManager->CreateResource(desc, ID("RTPass/OutputBuffer"));
-
+        mRtObjects->mOutputBuffer = outputBuffer;
         TextureDesc texDesc =
         { 
             .mUsage = tex::USAGE_UNORDERED,
@@ -273,10 +367,34 @@ namespace nv::graphics
         mRtObjects->mRtStateObject->QueryInterface(IID_PPV_ARGS(&mRtObjects->mRtStateobjectProperties));
     }
 
-    void RaytracePass::CreateShaderBindingTable()
+    void RaytracePass::CreateShaderBindingTable(const RenderPassData& renderPassData)
     {
         auto& sbtHelper = mRtObjects->mSbtHelper;
         sbtHelper.Reset();
+
+        auto renderer = (RendererDX12*)gRenderer;
+        auto startHandle = renderer->GetRTDescriptorHandle(0);
+        uint64_t* heapPtr = reinterpret_cast<uint64_t*>(startHandle.ptr);
+
+        sbtHelper.AddRayGenerationProgram(L"RayGen", { heapPtr });
+        sbtHelper.AddMissProgram(L"Miss", {});
+
+        auto objDescriptors = renderPassData.mRenderDataArray.GetObjectDescriptors();
+        for (uint32_t i = 0; i < objDescriptors.Size(); ++i)
+        {
+            auto vAddress = renderer->GetConstBufferAddress(objDescriptors[i]);
+            sbtHelper.AddHitGroup(
+                L"HitGroup",
+                { reinterpret_cast<void*>(vAddress) });
+        }
+
+        sbtHelper.AddHitGroup(L"PlaneHitGroup", {});
+        const uint32_t sbtSize = sbtHelper.ComputeSBTSize();
+
+        GPUResourceDesc sbtStorageDesc = { .mSize = (uint32_t)sbtSize,.mInitialState = STATE_GENERIC_READ, .mBufferMode = BUFFER_MODE_UPLOAD };
+        auto sbtStorageResourceHandle = gResourceManager->CreateResource(sbtStorageDesc, ID("RT/ShaderBindingTable"));
+        auto sbtResource = (GPUResourceDX12*)gResourceManager->GetGPUResource(sbtStorageResourceHandle);
+        sbtHelper.Generate(sbtResource->GetResource().Get(), mRtObjects->mRtStateobjectProperties.Get());
     }
 
 #endif // NV_RENDERER_DX12

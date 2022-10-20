@@ -79,6 +79,7 @@ namespace nv::graphics
         ID3D12Resource*             GetConstBuffer() const;
         D3D12_GPU_DESCRIPTOR_HANDLE GetConstBufferHandle(uint32_t index) const;
         D3D12_GPU_DESCRIPTOR_HANDLE GetTextureHandle(uint32_t index) const;
+        D3D12_GPU_DESCRIPTOR_HANDLE GetRTDescriptorHandle(uint32_t index) const;
         const GpuHeapState&         GetGPUHeapState() const { return mGpuHeapState; }
         D3D12_GPU_VIRTUAL_ADDRESS   GetConstBufferAddress(const ConstantBufferView& view);
 

@@ -19,7 +19,7 @@ namespace nv::graphics
         void CreateRaytracingStructures(const RenderPassData& renderPassData);
         void CreateOutputBuffer();
         void CreatePipeline();
-        void CreateShaderBindingTable();
+        void CreateShaderBindingTable(const RenderPassData& renderPassData);
 
     private:
         RTObjects* mRtObjects;

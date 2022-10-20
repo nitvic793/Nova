@@ -55,7 +55,7 @@ namespace nv::graphics
     class ConstantBufferPool
     {
     public:
-        template<typename T, size_t TMaxSize = MAX_RING_BUFFER_SIZE>
+        template<typename T, size_t TMaxSize = MAX_RING_BUFFER_SIZE, bool UseRayTracingHeap = false >
         ConstantBufferView GetConstantBuffer()
         {
             constexpr StringID typeId = TypeNameID<T>();
@@ -71,7 +71,7 @@ namespace nv::graphics
             size_t maxSize = TMaxSize;
             if (size < maxSize) // Fill up buffer upto max size
             {
-                ConstantBufferView view = gRenderer->CreateConstantBuffer({ .mSize = sizeof(T) });
+                ConstantBufferView view = gRenderer->CreateConstantBuffer({ .mSize = sizeof(T), .mUseRayTracingHeap = UseRayTracingHeap });
                 data.mRingBuffer.Insert(view);
                 return view;
             }
