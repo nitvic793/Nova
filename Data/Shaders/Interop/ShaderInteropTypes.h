@@ -76,6 +76,20 @@ namespace nv::graphics
         float               _Padding;
     };
 
+    struct ViewportDesc
+    {
+        float Left;
+        float Top;
+        float Right;
+        float Bottom;
+    };
+
+    struct RayGenConstantBuffer
+    {
+        ViewportDesc Viewport;
+        ViewportDesc Stencil;
+    };
+
 #ifdef __cplusplus
 }
 #endif

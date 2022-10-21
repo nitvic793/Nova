@@ -70,6 +70,7 @@ namespace nv::graphics
         constexpr void                      UpdateResourceState(buffer::State state) { mCurrentState = state; }
 
         virtual void                        MapMemory() = 0;
+        virtual void                        UnmapMemory() = 0;
         virtual void                        UploadMapped(uint8_t* bytes, size_t size, size_t offset = 0) = 0;
 
     protected:

@@ -11,7 +11,7 @@
 
 namespace nv::graphics
 {
-    constexpr size_t MAX_RING_BUFFER_SIZE = 1024;
+    constexpr size_t MAX_RING_BUFFER_SIZE = 128;
 
     template<typename T>
     class RingBuffer

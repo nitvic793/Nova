@@ -29,21 +29,7 @@
             }
         },
         {
-            "key": "Shaders/RT/Hit.hlsl",
-            "value": {
-                "Type": "Lib",
-                "ShaderModel": "6_6"
-            }
-        },
-        {
-            "key": "Shaders/RT/RayGen.hlsl",
-            "value": {
-                "Type": "Lib",
-                "ShaderModel": "6_6"
-            }
-        },
-        {
-            "key": "Shaders/RT/Miss.hlsl",
+            "key": "Shaders/Raytracing.hlsl",
             "value": {
                 "Type": "Lib",
                 "ShaderModel": "6_6"

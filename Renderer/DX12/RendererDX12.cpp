@@ -479,7 +479,7 @@ namespace nv::graphics
 
         mGpuHeapState.mConstBufferOffset = copyDescriptors(mConstantBufferHeap);
         mGpuHeapState.mTextureOffset = copyDescriptors(mTextureHeap);
-        mGpuHeapState.mRTObjectsOffset = copyDescriptors(mRayTracingHeap);
+        //mGpuHeapState.mRTObjectsOffset = copyDescriptors(mRayTracingHeap);
     }
 
     void RendererDX12::Draw()

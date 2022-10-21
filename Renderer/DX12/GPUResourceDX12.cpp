@@ -50,8 +50,15 @@ namespace nv::graphics
         mResource->Map(0, &readRange, reinterpret_cast<void**>(&mMappedAddress));
     }
 
+    void GPUResourceDX12::UnmapMemory()
+    {
+        mResource->Unmap(0, nullptr);
+        mMappedAddress = nullptr;
+    }
+
     void GPUResourceDX12::UploadMapped(uint8_t* bytes, size_t size, size_t offset)
     {
+        assert(mMappedAddress);
         char* ptr = reinterpret_cast<char*>(mMappedAddress) + offset;
         memcpy(ptr, bytes, size);
     }

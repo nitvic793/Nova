@@ -39,8 +39,11 @@ namespace nv::graphics
 
     D3D12_GPU_DESCRIPTOR_HANDLE TextureDX12::GetGPUHandle() const
     {
-        assert(mDescriptorHandle.mType == DescriptorHandle::GPU);
-        return mDescriptorHandle.GetGPUHandle();
+        if(mDescriptorHandle.mType == DescriptorHandle::GPU)
+            return mDescriptorHandle.GetGPUHandle();
+
+        auto renderer = (RendererDX12*)gRenderer;
+        return renderer->GetTextureHandle(mDescriptorHandle.mHeapIndex);
     }
 
     ID3D12Resource* TextureDX12::GetResource() const

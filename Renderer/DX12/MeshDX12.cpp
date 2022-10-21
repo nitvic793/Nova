@@ -36,9 +36,6 @@ namespace nv::graphics
 
     D3D12_RAYTRACING_GEOMETRY_DESC MeshDX12::GetGeometryDescs()
     {
-        if (mRTGeometryDescs.empty())
-            GenerateRTGeometryDescs();
-
         auto vb = (GPUResourceDX12*)gResourceManager->GetGPUResource(mVertexBuffer);
         auto ib = (GPUResourceDX12*)gResourceManager->GetGPUResource(mIndexBuffer);
 

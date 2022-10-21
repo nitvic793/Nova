@@ -122,7 +122,7 @@ namespace nv::graphics
         mObjectDrawData.mMaterialCBView = mpConstantBufferPool->GetConstantBuffer<MaterialData>();
 
         LoadResources();
-        //gRenderer->GetDevice()->InitRaytracingContext();
+        gRenderer->GetDevice()->InitRaytracingContext();
 
         mRenderPasses.Emplace(Alloc<ForwardPass>());
         mRenderPasses.Emplace(Alloc<Skybox>());

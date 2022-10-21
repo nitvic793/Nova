@@ -44,6 +44,7 @@ namespace nv::graphics
 
         // Inherited via GPUResource
         virtual void            MapMemory();
+        virtual void            UnmapMemory();
         virtual void            UploadMapped(uint8_t* bytes, size_t size, size_t offset = 0Ui64);
 
     private:
