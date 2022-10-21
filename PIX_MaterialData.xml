@@ -1,0 +1,4 @@
+<BufferFormats>
+  <BufferFormat Name="Globals" IsGlobals="true" Format="// Structure definitions added here will be available in all format definitions&#xD;&#xA;" SavedFormat="// Structure definitions added here will be available in all format definitions&#xD;&#xA;" />
+  <BufferFormat Name="MaterialData" Format="uint32_t AlbedoOffset;&#xD;&#xA;uint32_t NormalOffset;&#xD;&#xA;uint32_t RoughnessOffset;&#xD;&#xA;uint32_t MetalnessOffset;" SavedFormat="uint32_t AlbedoOffset;&#xD;&#xA;uint32_t NormalOffset;&#xD;&#xA;uint32_t RoughnessOffset;&#xD;&#xA;uint32_t MetalnessOffset;" />
+</BufferFormats>

@@ -71,9 +71,12 @@ namespace nv::graphics
         float4x4            Projection;
         float4x4            ViewInverse;
         float4x4            ProjectionInverse;
+        float4x4            ViewProjectionInverse;
+        float3              CameraPosition;
+        float               _Padding0;
         DirectionalLight    DirLights[MAX_DIRECTIONAL_LIGHTS];
         uint32_t            DirLightsCount;
-        float               _Padding;
+        float               _Padding1;
     };
 
     struct ViewportDesc

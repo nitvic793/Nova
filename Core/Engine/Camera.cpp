@@ -110,4 +110,13 @@ namespace nv
         Store(projInv, projT);
         return projT;
     }
+
+    float4x4 Camera::GetViewProjInverseTransposed() const
+    {
+        float4x4 viewProjT;
+        auto viewProj = Load(mView) * Load(mProjection);
+        auto viewProjInv = MatrixTranspose(MatrixInverse(viewProj));
+        Store(viewProjInv, viewProjT);
+        return viewProjT;
+    }
 }

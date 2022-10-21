@@ -42,6 +42,7 @@ namespace nv
         float4x4 GetViewInverseTransposed() const;
         float4x4 GetProjTransposed() const;
         float4x4 GetProjInverseTransposed() const;
+        float4x4 GetViewProjInverseTransposed() const;
 
         const float3&       GetPosition()  const { return mPosition; }
         const float3&       GetDirection() const { return mDirection; }

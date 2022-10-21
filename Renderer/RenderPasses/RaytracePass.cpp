@@ -218,9 +218,16 @@ namespace nv::graphics
             auto proj = camera.GetProjTransposed();
             auto projI = camera.GetProjInverseTransposed();
             auto viewI = camera.GetViewInverseTransposed();
+            auto viewProjI = camera.GetViewProjInverseTransposed();
             auto dirLights = ecs::gComponentManager.GetComponents<DirectionalLight>();
 
-            FrameData data = { .View = view, .Projection = proj, .ViewInverse = viewI, .ProjectionInverse = projI };
+            FrameData data = { 
+                .View = view, .Projection = proj, 
+                .ViewInverse = viewI, .ProjectionInverse = projI, 
+                .ViewProjectionInverse = viewProjI, 
+                .CameraPosition = camera.GetPosition()
+            };
+
             if (dirLights.Size() > 0)
             {
                 for (uint32_t i = 0; i < dirLights.Size() && i < MAX_DIRECTIONAL_LIGHTS; ++i)
@@ -373,16 +380,6 @@ namespace nv::graphics
 
             // Build acceleration structure.
             BuildAccelerationStructure(ctx->GetDXRCommandList());
-            //createTlas();
-
-            //TextureDesc texDesc =
-            //{
-            //    .mUsage = tex::USAGE_RT_ACCELERATION,
-            //    .mBuffer = gResourceManager->GetGPUResourceHandle(ID("RTPass/TlasResult")),
-            //    .mType = tex::TEXTURE_2D,
-            //};
-
-            //auto tlasUav = gResourceManager->CreateTexture(texDesc, ID("RTPass/TlasTex"));
             done = true;
         }
     }
