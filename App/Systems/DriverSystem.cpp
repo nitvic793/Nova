@@ -53,6 +53,7 @@ namespace nv
 
         auto transform = entity->GetTransform();
         gEntityManager.GetEntity(entity1)->GetTransform().mPosition.x -= 1;
+        gEntityManager.GetEntity(entity1)->GetTransform().mPosition.z += 1;
     }
 
     void DriverSystem::Update(float deltaTime, float totalTime)

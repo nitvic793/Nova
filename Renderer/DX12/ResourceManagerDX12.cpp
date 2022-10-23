@@ -245,7 +245,18 @@ namespace nv::graphics
             auto heapHandle = desc.mUseRayTracingHeap ? renderer->mRayTracingHeap : renderer->mTextureHeap;
             heap = renderer->mDescriptorHeapPool.GetAsDerived(heapHandle);
             cpuHandle = heap->PushCPU();
-            DirectX::CreateShaderResourceView(device, resource->GetResource().Get(), cpuHandle, tex::TEXTURE_CUBE == desc.mType);
+            if(desc.mType != tex::BUFFER)
+                DirectX::CreateShaderResourceView(device, resource->GetResource().Get(), cpuHandle, tex::TEXTURE_CUBE == desc.mType);
+            else
+            {
+                D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+                srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+                srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                srvDesc.Format = GetFormat(desc.mFormat);
+                srvDesc.Buffer = GetSRVBuffer(desc.mBufferData);
+                device->CreateShaderResourceView(resource->GetResource().Get(), &srvDesc, cpuHandle);
+            }
+
             break;
         }
         case tex::USAGE_UNORDERED:

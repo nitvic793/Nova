@@ -8,6 +8,8 @@ namespace nv::graphics
 {
     class GPUResource;
 
+
+
     struct TextureDesc
     {
         tex::Usage              mUsage = tex::USAGE_SHADER;
@@ -15,6 +17,7 @@ namespace nv::graphics
         Handle<GPUResource>     mBuffer = Handle<GPUResource>();
         tex::Type               mType = tex::TEXTURE_2D;
         bool                    mUseRayTracingHeap = false;
+        tex::Buffer             mBufferData = {};
     };
 
     class Texture

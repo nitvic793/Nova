@@ -49,6 +49,41 @@ namespace nv::graphics
         return D3D12_UAV_DIMENSION_UNKNOWN;
     }
 
+    constexpr D3D12_SRV_DIMENSION GetSRVDimension(tex::Type type)
+    {
+        switch (type)
+        {
+        case tex::TEXTURE_1D:   return D3D12_SRV_DIMENSION_TEXTURE1D;
+        case tex::TEXTURE_2D:   return D3D12_SRV_DIMENSION_TEXTURE2D;
+        case tex::TEXTURE_3D:   return D3D12_SRV_DIMENSION_TEXTURE3D;
+        case tex::BUFFER:       return D3D12_SRV_DIMENSION_BUFFER;
+        }
+
+        return D3D12_SRV_DIMENSION_UNKNOWN;
+    }
+
+    constexpr D3D12_BUFFER_SRV_FLAGS GetSRVBufferFlags(tex::BufferFlags flags)
+    {
+        switch (flags)
+        {
+        case tex::BUFFER_FLAG_NONE: return D3D12_BUFFER_SRV_FLAG_NONE;
+        case tex::BUFFER_FLAG_RAW : return D3D12_BUFFER_SRV_FLAG_RAW;
+        }
+
+        return D3D12_BUFFER_SRV_FLAG_NONE;
+    }
+
+    constexpr D3D12_BUFFER_SRV GetSRVBuffer(tex::Buffer buffer)
+    {
+        return D3D12_BUFFER_SRV
+        { 
+            .FirstElement = buffer.mFirstElement, 
+            .NumElements = buffer.mNumElements, 
+            .StructureByteStride = buffer.mStructureByteStride, 
+            .Flags = GetSRVBufferFlags(buffer.mBufferFlags) 
+        };
+    }
+
     constexpr D3D_PRIMITIVE_TOPOLOGY GetPrimitiveTopology(PrimitiveTopology topology)
     {
         switch (topology)

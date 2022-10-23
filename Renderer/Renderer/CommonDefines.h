@@ -225,6 +225,12 @@ namespace nv::graphics
             RT_ACCELERATION_STRUCT
         };
 
+        enum BufferFlags : uint8_t
+        {
+            BUFFER_FLAG_NONE = 0x0,
+            BUFFER_FLAG_RAW = 0x1
+        };
+
         enum Usage : uint8_t
         {
             USAGE_NONE = 0,
@@ -233,6 +239,14 @@ namespace nv::graphics
             USAGE_RENDER_TARGET = 1 << 2,
             USAGE_DEPTH_STENCIL = 1 << 3,
             USAGE_RT_ACCELERATION = 1 << 4
+        };
+
+        struct Buffer
+        {
+            uint64_t            mFirstElement = 0;
+            uint32_t            mNumElements = 0;
+            uint32_t            mStructureByteStride = 0;
+            tex::BufferFlags    mBufferFlags = tex::BUFFER_FLAG_NONE;
         };
     }
 

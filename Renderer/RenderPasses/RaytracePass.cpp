@@ -62,6 +62,7 @@ namespace nv::graphics
     {
         OutputViewSlot = 0,
         AccelerationStructureSlot,
+        PerFrameCB,
         CountGlobal
     };
 
@@ -282,6 +283,7 @@ namespace nv::graphics
             commandList->SetComputeRootSignature(mRtObjects->mGlobalRootSig.Get());
             commandList->SetComputeRootDescriptorTable(GlobalRS::OutputViewSlot, mRtObjects->mOutputUAV->GetGPUHandle());
             commandList->SetComputeRootShaderResourceView(GlobalRS::AccelerationStructureSlot, mRtObjects->mTlas->GetGPUVirtualAddress());
+            commandList->SetComputeRootDescriptorTable(GlobalRS::PerFrameCB, renderer->GetConstBufferHandle((uint32_t)cameraCbv.mHeapIndex));
             dispatchRays(mRtObjects->mStateObject.Get(), &dispatchDesc);
 
             TransitionBarrier endBarriers[] = { {.mTo = STATE_COPY_SOURCE, .mResource = mRtObjects->mOutputBuffer } };
@@ -347,8 +349,14 @@ namespace nv::graphics
             mRtObjects->mBlas = createUavBuffer(bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes, STATE_RAYTRACING_STRUCTURE, "RT/Blas");
             mRtObjects->mTlas = createUavBuffer(topLevelPrebuildInfo.ResultDataMaxSizeInBytes, STATE_RAYTRACING_STRUCTURE, "RT/Tlas");
 
+            struct alignas(16) TransformStruct
+            {
+                float transform3x4[3][4];
+            };
+
             D3D12_RAYTRACING_INSTANCE_DESC instanceDesc = {};
-            instanceDesc.Transform[0][0] = instanceDesc.Transform[1][1] = instanceDesc.Transform[2][2] = 1;
+            memcpy(&instanceDesc.Transform[0][0], &objectData.World.m[0][0], sizeof(instanceDesc.Transform));
+            //instanceDesc.Transform[0][0] = instanceDesc.Transform[1][1] = instanceDesc.Transform[2][2] = 1;
             instanceDesc.InstanceMask = 1;
             instanceDesc.AccelerationStructure = mRtObjects->mBlas->GetGPUVirtualAddress();
 
@@ -437,11 +445,13 @@ namespace nv::graphics
         };
 
         {
-            CD3DX12_DESCRIPTOR_RANGE UAVDescriptor;
-            UAVDescriptor.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+            CD3DX12_DESCRIPTOR_RANGE ranges[2];
+            ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+            ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
             CD3DX12_ROOT_PARAMETER rootParameters[GlobalRS::CountGlobal] = {};
-            rootParameters[GlobalRS::OutputViewSlot].InitAsDescriptorTable(1, &UAVDescriptor);
+            rootParameters[GlobalRS::OutputViewSlot].InitAsDescriptorTable(1, &ranges[0]);
             rootParameters[GlobalRS::AccelerationStructureSlot].InitAsShaderResourceView(0);
+            rootParameters[GlobalRS::PerFrameCB].InitAsDescriptorTable(1, &ranges[1]);
             CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
             serializeAndCreateRaytracingRootSignature(globalRootSignatureDesc, &mRtObjects->mGlobalRootSig);
         }
