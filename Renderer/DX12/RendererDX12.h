@@ -26,21 +26,7 @@ namespace nv::graphics
         uint32_t mCurrentCount          = 0;
     };
 
-    struct GpuHeapState
-    {
-        uint32_t mCurrentCount      = 0;
-        uint32_t mConstBufferOffset = 0;
-        uint32_t mTextureOffset     = 0;
-        uint32_t mRTObjectsOffset   = 0;
 
-        constexpr void Reset()
-        {
-            mCurrentCount = 0;
-            mConstBufferOffset = 0;
-            mTextureOffset = 0; 
-            mRTObjectsOffset = 0;
-        }
-    };
 
     class RendererDX12 : public IRenderer
     {
@@ -80,7 +66,7 @@ namespace nv::graphics
         D3D12_GPU_DESCRIPTOR_HANDLE GetConstBufferHandle(uint32_t index) const;
         D3D12_GPU_DESCRIPTOR_HANDLE GetTextureHandle(uint32_t index) const;
         D3D12_GPU_DESCRIPTOR_HANDLE GetRTDescriptorHandle(uint32_t index) const;
-        const GpuHeapState&         GetGPUHeapState() const { return mGpuHeapState; }
+        const GpuHeapState&         GetGPUHeapState() const override { return mGpuHeapState; }
         D3D12_GPU_VIRTUAL_ADDRESS   GetConstBufferAddress(const ConstantBufferView& view);
 
     private:

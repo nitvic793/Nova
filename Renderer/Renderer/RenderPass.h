@@ -27,6 +27,7 @@ namespace nv::graphics
         ConstantBufferView  mFrameDataCBV;
         RenderData&         mRenderData;
         RenderDataArray&    mRenderDataArray;
+        ConstantBufferView  mHeapStateCB;
     };
 
     class RenderPass

@@ -93,6 +93,12 @@ namespace nv::graphics
         ViewportDesc Stencil;
     };
 
+    struct HeapState
+    {
+        uint32_t ConstBufferOffset;
+        uint32_t TextureOffset;
+    };
+
 #ifdef __cplusplus
 }
 #endif

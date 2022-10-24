@@ -4,6 +4,7 @@
 #include <DX12/ResourceManagerDX12.h>
 #include <DX12/GPUResourceDX12.h>
 #include <D3D12MemAlloc.h>
+#include <DX12/TextureDX12.h>
 
 namespace nv::graphics
 {
@@ -29,9 +30,37 @@ namespace nv::graphics
         mIndexBufferView.SizeInBytes = indexBufferSize;
     }
 
-    void MeshDX12::GenerateRTGeometryDescs() 
+    void MeshDX12::GenerateBufferSRVs() 
     {
-        mRTGeometryDescs.clear();
+        auto createBufferSrv = [&](Handle<Texture>& outTex, Handle<GPUResource> buffer, uint32_t numElements, uint32_t elementsSize)
+        {
+            TextureDesc desc =
+            {
+                .mBuffer = buffer,
+                .mType = tex::BUFFER,
+            };
+            
+            format::SurfaceFormat format;
+            tex::Buffer& bufferData = desc.mBufferData;
+            bufferData.mNumElements = numElements;
+            if (elementsSize == 0)
+            {
+                format = format::R32_TYPELESS;
+                bufferData.mBufferFlags = tex::BUFFER_FLAG_RAW;
+                bufferData.mStructureByteStride = 0;
+            }
+            else
+            {
+                format = format::FORMAT_UNKNOWN;
+                bufferData.mBufferFlags = tex::BUFFER_FLAG_NONE;
+                bufferData.mStructureByteStride = elementsSize;
+            }
+
+            outTex = gResourceManager->CreateTexture(desc);
+        };
+
+        createBufferSrv(mIndexBufferSRV, mIndexBuffer, (uint32_t)mDesc.mIndices.size(), sizeof(uint32_t));
+        createBufferSrv(mVertexBufferSRV, mVertexBuffer, (uint32_t)mDesc.mVertices.size(), sizeof(Vertex));
     }
 
     D3D12_RAYTRACING_GEOMETRY_DESC MeshDX12::GetGeometryDescs()
@@ -64,6 +93,16 @@ namespace nv::graphics
     {
         auto resource = (GPUResourceDX12*)gResourceManager->GetGPUResource(mIndexBuffer);
         return resource->GetResource().Get();
+    }
+
+    Texture* MeshDX12::GetIndexBufferSRV() const
+    {
+        return gResourceManager->GetTexture(mIndexBufferSRV);
+    }
+
+    Texture* MeshDX12::GetVertexBufferSRV() const
+    {
+        return gResourceManager->GetTexture(mVertexBufferSRV);
     }
 }
 

@@ -205,7 +205,7 @@ namespace nv::asset
 
             CComPtr<IDxcOperationResult> result;
 
-            std::array<const wchar_t*, 2> args = { L"-Zi", L"-Qembed_debug"};
+            std::array<const wchar_t*, 3> args = { L"-Zi", L"-Qembed_debug", L"-HV 2021"};
 
             hr = compiler->Compile(
                 sourceBlob, // pSource

@@ -62,6 +62,7 @@ namespace nv::graphics
         Camera                  mCamera;
 
         ConstantBufferView      mFrameCB;
+        ConstantBufferView      mHeapStateCB;
         DrawData                mObjectDrawData;
         Handle<Mesh>            mMesh;
         Handle<PipelineState>   mPso;

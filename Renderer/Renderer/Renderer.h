@@ -16,6 +16,22 @@ namespace nv::graphics
     class DescriptorHeap;
     class Context;
 
+    struct GpuHeapState
+    {
+        uint32_t mCurrentCount = 0;
+        uint32_t mConstBufferOffset = 0;
+        uint32_t mTextureOffset = 0;
+        uint32_t mRTObjectsOffset = 0;
+
+        constexpr void Reset()
+        {
+            mCurrentCount = 0;
+            mConstBufferOffset = 0;
+            mTextureOffset = 0;
+            mRTObjectsOffset = 0;
+        }
+    };
+
     struct ConstBufferDesc
     {
         uint32_t    mSize = 0;
@@ -51,6 +67,7 @@ namespace nv::graphics
         virtual ConstantBufferView      CreateConstantBuffer(ConstBufferDesc desc) = 0;
         virtual void                    UploadToConstantBuffer(ConstantBufferView view, uint8_t* data, uint32_t size) = 0;
         virtual uint32_t                GetHeapIndex(const ConstantBufferView& cbv) = 0;
+        virtual const GpuHeapState&     GetGPUHeapState() const = 0;
 
         Device*     GetDevice() const;
         void        QueueDestroy(Handle<GPUResource> resource);

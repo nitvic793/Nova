@@ -11,6 +11,7 @@
 #include <fmt/locale.h>
 #include <Renderer/ConstantBufferPool.h>
 #include <Debug/Error.h>
+#include <Engine/Log.h>
 
 #if NV_RENDERER_DX12
 #include <DX12/MeshDX12.h>
@@ -63,12 +64,15 @@ namespace nv::graphics
         OutputViewSlot = 0,
         AccelerationStructureSlot,
         PerFrameCB,
+        HeapStateCB,
         CountGlobal
     };
 
     enum LocalRS
     {
         ViewportConstantSlot = 0,
+        //IndexBufferSlot,
+        //VertexBufferSlot,
         CountLocal
     };
 
@@ -284,6 +288,7 @@ namespace nv::graphics
             commandList->SetComputeRootDescriptorTable(GlobalRS::OutputViewSlot, mRtObjects->mOutputUAV->GetGPUHandle());
             commandList->SetComputeRootShaderResourceView(GlobalRS::AccelerationStructureSlot, mRtObjects->mTlas->GetGPUVirtualAddress());
             commandList->SetComputeRootDescriptorTable(GlobalRS::PerFrameCB, renderer->GetConstBufferHandle((uint32_t)cameraCbv.mHeapIndex));
+            
             dispatchRays(mRtObjects->mStateObject.Get(), &dispatchDesc);
 
             TransitionBarrier endBarriers[] = { {.mTo = STATE_COPY_SOURCE, .mResource = mRtObjects->mOutputBuffer } };
@@ -325,6 +330,8 @@ namespace nv::graphics
         if (renderPassData.mRenderData.mSize > 0)
         {
             auto mesh = (MeshDX12*)renderPassData.mRenderData.mppMeshes[1];
+            mesh->GenerateBufferSRVs();
+
             auto objectData = renderPassData.mRenderData.mpObjectData[1];
             auto geomDesc = mesh->GetGeometryDescs();
             geomDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
@@ -441,24 +448,38 @@ namespace nv::graphics
             ComPtr<ID3DBlob> error;
 
             D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &blob, &error);
+            if (error)
+            {
+                log::Error("Root Signature Compilation failed with errors: \n{}",
+                    (const char*)error->GetBufferPointer());
+            }
             device->CreateRootSignature(1, blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&(*rootSig)));
         };
 
         {
-            CD3DX12_DESCRIPTOR_RANGE ranges[2];
+            CD3DX12_DESCRIPTOR_RANGE ranges[3];
             ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
             ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+            ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
             CD3DX12_ROOT_PARAMETER rootParameters[GlobalRS::CountGlobal] = {};
             rootParameters[GlobalRS::OutputViewSlot].InitAsDescriptorTable(1, &ranges[0]);
             rootParameters[GlobalRS::AccelerationStructureSlot].InitAsShaderResourceView(0);
             rootParameters[GlobalRS::PerFrameCB].InitAsDescriptorTable(1, &ranges[1]);
+            rootParameters[GlobalRS::HeapStateCB].InitAsDescriptorTable(1, &ranges[2]);
             CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
+            globalRootSignatureDesc.Flags |= D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED;
             serializeAndCreateRaytracingRootSignature(globalRootSignatureDesc, &mRtObjects->mGlobalRootSig);
         }
 
         {
+            CD3DX12_DESCRIPTOR_RANGE ranges[2];
+            ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 1);
+            ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 2);
             CD3DX12_ROOT_PARAMETER rootParameters[LocalRS::CountLocal] = {};
             rootParameters[LocalRS::ViewportConstantSlot].InitAsConstants(SizeOfInUint32(mRtObjects->mRayGenCB), 0, 0);
+            //rootParameters[LocalRS::IndexBufferSlot].InitAsShaderResourceView(0, 1);
+            //rootParameters[LocalRS::VertexBufferSlot].InitAsShaderResourceView(0, 2);
+
             CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
             localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
             serializeAndCreateRaytracingRootSignature(localRootSignatureDesc, &mRtObjects->mLocalRootSig);
@@ -534,15 +555,19 @@ namespace nv::graphics
         }
 
         {
+            auto mesh = (MeshDX12*)renderPassData.mRenderData.mppMeshes[1];
+
             struct RootArguments {
                 RayGenConstantBuffer cb;
             } rootArguments;
             rootArguments.cb = mRtObjects->mRayGenCB;
 
             UINT numShaderRecords = 1;
-            UINT shaderRecordSize = shaderIdentifierSize + sizeof(rootArguments);
+            UINT shaderRecordSize = shaderIdentifierSize + sizeof(rootArguments) + sizeof(D3D12_GPU_DESCRIPTOR_HANDLE) * 2;
             ShaderTable rayGenShaderTable(dxrDevice, numShaderRecords, shaderRecordSize, "RayGenShaderTable");
             rayGenShaderTable.push_back(ShaderRecord(rayGenShaderIdentifier, shaderIdentifierSize, &rootArguments, sizeof(rootArguments)));
+            //rayGenShaderTable.push_back(ShaderRecord(rayGenShaderIdentifier, shaderIdentifierSize, &ibHandle, sizeof(ibHandle)));
+            //rayGenShaderTable.push_back(ShaderRecord(rayGenShaderIdentifier, shaderIdentifierSize, &vbHandle, sizeof(vbHandle)));
             mRtObjects->mRayGenShaderTable = rayGenShaderTable.GetResource();
         }
 

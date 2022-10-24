@@ -7,6 +7,7 @@
 namespace nv::graphics
 {
     class GPUResource;
+    class Texture;
 
     class MeshDX12 : public Mesh
     {
@@ -25,16 +26,19 @@ namespace nv::graphics
         const D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView() const { return mVertexBufferView; }
         const std::vector<MeshEntry>&   GetMeshEntries() const { return mDesc.mMeshEntries; }
 
-        void                            GenerateRTGeometryDescs();
+        void                            GenerateBufferSRVs();
         D3D12_RAYTRACING_GEOMETRY_DESC  GetGeometryDescs();
         ID3D12Resource*                 GetVertexBuffer() const;
         ID3D12Resource*                 GetIndexBuffer() const;
+        Texture*                        GetIndexBufferSRV() const;
+        Texture*                        GetVertexBufferSRV() const;
 
     private:
-        Handle<GPUResource> mVertexBuffer;
-        Handle<GPUResource> mIndexBuffer;
-        D3D12_INDEX_BUFFER_VIEW mIndexBufferView;
-        D3D12_VERTEX_BUFFER_VIEW mVertexBufferView;
-        std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> mRTGeometryDescs;
+        Handle<GPUResource>         mVertexBuffer;
+        Handle<GPUResource>         mIndexBuffer;
+        D3D12_INDEX_BUFFER_VIEW     mIndexBufferView;
+        D3D12_VERTEX_BUFFER_VIEW    mVertexBufferView;
+        Handle<Texture>             mIndexBufferSRV;
+        Handle<Texture>             mVertexBufferSRV;
     };
 }

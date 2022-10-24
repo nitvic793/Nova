@@ -118,6 +118,7 @@ namespace nv::graphics
         gpConstantBufferPool = mpConstantBufferPool;
 
         mFrameCB = mpConstantBufferPool->GetConstantBuffer<FrameData>();
+        mHeapStateCB = mpConstantBufferPool->GetConstantBuffer<HeapState, 4>();
         mObjectDrawData.mObjectCBView = mpConstantBufferPool->GetConstantBuffer<ObjectData>();
         mObjectDrawData.mMaterialCBView = mpConstantBufferPool->GetConstantBuffer<MaterialData>();
 
@@ -207,7 +208,8 @@ namespace nv::graphics
                 {
                     .mFrameDataCBV      = mFrameCB,
                     .mRenderData        = mCurrentRenderData,
-                    .mRenderDataArray   = mRenderData
+                    .mRenderDataArray   = mRenderData,
+                    .mHeapStateCB       = mHeapStateCB
                 };
 
                 for (auto& pass : mRenderPasses)
@@ -256,6 +258,10 @@ namespace nv::graphics
         }
 
         gRenderer->UploadToConstantBuffer(mFrameCB, (uint8_t*)&data, sizeof(data));
+
+        auto& heapState = gRenderer->GetGPUHeapState();
+        HeapState state = { .ConstBufferOffset = heapState.mConstBufferOffset, .TextureOffset = heapState.mTextureOffset };
+        gRenderer->UploadToConstantBuffer(mHeapStateCB, (uint8_t*)&state, sizeof(state));
 
         auto objectCbs = mRenderData.GetObjectDescriptors();
         auto materialCbs = mRenderData.GetMaterialDescriptors();
