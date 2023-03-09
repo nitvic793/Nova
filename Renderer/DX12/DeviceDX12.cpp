@@ -38,7 +38,7 @@ namespace nv::graphics
 			}
 			
 			//direct3d 12 (feature level 12.1 or higher)
-			hr = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_0, _uuidof(ID3D12Device), nullptr);
+			hr = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_1, _uuidof(ID3D12Device), nullptr);
 			if (SUCCEEDED(hr))
 			{
 				adapterFound = true;
@@ -50,7 +50,7 @@ namespace nv::graphics
 
 		if (!adapterFound)
 		{
-			log::Error("Feature level D3D_FEATURE_LEVEL_12_0 or greater required");
+			log::Error("Feature level D3D_FEATURE_LEVEL_12_1 or greater required");
 			return false;
 		}
 
@@ -109,7 +109,17 @@ namespace nv::graphics
 	void DeviceDX12::Present()
 	{
 		NV_GPU_FLIP(mSwapChain.Get());
-		mSwapChain->Present(0, 0);
+		auto hr = mSwapChain->Present(0, 0);
+		if (hr == DXGI_ERROR_DEVICE_RESET || hr == DXGI_ERROR_DEVICE_REMOVED)
+		{
+			HRESULT reason = mDevice->GetDeviceRemovedReason();
+#if defined(_DEBUG)
+            wchar_t outString[100];
+            size_t size = 100;
+            swprintf_s(outString, size, L"Device removed! DXGI_ERROR code: 0x%X\n", reason);
+            OutputDebugStringW(outString);
+#endif
+		}
 	}
 
 	DeviceDX12::~DeviceDX12()
