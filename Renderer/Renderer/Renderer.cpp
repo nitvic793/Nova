@@ -17,6 +17,10 @@
 #include <d3d12.h>
 #endif
 
+#if NV_ENABLE_DEBUG_UI
+#include <DebugUI/Imgui/imgui.h>
+#endif
+
 namespace nv::graphics
 {
     IRenderer*          gRenderer           = nullptr;
@@ -53,6 +57,15 @@ namespace nv::graphics
         ReportLeaksDX12();
 #endif
     }
+
+#if NV_ENABLE_DEBUG_UI
+    bool IsDebugUIInputActive()
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        const bool debugNav = (io.NavActive || ImGui::IsAnyItemFocused());
+        return debugNav;
+    }
+#endif
 
     Device* IRenderer::GetDevice() const
     {

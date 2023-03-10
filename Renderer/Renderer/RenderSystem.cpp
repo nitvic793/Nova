@@ -31,6 +31,8 @@
 #include <RenderPasses/RaytracePass.h>
 #include <RenderPasses/Skybox.h>
 
+#include <DebugUI/DebugUIPass.h>
+
 #include <thread>
 #include <functional>
 
@@ -127,7 +129,8 @@ namespace nv::graphics
 
         mRenderPasses.Emplace(Alloc<ForwardPass>());
         mRenderPasses.Emplace(Alloc<Skybox>());
-        mRenderPasses.Emplace(Alloc<RaytracePass>());
+        //mRenderPasses.Emplace(Alloc<RaytracePass>());
+        mRenderPasses.Emplace(Alloc<DebugUIPass>());
 
         for (auto& pass : mRenderPasses)
         {

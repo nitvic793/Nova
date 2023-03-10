@@ -148,6 +148,15 @@
   <ItemGroup>
     <ClInclude Include="Components\Material.h" />
     <ClInclude Include="Components\Renderable.h" />
+    <ClInclude Include="DebugUI\DebugUIPass.h" />
+    <ClInclude Include="DebugUI\Imgui\imconfig.h" />
+    <ClInclude Include="DebugUI\Imgui\imgui.h" />
+    <ClInclude Include="DebugUI\Imgui\imgui_impl_dx12.h" />
+    <ClInclude Include="DebugUI\Imgui\imgui_impl_win32.h" />
+    <ClInclude Include="DebugUI\Imgui\imgui_internal.h" />
+    <ClInclude Include="DebugUI\Imgui\imstb_rectpack.h" />
+    <ClInclude Include="DebugUI\Imgui\imstb_textedit.h" />
+    <ClInclude Include="DebugUI\Imgui\imstb_truetype.h" />
     <ClInclude Include="DX12\ConstantBuffer.h" />
     <ClInclude Include="DX12\ContextDX12.h" />
     <ClInclude Include="DX12\D3D12MemoryAllocator\include\D3D12MemAlloc.h" />
@@ -199,6 +208,14 @@
     <ClInclude Include="RenderPasses\Skybox.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DebugUI\DebugUIPass.cpp" />
+    <ClCompile Include="DebugUI\Imgui\imgui.cpp" />
+    <ClCompile Include="DebugUI\Imgui\imgui_demo.cpp" />
+    <ClCompile Include="DebugUI\Imgui\imgui_draw.cpp" />
+    <ClCompile Include="DebugUI\Imgui\imgui_impl_dx12.cpp" />
+    <ClCompile Include="DebugUI\Imgui\imgui_impl_win32.cpp" />
+    <ClCompile Include="DebugUI\Imgui\imgui_tables.cpp" />
+    <ClCompile Include="DebugUI\Imgui\imgui_widgets.cpp" />
     <ClCompile Include="DX12\ContextDX12.cpp" />
     <ClCompile Include="DX12\D3D12MemoryAllocator\src\D3D12MemAlloc.cpp" />
     <ClCompile Include="DX12\DeviceDX12.cpp" />

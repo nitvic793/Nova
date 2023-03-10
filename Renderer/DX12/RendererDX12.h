@@ -11,6 +11,7 @@ struct ID3D12CommandQueue;
 struct ID3D12Fence;
 struct ID3D12Resource;
 struct D3D12_GPU_DESCRIPTOR_HANDLE;
+enum D3D12_DESCRIPTOR_HEAP_TYPE : int32_t;
 using HANDLE = void*;
 using D3D12_GPU_VIRTUAL_ADDRESS = uint64_t;
 
@@ -68,6 +69,7 @@ namespace nv::graphics
         D3D12_GPU_DESCRIPTOR_HANDLE GetRTDescriptorHandle(uint32_t index) const;
         const GpuHeapState&         GetGPUHeapState() const override { return mGpuHeapState; }
         D3D12_GPU_VIRTUAL_ADDRESS   GetConstBufferAddress(const ConstantBufferView& view);
+        DescriptorHeapDX12*         CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptorCount, Handle<DescriptorHeap>& handle, bool shaderVisible = false);
 
     private:
         void                    CreateRootSignature();

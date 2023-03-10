@@ -6,8 +6,16 @@
 #include <windowsx.h>
 #include <wrl.h>
 
+#include <DebugUI/Imgui/imgui_impl_dx12.h>
+
+// Forward declare message handler from imgui_impl_win32.cpp
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 LRESULT CALLBACK WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+        return true;
+
     auto window = static_cast<nv::graphics::WindowDX12*>(nv::graphics::gWindow);
     return window->WndProcHandler(hWnd, msg, wParam, lParam);
 }

@@ -10,6 +10,8 @@
 #include <Interop/ShaderInteropTypes.h>
 #include <Engine/Camera.h>
 #include <Renderer/Window.h>
+#include <Renderer/Renderer.h>
+#include <Renderer/Device.h>
 
 namespace nv
 {
@@ -44,6 +46,12 @@ namespace nv
 
     void CameraSystem::Update(float deltaTime, float totalTime)
     {
+#if NV_ENABLE_DEBUG_UI
+        const bool isDebugUIActive = graphics::IsDebugUIInputActive();
+#else
+        constexpr bool isDebugUIActive = false;
+#endif
+
         float speed = 3.f;
         float speedMultiplier = 3.f;
         float mouseSpeed = 0.005f;
@@ -92,7 +100,7 @@ namespace nv
         float yDiff = 0;
 
         auto mousePos = float2{ (float)input::GetInputState().mMouse.GetLastState().x,  (float)input::GetInputState().mMouse.GetLastState().y };;
-        if (input::LeftMouseButtonState() == ButtonState::HELD) 
+        if (input::LeftMouseButtonState() == ButtonState::HELD && !isDebugUIActive) 
         {
             xDiff = (float)(mousePos.x - mPrevPos.x) * mouseSpeed;
             yDiff = (float)(mousePos.y - mPrevPos.y) * mouseSpeed;
@@ -104,7 +112,8 @@ namespace nv
 
         camera.SetRotation(camRotatin);
 
-        Store(pos, transform.mPosition);
+        if(!isDebugUIActive)
+            Store(pos, transform.mPosition);
 
         mPrevPos = { (float)input::GetInputState().mMouse.GetLastState().x,  (float)input::GetInputState().mMouse.GetLastState().y };
 

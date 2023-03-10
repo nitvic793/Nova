@@ -87,4 +87,8 @@ namespace nv::graphics
 
     void InitGraphics(void* context = nullptr);
     void DestroyGraphics();
+
+#if NV_ENABLE_DEBUG_UI
+    bool IsDebugUIInputActive();
+#endif
 }

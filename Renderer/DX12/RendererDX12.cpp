@@ -39,19 +39,12 @@ namespace nv::graphics
 
         auto pDevice = mDevice.As<DeviceDX12>()->GetDevice();
 
-        auto initDescriptorHeap = [&](D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptorCount, Handle<DescriptorHeap>& handle, bool shaderVisible = false)
-        {
-            auto descriptorHeap = (DescriptorHeapDX12*)mDescriptorHeapPool.CreateInstance(handle);
-            descriptorHeap->Create(pDevice, type, descriptorCount, shaderVisible);
-            return descriptorHeap;
-        };
-
-        initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, kDefaultDescriptorCount, mRtvHeap);
-        initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, kDefaultDescriptorCount, mDsvHeap);
-        initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultGPUDescriptorCount, mGpuHeap, true);
-        initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultFrameDescriptorCount, mTextureHeap);
-        initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultFrameDescriptorCount, mConstantBufferHeap);
-        initDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultFrameDescriptorCount, mRayTracingHeap);
+        CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, kDefaultDescriptorCount, mRtvHeap);
+        CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, kDefaultDescriptorCount, mDsvHeap);
+        CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultGPUDescriptorCount, mGpuHeap, true);
+        CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultFrameDescriptorCount, mTextureHeap);
+        CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultFrameDescriptorCount, mConstantBufferHeap);
+        CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kDefaultFrameDescriptorCount, mRayTracingHeap);
 
         for (uint32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
         {
@@ -346,6 +339,14 @@ namespace nv::graphics
     D3D12_GPU_VIRTUAL_ADDRESS RendererDX12::GetConstBufferAddress(const ConstantBufferView& view)
     {
         return mConstantBuffer->GetAddress() + view.mMemoryOffset;
+    }
+
+    DescriptorHeapDX12* RendererDX12::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptorCount, Handle<DescriptorHeap>& handle, bool shaderVisible)
+    {
+        auto pDevice = mDevice.As<DeviceDX12>()->GetDevice();
+        auto descriptorHeap = (DescriptorHeapDX12*)mDescriptorHeapPool.CreateInstance(handle);
+        descriptorHeap->Create(pDevice, type, descriptorCount, shaderVisible);
+        return descriptorHeap;
     }
 
     ConstantBufferView RendererDX12::CreateConstantBuffer(ConstBufferDesc desc)
