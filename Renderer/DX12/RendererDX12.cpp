@@ -48,7 +48,8 @@ namespace nv::graphics
 
         for (uint32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
         {
-            pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(mCommandAllocators[i].ReleaseAndGetAddressOf())); 
+            pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(mCommandAllocators[i].ReleaseAndGetAddressOf()));
+            pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(mComputeCommandAllocators[i].ReleaseAndGetAddressOf()));
             // TODO: Create Command Allocator Ring Buffer, GetCommandAllocator should return allocator on-demand
             // Need CreateCommandAllocator() function
             // Create per thread command allocator
@@ -136,6 +137,19 @@ namespace nv::graphics
             }
 
             pContext->InitRaytracingContext();
+            pContext->End();
+        }
+
+        for (int i = 0; i < FRAMEBUFFER_COUNT; i++)
+        {
+            // TODO: Create per thread contexts once there are multiple render threads.
+            mComputeContexts[i] = gResourceManager->CreateContext({ .mType = CONTEXT_COMPUTE });
+            auto pContext = (ContextDX12*)gResourceManager->GetContext(mComputeContexts[i]);
+            if (!pContext->Init(dxDevice->GetDevice(), mComputeCommandAllocators[i].Get()))
+            {
+                debug::ReportError("Unable to create command context");
+            }
+
             pContext->End();
         }
 

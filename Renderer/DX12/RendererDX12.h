@@ -87,7 +87,9 @@ namespace nv::graphics
         Handle<DescriptorHeap>                      mConstantBufferHeap;
         Handle<DescriptorHeap>                      mRayTracingHeap;
         Handle<Context>                             mContexts[FRAMEBUFFER_COUNT];
+        Handle<Context>                             mComputeContexts[FRAMEBUFFER_COUNT];
         ComPtr<ID3D12CommandAllocator>              mCommandAllocators[FRAMEBUFFER_COUNT];
+        ComPtr<ID3D12CommandAllocator>              mComputeCommandAllocators[FRAMEBUFFER_COUNT];
         ComPtr<ID3D12CommandQueue>                  mCommandQueue;
         ComPtr<ID3D12RootSignature>                 mRootSignature;
 
