@@ -29,12 +29,12 @@ namespace nv::graphics
 
     void InitGraphics(void* context)
     {
-        uint32_t width = 1280;
-        uint32_t height = 720;
+        uint32_t width = 2560;
+        uint32_t height = 1440;
 
 #if NV_PLATFORM_WINDOWS && NV_RENDERER_DX12
         gWindow = Alloc<WindowDX12>(SystemAllocator::gPtr, (HWND)context);
-        gWindow->Init(width, height);
+        gWindow->Init(width, height, false);
 
         gRenderer = Alloc<RendererDX12>();
         gRenderer->Init(*gWindow);

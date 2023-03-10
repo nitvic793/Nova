@@ -86,7 +86,13 @@ namespace nv
     {
         bool result = graphics::gWindow->ProcessMessages() != graphics::Window::kNvQuit;
         result = result || sError;
-        if (!result) gInstanceState = INSTANCE_STATE_STOPPED;
+
+        if (!result) 
+            gInstanceState = INSTANCE_STATE_STOPPED;
+
+        if (gInstanceState == INSTANCE_STATE_STOPPED)
+            result = false;
+
         return result;
     }
 }

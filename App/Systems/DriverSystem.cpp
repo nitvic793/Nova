@@ -7,6 +7,7 @@
 #include <Engine/EntityComponent.h>
 #include <Input/Input.h>
 #include <Engine/Log.h>
+#include <Engine/Instance.h>
 #include <Interop/ShaderInteropTypes.h>
 
 namespace nv
@@ -62,6 +63,9 @@ namespace nv
         transform.mPosition.y = sin(totalTime * 2.f);
 
         auto kb = input::GetInputState().mpKeyboardInstance->GetState();
+
+        if (input::IsKeyPressed(input::Keys::Escape))
+            Instance::SetInstanceState(INSTANCE_STATE_STOPPED);
 
         if (input::IsKeyComboPressed(input::Keys::LeftShift, input::Keys::T))
         {
