@@ -19,7 +19,7 @@ namespace nv
         };
 
         constexpr Handle() : mHandle(0) {}
-        constexpr bool IsNull() { return mGeneration == 0; }
+        constexpr bool IsNull() const { return mGeneration == 0; }
 
         constexpr bool operator<(const Handle& h)  const { return mHandle < h.mHandle; }
         constexpr bool operator==(const Handle& h) const { return mHandle == h.mHandle; }

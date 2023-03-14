@@ -19,7 +19,7 @@ namespace nv::asset
 {
     namespace utility
     {
-		void ProcessMesh(uint32_t index, aiMesh* mesh, const aiScene* scene, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+		void ProcessMesh(uint32_t index, aiMesh* mesh, const aiScene* scene, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<VertexPos>& verticesPos, std::vector<VertexEx>& verticesEx)
 		{
 			for (uint32_t i = 0; i < mesh->mNumVertices; i++)
 			{
@@ -39,6 +39,12 @@ namespace nv::asset
 				}
 
 				vertices.push_back(vertex);
+
+				VertexPos vertPos = { .mPosition = vertex.mPosition };
+				VertexEx vertEx = { .mUV = vertex.mUV, .mNormal = vertex.mNormal, .mTangent = vertex.mTangent };
+
+				verticesPos.push_back(vertPos);
+				verticesEx.push_back(vertEx);
 			}
 
 			for (uint32_t i = 0; i < mesh->mNumFaces; i++)
@@ -68,13 +74,16 @@ namespace nv::asset
 
 				if (!mesh->HasTangentsAndBitangents())
 					DirectX::ComputeTangentFrame(indices.data(), mesh->mNumFaces, pos.data(), normals.data(), uv.data(), pos.size(), tangents.data(), nullptr);
+
 				for (int i = 0; i < vertices.size(); ++i)
 				{
 					vertices[i].mNormal = normals[i];
 					vertices[i].mTangent = tangents[i];
+
+                    verticesEx[i].mNormal = normals[i];
+                    verticesEx[i].mTangent = tangents[i];
 				}
 			}
-
 		}
     }
 
@@ -111,10 +120,12 @@ namespace nv::asset
 
 		mData.mIndices.reserve(numIndices);
 		mData.mVertices.reserve(numVertices);
+        mData.mVertexPosList.reserve(numVertices);
+        mData.mVertexExList.reserve(numVertices);
 
 		for (uint32_t i = 0; i < numMeshes; ++i)
 		{
-			utility::ProcessMesh(i, pScene->mMeshes[i], pScene, mData.mVertices, mData.mIndices);
+			utility::ProcessMesh(i, pScene->mMeshes[i], pScene, mData.mVertices, mData.mIndices, mData.mVertexPosList, mData.mVertexExList);
 		}
 
 		cereal::BinaryOutputArchive archive(ostream);

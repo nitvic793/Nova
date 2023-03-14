@@ -31,10 +31,11 @@ namespace nv::graphics
     {
         uint32_t width = 2560;
         uint32_t height = 1440;
+        const bool isFullscreen = false;
 
 #if NV_PLATFORM_WINDOWS && NV_RENDERER_DX12
         gWindow = Alloc<WindowDX12>(SystemAllocator::gPtr, (HWND)context);
-        gWindow->Init(width, height, false);
+        gWindow->Init(width, height, isFullscreen);
 
         gRenderer = Alloc<RendererDX12>();
         gRenderer->Init(*gWindow);

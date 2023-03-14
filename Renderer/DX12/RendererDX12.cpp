@@ -389,6 +389,30 @@ namespace nv::graphics
 
     void RendererDX12::CreateRootSignature()
     {
+        auto device = mDevice.As<DeviceDX12>()->GetDevice();
+        const auto createRootSig = [device](const D3D12_ROOT_SIGNATURE_DESC& descRootSignature, ID3D12RootSignature** rootSig)
+        {
+            Microsoft::WRL::ComPtr<ID3DBlob> rootSigBlob;
+            Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+            D3D12SerializeRootSignature(
+                &descRootSignature, 
+                D3D_ROOT_SIGNATURE_VERSION_1_0, 
+                &rootSigBlob, 
+                &errorBlob
+            );
+
+            if (errorBlob)
+            {
+                const char* errStr = (const char*)errorBlob->GetBufferPointer();
+                log::Error("Error creating Root Signature: {}", errStr);
+            }
+
+            device->CreateRootSignature(0, 
+                rootSigBlob->GetBufferPointer(), 
+                rootSigBlob->GetBufferSize(),
+                IID_PPV_ARGS(rootSig));
+        };
+
         enum RootParameterSlot 
         {
             RootSigCBVertex0 = 0,
@@ -401,7 +425,7 @@ namespace nv::graphics
             RootSigParamCount
         };
 
-        auto device = mDevice.As<DeviceDX12>()->GetDevice();
+
         CD3DX12_DESCRIPTOR_RANGE range[RootSigParamCount] = {};
         //view dependent CBV
         range[RootSigCBVertex0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
@@ -462,17 +486,36 @@ namespace nv::graphics
         descRootSignature.NumStaticSamplers = _countof(staticSamplers);
         descRootSignature.pStaticSamplers = staticSamplers;
 
-        Microsoft::WRL::ComPtr<ID3DBlob> rootSigBlob;
-        Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
-        D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1_0, &rootSigBlob, &errorBlob);
+        createRootSig(descRootSignature, mRootSignature.ReleaseAndGetAddressOf());
 
-        if (errorBlob)
+        // Create root signature for Compute 
         {
-            const char* errStr = (const char*)errorBlob->GetBufferPointer();
-            log::Error("Error creating Root Signature: {}", errStr);
-        }
+            CD3DX12_DESCRIPTOR_RANGE range[3];
+            range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+            range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 4, 0);
+            range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 
-        device->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(), IID_PPV_ARGS(mRootSignature.ReleaseAndGetAddressOf()));
+            CD3DX12_ROOT_PARAMETER rootParameters[3];
+            rootParameters[0].InitAsDescriptorTable(1, &range[0], D3D12_SHADER_VISIBILITY_ALL);
+            rootParameters[1].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_ALL);
+            rootParameters[2].InitAsDescriptorTable(1, &range[2], D3D12_SHADER_VISIBILITY_ALL);
+
+            CD3DX12_STATIC_SAMPLER_DESC StaticSamplers[2];
+
+            StaticSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+                D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                D3D12_TEXTURE_ADDRESS_MODE_WRAP);
+
+            StaticSamplers[1].Init(1, D3D12_FILTER_MIN_MAG_MIP_POINT,
+                D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
+                D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
+                D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
+
+            CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
+            descRootSignature.Init(_countof(rootParameters), rootParameters, _countof(StaticSamplers), StaticSamplers);
+            createRootSig(descRootSignature, mComputeRootSignature.ReleaseAndGetAddressOf());
+        }
     }
 
     void RendererDX12::CopyDescriptorsToGPU()

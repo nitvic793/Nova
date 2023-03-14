@@ -186,8 +186,26 @@ namespace nv::graphics
     {
         auto pDevice = mDevice->GetDevice();
         auto renderer = (RendererDX12*)gRenderer;
-        auto ps = mShaders.GetAsDerived(desc.mPS);
-        auto vs = mShaders.GetAsDerived(desc.mVS);
+
+        const auto setShaderByteCode = [&](const Handle<Shader> shader, D3D12_SHADER_BYTECODE& outByteCode)
+        {
+            if (!shader.IsNull())
+            {
+                auto shaderInstance = mShaders.GetAsDerived(shader);
+                outByteCode = shaderInstance->GetByteCode();
+            }
+        };
+
+        Handle<PipelineState> handle;
+
+        // Creating compute pipeline state
+        if (!desc.mCS.IsNull())
+        {
+            D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
+            setShaderByteCode(desc.mCS, psoDesc.CS);
+
+            return handle;
+        }
 
         DXGI_SAMPLE_DESC sampleDesc = {};
         sampleDesc.Count = 1;
@@ -198,8 +216,8 @@ namespace nv::graphics
         psoDesc.InputLayout.NumElements = _countof(dx12::DefaultLayout);
         psoDesc.pRootSignature = renderer->mRootSignature.Get();
 
-        psoDesc.VS = vs->GetByteCode();
-        psoDesc.PS = ps->GetByteCode();
+        setShaderByteCode(desc.mPS, psoDesc.PS);
+        setShaderByteCode(desc.mVS, psoDesc.VS);
 
         psoDesc.DepthStencilState = GetDepthStencilDesc(desc.mDepthStencilState);
         psoDesc.RasterizerState = GetRasterizerDesc(desc.mRasterizerState);
@@ -213,7 +231,6 @@ namespace nv::graphics
         psoDesc.SampleDesc = sampleDesc;
         psoDesc.SampleMask = 0xffffffff;
 
-        Handle<PipelineState> handle;
         auto pso = mPipelineStates.CreateInstance(handle, desc);
         pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pso->GetPipelineCom().ReleaseAndGetAddressOf()));
 

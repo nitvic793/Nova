@@ -24,6 +24,18 @@ namespace nv::graphics
         float3 mTangent;
     };
 
+    struct VertexPos
+    {
+        float3 mPosition;
+    };
+
+    struct VertexEx
+    {
+        float2 mUV;
+        float3 mNormal;
+        float3 mTangent;
+    };
+
     struct ObjectData
     {
         float4x4 World;

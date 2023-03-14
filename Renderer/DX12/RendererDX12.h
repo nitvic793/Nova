@@ -92,6 +92,7 @@ namespace nv::graphics
         ComPtr<ID3D12CommandAllocator>              mComputeCommandAllocators[FRAMEBUFFER_COUNT];
         ComPtr<ID3D12CommandQueue>                  mCommandQueue;
         ComPtr<ID3D12RootSignature>                 mRootSignature;
+        ComPtr<ID3D12RootSignature>                 mComputeRootSignature;
 
         ComPtr<ID3D12Fence>                         mFences[FRAMEBUFFER_COUNT];
         uint64_t                                    mFenceValues[FRAMEBUFFER_COUNT];

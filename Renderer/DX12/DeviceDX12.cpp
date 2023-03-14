@@ -108,8 +108,9 @@ namespace nv::graphics
 
 	void DeviceDX12::Present()
 	{
+		constexpr bool vsyncEnabled = true;
 		NV_GPU_FLIP(mSwapChain.Get());
-		auto hr = mSwapChain->Present(0, 0);
+		auto hr = mSwapChain->Present(vsyncEnabled ? 1 : 0, 0);
 		if (hr == DXGI_ERROR_DEVICE_RESET || hr == DXGI_ERROR_DEVICE_REMOVED)
 		{
 			HRESULT reason = mDevice->GetDeviceRemovedReason();
