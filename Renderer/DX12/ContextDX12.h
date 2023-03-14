@@ -44,11 +44,17 @@ namespace nv::graphics
         virtual void Bind(uint32_t slot, BindResourceType type, uint32_t offset) override;
         virtual void BindConstantBuffer(uint32_t slot, uint32_t offset) override;
         virtual void BindTexture(uint32_t slot, Handle<Texture> texture) override;
+        // Compute
+        virtual void Dispatch(uint32_t x, uint32_t y, uint32_t z) override;
+        virtual void ComputeBind(uint32_t slot, BindResourceType type, uint32_t offset) override;
+        virtual void ComputeBindConstantBuffer(uint32_t slot, uint32_t offset) override;
+        virtual void ComputeBindTexture(uint32_t slot, Handle<Texture> texture) override;
 
     public:
         ID3D12GraphicsCommandList4* GetCommandList() const { return mCommandList.Get(); }
         ID3D12GraphicsCommandList5* GetDXRCommandList() const { return mDXRCommandList.Get(); }
         void SetRootSignature(ID3D12RootSignature* pRootSig);
+        void SetComputeRootSignature(ID3D12RootSignature* pRootSig);
 
     private:
         template<typename T>

@@ -222,4 +222,43 @@ namespace nv::graphics
     {
         mCommandList->SetGraphicsRootSignature(pRootSig);
     }
+
+    void ContextDX12::SetComputeRootSignature(ID3D12RootSignature* pRootSig)
+    {
+        mCommandList->SetComputeRootSignature(pRootSig);
+    }
+
+    void ContextDX12::Dispatch(uint32_t x, uint32_t y, uint32_t z)
+    {
+        mCommandList->Dispatch(x, y, z);
+    }
+
+    void ContextDX12::ComputeBind(uint32_t slot, BindResourceType type, uint32_t offset)
+    {
+        D3D12_GPU_DESCRIPTOR_HANDLE handle = {};
+        auto renderer = (RendererDX12*)gRenderer;
+
+        switch (type)
+        {
+        case BIND_BUFFER:
+            handle = renderer->GetConstBufferHandle(offset);
+            break;
+        case BIND_TEXTURE:
+            handle = renderer->GetTextureHandle(offset);
+            break;
+        }
+
+        mCommandList->SetComputeRootDescriptorTable(slot, handle);
+    }
+
+    void ContextDX12::ComputeBindConstantBuffer(uint32_t slot, uint32_t offset)
+    {
+        Bind(slot, BIND_BUFFER, offset);
+    }
+
+    void ContextDX12::ComputeBindTexture(uint32_t slot, Handle<Texture> texture)
+    {
+        auto tex = (TextureDX12*)gResourceManager->GetTexture(texture);
+        Bind(slot, BIND_TEXTURE, tex->GetHeapOffset());
+    }
 }

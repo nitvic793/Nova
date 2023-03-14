@@ -198,6 +198,18 @@ namespace nv::graphics
         return mGpuHeapState.mConstBufferOffset + (uint32_t)cbv.mHeapIndex;
     }
 
+    void RendererDX12::SetContextDefaults(Context* context) const
+    {
+        auto ctx = (ContextDX12*)context;
+        ctx->SetRootSignature(mRootSignature.Get());
+    }
+
+    void RendererDX12::SetComputeContextDefaults(Context* context) const
+    {
+        auto ctx = (ContextDX12*)context;
+        ctx->SetComputeRootSignature(mComputeRootSignature.Get());
+    }
+
     RendererDX12::~RendererDX12()
     {
         Free(mConstantBuffer);

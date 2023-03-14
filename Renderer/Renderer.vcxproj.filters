@@ -195,6 +195,9 @@
     <ClInclude Include="DebugUI\DebugUIPass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RenderPasses\RTCompute.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer\Renderer.cpp">
@@ -303,6 +306,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DebugUI\DebugUIPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPasses\RTCompute.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

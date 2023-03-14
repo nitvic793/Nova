@@ -27,6 +27,7 @@
 #include <Components/Material.h>
 #include <Components/Renderable.h>
 
+#include <RenderPasses/RTCompute.h>
 #include <RenderPasses/ForwardPass.h>
 #include <RenderPasses/RaytracePass.h>
 #include <RenderPasses/Skybox.h>
@@ -127,6 +128,7 @@ namespace nv::graphics
         LoadResources();
         gRenderer->GetDevice()->InitRaytracingContext();
 
+        mRenderPasses.Emplace(Alloc<RTCompute>());
         mRenderPasses.Emplace(Alloc<ForwardPass>());
         mRenderPasses.Emplace(Alloc<Skybox>());
         //mRenderPasses.Emplace(Alloc<RaytracePass>());

@@ -63,6 +63,13 @@ namespace nv::graphics
         virtual void BindConstantBuffer(uint32_t slot, uint32_t offset) = 0;
         virtual void BindTexture(uint32_t slot, Handle<Texture> texture) = 0;
 
+        // Compute Functions
+        virtual void Dispatch(uint32_t x, uint32_t y, uint32_t z) = 0;
+        virtual void ComputeBind(uint32_t slot, BindResourceType type, uint32_t offset) = 0;
+        virtual void ComputeBindConstantBuffer(uint32_t slot, uint32_t offset) = 0;
+        virtual void ComputeBindTexture(uint32_t slot, Handle<Texture> texture) = 0;
+
+
     protected:
         ContextDesc mDesc;
     };

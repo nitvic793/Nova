@@ -111,6 +111,11 @@ namespace nv::graphics
         uint32_t TextureOffset;
     };
 
+    struct TraceParams
+    {
+        float2 Resolution;
+    };
+
 #ifdef __cplusplus
 }
 #endif

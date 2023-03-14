@@ -34,6 +34,13 @@
                 "Type": "Lib",
                 "ShaderModel": "6_6"
             }
+        },
+        {
+            "key": "Shaders/RayTraceCS.hlsl",
+            "value": {
+                "Type": "ComputeShader",
+                "ShaderModel": "6_6"
+            }
         }
     ]
 }

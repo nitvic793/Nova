@@ -24,5 +24,15 @@ namespace nv::graphics
         context->SetDescriptorHeap({ heaps, _countof(heaps) });
         context->SetRenderTarget({ targets, _countof(targets) }, depthTarget);
     }
+
+    void RenderPass::SetComputeDefault(Context* context)
+    {
+        const auto renderTarget = gRenderer->GetDefaultRenderTarget();
+        const auto gpuHeap = gRenderer->GetGPUDescriptorHeap();
+        Handle<DescriptorHeap> heaps[] = { gpuHeap };
+
+        gRenderer->SetComputeContextDefaults(context);
+        context->SetDescriptorHeap({ heaps, _countof(heaps) });
+    }
 }
 

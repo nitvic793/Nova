@@ -199,11 +199,13 @@ namespace nv::graphics
         Handle<PipelineState> handle;
 
         // Creating compute pipeline state
-        if (!desc.mCS.IsNull())
+        if (desc.mPipelineType == PIPELINE_COMPUTE)
         {
             D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
             setShaderByteCode(desc.mCS, psoDesc.CS);
-
+            psoDesc.pRootSignature = renderer->mComputeRootSignature.Get();
+            auto pso = mPipelineStates.CreateInstance(handle, desc);
+            pDevice->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(pso->GetPipelineCom().ReleaseAndGetAddressOf()));
             return handle;
         }
 

@@ -83,10 +83,26 @@ namespace cereal
     }
 
     template<class Archive>
+    void serialize(Archive& archive, VertexPos& v)
+    {
+        archive(v.mPosition);
+    }
+
+    template<class Archive>
+    void serialize(Archive& archive, VertexEx& v)
+    {
+        archive(v.mNormal);
+        archive(v.mTangent);
+        archive(v.mUV);
+    }
+
+    template<class Archive>
     void serialize(Archive& archive, MeshDesc & m)
     {
         archive(m.mMeshEntries);
         archive(m.mVertices);
+        archive(m.mVertexPosList);
+        archive(m.mVertexExList);
         archive(m.mIndices);
     }
 

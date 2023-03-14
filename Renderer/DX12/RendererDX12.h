@@ -57,6 +57,8 @@ namespace nv::graphics
         virtual format::SurfaceFormat   GetDepthSurfaceFormat() const override { return mDsvFormat; }
         virtual format::SurfaceFormat   GetDefaultRenderTargetFormat() const override { return mBackbufferFormat; }
         virtual uint32_t                GetHeapIndex(const ConstantBufferView& cbv) override;
+        virtual void                    SetContextDefaults(Context* context) const override;
+        virtual void                    SetComputeContextDefaults(Context* context) const override;
         ~RendererDX12();
 
     public:
@@ -70,7 +72,7 @@ namespace nv::graphics
         const GpuHeapState&         GetGPUHeapState() const override { return mGpuHeapState; }
         D3D12_GPU_VIRTUAL_ADDRESS   GetConstBufferAddress(const ConstantBufferView& view);
         DescriptorHeapDX12*         CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptorCount, Handle<DescriptorHeap>& handle, bool shaderVisible = false);
-
+        ID3D12RootSignature*        GetComputeRootSignature() const { return mComputeRootSignature.Get(); }
     private:
         void                    CreateRootSignature();
         void                    CopyDescriptorsToGPU();

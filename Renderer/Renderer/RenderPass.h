@@ -43,6 +43,7 @@ namespace nv::graphics
 
     protected:
         void SetContextDefault(Context* context);
+        void SetComputeDefault(Context* context);
     };
 
 #ifndef NV_RENDER_PASS_NAME
