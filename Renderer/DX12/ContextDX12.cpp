@@ -253,12 +253,12 @@ namespace nv::graphics
 
     void ContextDX12::ComputeBindConstantBuffer(uint32_t slot, uint32_t offset)
     {
-        Bind(slot, BIND_BUFFER, offset);
+        ComputeBind(slot, BIND_BUFFER, offset);
     }
 
     void ContextDX12::ComputeBindTexture(uint32_t slot, Handle<Texture> texture)
     {
         auto tex = (TextureDX12*)gResourceManager->GetTexture(texture);
-        Bind(slot, BIND_TEXTURE, tex->GetHeapOffset());
+        ComputeBind(slot, BIND_TEXTURE, tex->GetHeapOffset());
     }
 }
