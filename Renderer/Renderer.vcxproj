@@ -146,6 +146,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BVH\BVH.h" />
     <ClInclude Include="Components\Material.h" />
     <ClInclude Include="Components\Renderable.h" />
     <ClInclude Include="DebugUI\DebugUIPass.h" />
