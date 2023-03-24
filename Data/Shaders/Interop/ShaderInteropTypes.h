@@ -114,6 +114,24 @@ namespace nv::graphics
     struct TraceParams
     {
         float2 Resolution;
+        float  ScaleFactor;
+        float  _Padding;
+    };
+
+    //BVH Reference: https://jacco.ompf2.com/2022/06/03/how-to-build-a-bvh-part-9a-to-the-gpu/
+    struct Intersection
+    {
+        float T;                    // intersection distance along ray
+        float U, V;	                // barycentric coordinates of the intersection
+        uint InstPrim;              // instance index (12 bit) and primitive index (20 bit)
+    };
+    
+    struct Ray
+    {
+        float3          Orig; 
+        float3          Dir;
+        float3          rDir;            
+        Intersection    Hit;           
     };
 
 #ifdef __cplusplus

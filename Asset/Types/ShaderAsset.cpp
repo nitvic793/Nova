@@ -205,14 +205,21 @@ namespace nv::asset
 
             CComPtr<IDxcOperationResult> result;
 
-            std::array<const wchar_t*, 3> args = { L"-Zi", L"-Qembed_debug", L"-HV 2021"};
+            const wchar_t* args[] =
+            { 
+#ifdef DEBUG
+                L"-Zi", L"-Qembed_debug", L"-HV 2021"
+#else
+                L"-Zi", L"-Qembed_debug", L"-HV 2021", L"-O3"
+#endif
+            };
 
             hr = compiler->Compile(
                 sourceBlob, // pSource
                 srcName.c_str(), // pSourceName
                 config.mShaderType == shader::LIB ? L"" : mainEntry,  // pEntryPoint
                 profile.c_str(), // pTargetProfile
-                args.data(), (UINT)args.size(), // pArguments, argCount
+                args, (UINT)ArrayCountOf(args), // pArguments, argCount
                 NULL, 0, // pDefines, defineCount
                 &includeHandler, // pIncludeHandler
                 &result); // ppResult

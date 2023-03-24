@@ -31,6 +31,7 @@ namespace nv::graphics
     };
 
     static RTComputeObjects sRTComputeObjects;
+    constexpr uint32_t SCALE = 2;
 
     void RTCompute::Init()
     {
@@ -39,8 +40,8 @@ namespace nv::graphics
         PipelineStateDesc psoDesc = { .mPipelineType = PIPELINE_COMPUTE, .mCS = rtcs };
         mRTComputePSO = gResourceManager->CreatePipelineState(psoDesc);
 
-        uint32_t height = gWindow->GetHeight();
-        uint32_t width = gWindow->GetWidth();
+        uint32_t height = gWindow->GetHeight() / SCALE;
+        uint32_t width = gWindow->GetWidth() / SCALE;
 
         GPUResourceDesc desc =
         {
@@ -74,18 +75,20 @@ namespace nv::graphics
         auto ctx = gRenderer->GetContext();
         SetComputeDefault(ctx);
         
-        TraceParams params = { .Resolution = float2((float)gWindow->GetWidth(), (float)gWindow->GetHeight()) };
+        TraceParams params = { .Resolution = float2((float)gWindow->GetWidth(), (float)gWindow->GetHeight()), .ScaleFactor = 1.f / SCALE };
         gRenderer->UploadToConstantBuffer(sRTComputeObjects.mTraceParamsCBV, (uint8_t*)&params, (uint32_t)sizeof(params));
 
-        TransitionBarrier initBarriers[] = { {.mTo = STATE_UNORDERED_ACCESS, .mResource = sRTComputeObjects.mOutputBuffer } };
+        TransitionBarrier initBarriers[] = { {.mTo = STATE_COPY_DEST, .mResource = sRTComputeObjects.mOutputBuffer } };
         ctx->ResourceBarrier({ &initBarriers[0] , ArrayCountOf(initBarriers) });
-
+        
         ctx->SetPipeline(mRTComputePSO);
         ctx->ComputeBindConstantBuffer(0, (uint32_t)sRTComputeObjects.mTraceParamsCBV.mHeapIndex);
-        ctx->ComputeBindTexture(1, sRTComputeObjects.mOutputUAV);
-        ctx->Dispatch(gWindow->GetWidth(), gWindow->GetHeight(), 1);
+        ctx->ComputeBindConstantBuffer(1, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
+        ctx->ComputeBindTexture(2, sRTComputeObjects.mOutputUAV);
 
-        TransitionBarrier endBarriers[] = { {.mTo = STATE_COPY_SOURCE, .mResource = sRTComputeObjects.mOutputBuffer } };
+        ctx->Dispatch(gWindow->GetWidth() / SCALE, gWindow->GetHeight() / SCALE, 1);
+
+        TransitionBarrier endBarriers[] = { {.mTo = STATE_COMMON, .mResource = sRTComputeObjects.mOutputBuffer } };
         ctx->ResourceBarrier({ &endBarriers[0] , ArrayCountOf(endBarriers) });
         //SetContextDefault(ctx);
     }
