@@ -158,11 +158,12 @@ namespace nv::asset
                         return S_OK;
                     }
 
-                    auto hr = pUtils->CreateBlobFromPinned(data.mData, (UINT)data.mSize, CP_UTF8, &pEncoding);
+                    auto hr = pUtils->CreateBlob(data.mData, (UINT)data.mSize, CP_UTF8, &pEncoding);
                     if (SUCCEEDED(hr))
                     {
                         mIncludedFiles.insert(path);
                         *ppIncludeSource = pEncoding.Detach();
+                        gpAssetManager->UnloadAsset(id);
                     }
                     else
                     {
