@@ -110,6 +110,16 @@ inline Vector VectorSet(float x, float y, float z, float w) noexcept
     return DirectX::XMVectorSet(x, y, z, w);
 }
 
+inline Vector VectorMin(Vector a, Vector b) noexcept
+{
+    return DirectX::XMVectorMin(a, b);
+}
+
+inline Vector VectorMax(Vector a, Vector b) noexcept
+{
+    return DirectX::XMVectorMax(a, b);
+}
+
 inline void QuaternionToAxisAngle(Vector& axis, float& angle, Vector rotation)
 {
     DirectX::XMQuaternionToAxisAngle(&axis, &angle, rotation);

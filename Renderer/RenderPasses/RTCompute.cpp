@@ -11,6 +11,7 @@
 #include <Renderer/GPUResource.h>
 #include <Renderer/RenderDataArray.h>
 #include <Renderer/ConstantBufferPool.h>
+#include <BVH/BVH.h>
 
 #include <Components/Renderable.h>
 #include <Engine/EntityComponent.h>
@@ -72,6 +73,19 @@ namespace nv::graphics
 
     void RTCompute::Execute(const RenderPassData& renderPassData)
     {
+        static bool done = false;
+        for (size_t i = 0; i < renderPassData.mRenderData.mSize; ++i)
+        {
+            const auto mesh = renderPassData.mRenderData[i].mpMesh;
+            if (mesh && !done)
+            {
+                using namespace bvh;
+                BVHData data;
+                BuildBVH(mesh, data);
+                done = true;
+            }
+        }
+
         auto ctx = gRenderer->GetContext();
         SetComputeDefault(ctx);
         

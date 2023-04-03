@@ -210,6 +210,7 @@
     <ClInclude Include="RenderPasses\Skybox.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BVH\BVH.cpp" />
     <ClCompile Include="DebugUI\DebugUIPass.cpp" />
     <ClCompile Include="DebugUI\Imgui\imgui.cpp" />
     <ClCompile Include="DebugUI\Imgui\imgui_demo.cpp" />

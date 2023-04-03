@@ -50,7 +50,7 @@ namespace nv::asset
 			for (uint32_t i = 0; i < mesh->mNumFaces; i++)
 			{
 				aiFace face = mesh->mFaces[i];
-
+				
 				for (uint32_t j = 0; j < face.mNumIndices; j++)
 					indices.push_back(face.mIndices[j]);
 			}
