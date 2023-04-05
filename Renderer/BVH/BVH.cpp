@@ -240,6 +240,9 @@ namespace nv::graphics::bvh
         outBvh.mBvhNodes.resize(triMesh.Tris.size() * 2);
         outBvh.TriIdx.resize(triMesh.Tris.size());
 
+        for (uint32_t i = 0; i < triCount; i++)
+            outBvh.TriIdx[i] = i;
+
         auto& nodesUsed = outBvh.nodesUsed;
         auto& root = *outBvh.mBvhNodes.data();
 
