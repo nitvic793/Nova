@@ -110,6 +110,7 @@ namespace nv::graphics
         loadMesh(ID("Mesh/torus.obj"));
         loadMaterials();
         gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/SunnyCubeMap.dds") });
+        gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/Sky.hdr") });
 
         for (const auto& mat : materials)
             unloadMaterialAssets(mat);
@@ -251,7 +252,15 @@ namespace nv::graphics
         auto viewI = camera.GetViewInverseTransposed();
         auto dirLights = ecs::gComponentManager.GetComponents<DirectionalLight>();
         
-        FrameData data = { .View = view, .Projection = proj, .ViewInverse = viewI, .ProjectionInverse = projI };
+        FrameData data = 
+        { 
+            .View                   = view, 
+            .Projection             = proj, 
+            .ViewInverse            = viewI, 
+            .ProjectionInverse      = projI, 
+            .ViewProjectionInverse  = camera.GetViewProjInverseTransposed()
+        };
+
         if (dirLights.Size() > 0)
         {
             for (uint32_t i = 0; i < dirLights.Size() && i < MAX_DIRECTIONAL_LIGHTS; ++i)

@@ -14,7 +14,7 @@ namespace nv::asset
     public:
         enum Type
         {
-            WIC, DDS
+            WIC, DDS, HDR
         };
 
     public:

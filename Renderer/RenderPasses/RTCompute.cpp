@@ -86,6 +86,7 @@ namespace nv::graphics
             }
         }
 
+        auto skyHandle = gResourceManager->GetTextureHandle(ID("Textures/Sky.hdr"));
         auto ctx = gRenderer->GetContext();
         SetComputeDefault(ctx);
         
@@ -99,6 +100,7 @@ namespace nv::graphics
         ctx->ComputeBindConstantBuffer(0, (uint32_t)sRTComputeObjects.mTraceParamsCBV.mHeapIndex);
         ctx->ComputeBindConstantBuffer(1, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
         ctx->ComputeBindTexture(2, sRTComputeObjects.mOutputUAV);
+        ctx->ComputeBindTexture(3, skyHandle);
 
         ctx->Dispatch(gWindow->GetWidth() / SCALE, gWindow->GetHeight() / SCALE, 1);
 

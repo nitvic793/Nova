@@ -438,6 +438,9 @@ namespace nv::asset
                 if (path.find(".dds") != std::string::npos)
                     type = TextureAsset::DDS;
 
+                if (path.find(".hdr") != std::string::npos)
+                    type = TextureAsset::HDR;
+
                 texture.Export(data, sstream, type);
                 writeHeader((size_t)sstream.tellp());
                 ostream.write(sstream.str().c_str(), sstream.str().size());

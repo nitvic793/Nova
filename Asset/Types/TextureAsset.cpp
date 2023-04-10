@@ -85,6 +85,9 @@ namespace nv::asset
         case WIC:
             LoadFromWICMemory(data.begin(), data.Size(), WIC_FLAGS_NONE, &metadata, image);
             break;
+        case HDR:
+            LoadFromHDRMemory(data.begin(), data.Size(), &metadata, image);
+            break;
         case DDS:
             ostream.write((const char*)data.mData, data.mSize); // Just write through directly.
             break;
