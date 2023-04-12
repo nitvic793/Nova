@@ -375,6 +375,11 @@ namespace nv::graphics
         return descriptorHeap;
     }
 
+    DescriptorHeapDX12* RendererDX12::GetDescriptorHeap(Handle<DescriptorHeap> handle) const
+    {
+        return mDescriptorHeapPool.GetAsDerived(handle);
+    }
+
     ConstantBufferView RendererDX12::CreateConstantBuffer(ConstBufferDesc desc)
     {
         auto heapHandle = desc.mUseRayTracingHeap ? mRayTracingHeap : mConstantBufferHeap;

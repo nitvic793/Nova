@@ -38,15 +38,25 @@ uint2 GetSkyUV( Ray ray, uint2 texDims )
 
 inline void GenerateCameraRay(uint2 idx, out Ray ray)
 {
-    float2 xy = idx + 0.5f;
-    float2 screenPos = xy / (Params.Resolution.xy * Params.ScaleFactor) * 2.0 - 1.0;
-    screenPos.y = -screenPos.y;
+    float2 dimensions = (Params.Resolution.xy * Params.ScaleFactor);
+    // float2 xy = idx + 0.5f;
+    // float2 screenPos = xy / (Params.Resolution.xy * Params.ScaleFactor) * 2.0 - 1.0;
+    // screenPos.y = -screenPos.y;
 
-    float4 world = mul(float4(screenPos, 0, 1), Frame.ViewProjectionInverse);
+    float2 rayPixelPos = idx;
+    float2 ncdXY = (rayPixelPos / dimensions.xy * 0.5f) - 1.0f; // Transfrom [0,1] to [-1, 1]
+    ncdXY.y *= -1.0f;
 
-    world.xyz /= world.w;
-    ray.Orig = Frame.CameraPosition;
-    ray.Dir = normalize(world.xyz - ray.Orig);
+    float4 rayStart = mul(float4(ncdXY, 0.0f, 1.0f), Frame.ViewProjectionInverse); // Near clip plane
+    float4 rayEnd = mul(float4(ncdXY, 1.0f, 1.0f), Frame.ViewProjectionInverse); // Far clip plane
+    rayStart.xyz /= rayStart.w;
+    rayEnd.xyz /= rayEnd.w;
+    float3 rayDir = normalize(rayEnd.xyz - rayStart.xyz);
+
+    //float4 world = mul(float4(screenPos, 0, 1), Frame.ViewProjectionInverse);
+
+    ray.Orig = rayStart;
+    ray.Dir = rayDir;
     ray.Hit.T = 1e30f; 
 }
 

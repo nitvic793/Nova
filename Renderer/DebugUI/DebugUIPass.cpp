@@ -21,6 +21,7 @@
 #include <DX12/WindowDX12.h>
 #include <DX12/DeviceDX12.h>
 #include <DX12/ContextDX12.h>
+#include <DX12/TextureDX12.h>
 
 namespace nv::graphics
 {
@@ -33,7 +34,7 @@ namespace nv::graphics
         auto ctx = renderer->GetContext();
         auto device = (DeviceDX12*)renderer->GetDevice();
 
-        DescriptorHeapDX12* heap = renderer->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1, mDescriptorHeapHandle, true);
+        DescriptorHeapDX12* heap = renderer->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2, mDescriptorHeapHandle, true);
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
 
@@ -78,6 +79,12 @@ namespace nv::graphics
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+
+            auto tex = (TextureDX12*)gResourceManager->GetTexture(ID("RTPass/OutputBufferTex"));
+            auto heap = renderer->GetDescriptorHeap(mDescriptorHeapHandle);
+            device->GetDevice()->CopyDescriptorsSimple(1, heap->HandleCPU(1), tex->GetCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            ImGui::Image((ImTextureID)heap->HandleGPU(1).ptr, ImVec2(480, 320));
+
             ImGui::End();
         }
 

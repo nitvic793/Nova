@@ -106,6 +106,7 @@ namespace nv::graphics
 
         TransitionBarrier endBarriers[] = { {.mTo = STATE_COMMON, .mResource = sRTComputeObjects.mOutputBuffer } };
         ctx->ResourceBarrier({ &endBarriers[0] , ArrayCountOf(endBarriers) });
+
         //SetContextDefault(ctx);
     }
 
