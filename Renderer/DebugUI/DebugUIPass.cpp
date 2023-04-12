@@ -27,6 +27,29 @@ namespace nv::graphics
 {
     Handle<DescriptorHeap> mDescriptorHeapHandle;
 
+    static void ShowTexturePreview(bool& open)
+    {
+        auto renderer = (RendererDX12*)gRenderer;
+        auto device = (DeviceDX12*)renderer->GetDevice();
+
+        ImGui::Begin("Texture Preview", &open);
+
+        static StringID texId = 0;
+
+        constexpr uint32_t BUFFER_SIZE = 1024;
+        static char buffer[BUFFER_SIZE] = "RTPass/OutputBufferTex";
+        ImGui::InputText("Texture Name", buffer, BUFFER_SIZE);
+        texId = ID(buffer);
+        if (gResourceTracker.ExistsTexture(texId))
+        {
+            auto tex = (TextureDX12*)gResourceManager->GetTexture(texId);
+            auto heap = renderer->GetDescriptorHeap(mDescriptorHeapHandle);
+            device->GetDevice()->CopyDescriptorsSimple(1, heap->HandleCPU(1), tex->GetCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            ImGui::Image((ImTextureID)heap->HandleGPU(1).ptr, ImVec2(480, 320));
+        }
+        ImGui::End();
+    }
+
     void DebugUIPass::Init()
     {
         auto window = (WindowDX12*)gWindow;
@@ -52,6 +75,7 @@ namespace nv::graphics
     }
 
     static bool showDemoWindow = false;
+    static bool showTexturePreview = false;
 
     void DebugUIPass::Execute(const RenderPassData& renderPassData)
     {
@@ -67,29 +91,14 @@ namespace nv::graphics
         ImGui::NewFrame();
         ImGuiIO& io = ImGui::GetIO();
         {
-            static float f = 0.0f;
-
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &showDemoWindow);      // Edit bools storing our window open/close state
-
-            static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
+            ImGui::Begin("Nova");                                 
+            ImGui::Checkbox("Texture Preview", &showTexturePreview);      
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-
-            auto tex = (TextureDX12*)gResourceManager->GetTexture(ID("RTPass/OutputBufferTex"));
-            auto heap = renderer->GetDescriptorHeap(mDescriptorHeapHandle);
-            device->GetDevice()->CopyDescriptorsSimple(1, heap->HandleCPU(1), tex->GetCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            ImGui::Image((ImTextureID)heap->HandleGPU(1).ptr, ImVec2(480, 320));
-
             ImGui::End();
         }
 
-        if(showDemoWindow)
-            ImGui::ShowDemoWindow(&showDemoWindow);
+        if (showTexturePreview)
+            ShowTexturePreview(showTexturePreview);
 
         ImGui::Render();
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), ctx->GetCommandList());
