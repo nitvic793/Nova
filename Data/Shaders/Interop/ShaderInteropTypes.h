@@ -134,6 +134,39 @@ namespace nv::graphics
         Intersection    Hit;           
     };
 
+    struct BVHNode
+    {
+        float3      AABBMin;
+        uint32_t    LeftFirst;
+        float3      AABBMax;
+        uint32_t    TriCount;
+    };
+
+    struct AABB
+    {
+        float3 bmin;
+        float3 bmax;
+    };
+
+    struct Tri
+    {
+        float3 Vertex0;
+        float3 Vertex1;
+        float3 Vertex2;
+        float3 Centroid;
+    };
+
+    struct TriEx
+    {
+        float2 uv0;
+        float2 uv1;
+        float2 uv2;
+        float3 N0;
+        float3 N1;
+        float3 N2;
+        float dummy;
+    };
+
 #ifdef __cplusplus
 }
 #endif

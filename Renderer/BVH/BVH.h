@@ -57,7 +57,7 @@ namespace nv::graphics::bvh
         using Vector = math::Vector;
 
         float3 bmin = float3(DIST_MAX, DIST_MAX, DIST_MAX);
-        float3 bmax = float3(-DIST_MAX, -DIST_MAX, -DIST_MAX);;
+        float3 bmax = float3(-DIST_MAX, -DIST_MAX, -DIST_MAX);
 
         void Grow(float3 p)
         {
