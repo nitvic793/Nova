@@ -23,6 +23,7 @@ namespace nv::graphics
     using namespace asset;
     using namespace ecs;
     using namespace buffer;
+    using namespace bvh;
 
     struct RTComputeObjects
     {
@@ -71,19 +72,30 @@ namespace nv::graphics
         sRTComputeObjects.mTraceParamsCBV = gpConstantBufferPool->GetConstantBuffer<TraceParams>();
     }
 
+    static void BuildBVHs(nv::Span<Mesh*> meshes)
+    {
+        for (auto pMesh : meshes)
+        {
+            if (pMesh)
+            {
+                BuildBVH(pMesh, pMesh->GetBVH());
+                // Create BVH Instances for all drawable entities, store in component.
+                // Build TLAS with all BVH instances
+                // Create structured buffer of bvh nodes in each BVHData, store index of BVHData in BVH Instance
+                // Create structured buffer of BVH instances
+                // Create structured buffer of TLAS
+            }
+        }
+    }
+
     void RTCompute::Execute(const RenderPassData& renderPassData)
     {
         static bool done = false;
-        for (size_t i = 0; i < renderPassData.mRenderData.mSize; ++i)
+        if (!done && renderPassData.mRenderData.mSize > 0)
         {
-            const auto mesh = renderPassData.mRenderData[i].mpMesh;
-            if (mesh && !done)
-            {
-                using namespace bvh;
-                BVHData data;
-                BuildBVH(mesh, data);
-                done = true;
-            }
+            nv::Span<Mesh*> meshes{ renderPassData.mRenderData.mppMeshes, renderPassData.mRenderData.mSize };
+            BuildBVHs(meshes);
+            done = true;
         }
 
         auto skyHandle = gResourceManager->GetTextureHandle(ID("Textures/Sky.hdr"));

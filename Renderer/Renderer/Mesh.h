@@ -3,6 +3,7 @@
 #include <Interop/ShaderInteropTypes.h>
 #include <Engine/Component.h>
 #include <vector>
+#include <BVH/BVH.h>
 
 namespace nv::graphics
 {
@@ -35,8 +36,10 @@ namespace nv::graphics
         constexpr const MeshDesc& GetDesc() const { return mDesc; }
         constexpr size_t GetVertexCount() const { return mDesc.mVertices.size(); }
         constexpr size_t GetIndexCount() const { return mDesc.mIndices.size(); }
+        inline bvh::BVHData& GetBVH() { return mBVH; }
 
     protected:
         MeshDesc mDesc;
+        bvh::BVHData mBVH;
     };
 }

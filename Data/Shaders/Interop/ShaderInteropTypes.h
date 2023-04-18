@@ -167,6 +167,22 @@ namespace nv::graphics
         float dummy;
     };
 
+    struct TLASNode
+    {
+        float3 aabbMin;
+        uint32_t leftRight; // 2x16 bits
+        float3 aabbMax;
+        uint32_t BLAS;
+    };
+    
+    struct BVHInstance
+    {
+        float4x4 transform;
+        float4x4 invTransform; // inverse transform
+        uint32_t idx;
+        float3 _padding;
+    };
+
 #ifdef __cplusplus
 }
 #endif
