@@ -17,8 +17,6 @@ namespace nv::graphics
     struct MeshDesc
     {
         std::vector<Vertex>     mVertices; // TODO: Remove this and use the pos and extras list instead
-        std::vector<VertexPos>  mVertexPosList;
-        std::vector<VertexEx>   mVertexExList;
         std::vector<uint32_t>   mIndices;
         std::vector<MeshEntry>  mMeshEntries;
         // TODO: 

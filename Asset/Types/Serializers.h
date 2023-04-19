@@ -101,8 +101,6 @@ namespace cereal
     {
         archive(m.mMeshEntries);
         archive(m.mVertices);
-        archive(m.mVertexPosList);
-        archive(m.mVertexExList);
         archive(m.mIndices);
     }
 

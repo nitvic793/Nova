@@ -19,7 +19,7 @@ namespace nv::asset
 {
     namespace utility
     {
-		void ProcessMesh(uint32_t index, aiMesh* mesh, const aiScene* scene, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<VertexPos>& verticesPos, std::vector<VertexEx>& verticesEx)
+		void ProcessMesh(uint32_t index, aiMesh* mesh, const aiScene* scene, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 		{
 			for (uint32_t i = 0; i < mesh->mNumVertices; i++)
 			{
@@ -42,9 +42,6 @@ namespace nv::asset
 
 				VertexPos vertPos = { .mPosition = vertex.mPosition };
 				VertexEx vertEx = { .mUV = vertex.mUV, .mNormal = vertex.mNormal, .mTangent = vertex.mTangent };
-
-				verticesPos.push_back(vertPos);
-				verticesEx.push_back(vertEx);
 			}
 
 			for (uint32_t i = 0; i < mesh->mNumFaces; i++)
@@ -79,9 +76,6 @@ namespace nv::asset
 				{
 					vertices[i].mNormal = normals[i];
 					vertices[i].mTangent = tangents[i];
-
-                    verticesEx[i].mNormal = normals[i];
-                    verticesEx[i].mTangent = tangents[i];
 				}
 			}
 		}
@@ -120,12 +114,10 @@ namespace nv::asset
 
 		mData.mIndices.reserve(numIndices);
 		mData.mVertices.reserve(numVertices);
-        mData.mVertexPosList.reserve(numVertices);
-        mData.mVertexExList.reserve(numVertices);
 
 		for (uint32_t i = 0; i < numMeshes; ++i)
 		{
-			utility::ProcessMesh(i, pScene->mMeshes[i], pScene, mData.mVertices, mData.mIndices, mData.mVertexPosList, mData.mVertexExList);
+			utility::ProcessMesh(i, pScene->mMeshes[i], pScene, mData.mVertices, mData.mIndices);
 		}
 
 		cereal::BinaryOutputArchive archive(ostream);
