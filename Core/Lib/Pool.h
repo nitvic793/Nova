@@ -133,6 +133,19 @@ namespace nv
             return ::nv::Span<TDerived>{ (TDerived*)mBuffer, mSize };
         }
 
+        void GetAllHandles(Vector<Handle<T>>& outHandles) const
+        {
+            for (uint32_t i = 0; i < mSize; ++i)
+            {
+                const uint32_t gen = mGenerations[i];
+                const Handle<T> handle(i, gen);
+                if (IsValid(handle))
+                {
+                    outHandles.Push(handle);
+                }
+            }
+        }
+
         constexpr void Clear()
         {
             mFreeIndices.Clear();

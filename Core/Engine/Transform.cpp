@@ -28,6 +28,15 @@ namespace nv
         return mat;
     }
 
+	float4x4 Transform::GetTransformMatrixInverseTransposed() const
+	{
+        float4x4 mat = GetTransformMatrix();
+		auto mmat = Load(mat);
+		mmat = MatrixInverse(mmat);
+        Store(MatrixTranspose(mmat), mat);
+        return mat;
+	}
+
 	float4x4 TransformRef::GetTransformMatrix() const
 	{
 		auto pos = Load(mPosition);
@@ -49,6 +58,15 @@ namespace nv
 		float4x4 mat = GetTransformMatrix();
 		Store(MatrixTranspose(Load(mat)), mat);
 		return mat;
+	}
+
+	float4x4 TransformRef::GetTransformMatrixInverseTransposed() const
+	{
+        float4x4 mat = GetTransformMatrix();
+        auto mmat = Load(mat);
+        mmat = MatrixInverse(mmat);
+        Store(MatrixTranspose(mmat), mat);
+        return mat;
 	}
 
 }

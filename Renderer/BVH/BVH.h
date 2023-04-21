@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Math/Math.h>
+#include <Interop/ShaderInteropTypes.h>
 
 /// BVH Reference Code: https://jacco.ompf2.com/2022/06/03/how-to-build-a-bvh-part-9a-to-the-gpu/
 
@@ -59,7 +60,7 @@ namespace nv::graphics::bvh
         float3 bmin = float3(DIST_MAX, DIST_MAX, DIST_MAX);
         float3 bmax = float3(-DIST_MAX, -DIST_MAX, -DIST_MAX);
 
-        void Grow(float3 p)
+        void Grow(const float3& p)
         {
             using namespace math;
 
@@ -95,6 +96,14 @@ namespace nv::graphics::bvh
             math::Store(result, e);
             return e.x * e.y + e.y * e.z + e.z * e.x;
         }
+
+        graphics::AABB GfxAABB() const
+        {
+            graphics::AABB aabb;
+            aabb.bmax = bmax;
+            aabb.bmin = bmin;
+            return aabb;
+        }
     };
 
     struct TriangulatedMesh;
@@ -117,37 +126,36 @@ namespace nv::graphics::bvh
         AABB bounds; // in world space
     };
 
-    struct Tri
-    {
-        using float3 = math::float3;
+    //struct Tri
+    //{
+    //    using float3 = math::float3;
 
-        float3 Vertex0;
-        float3 Vertex1;
-        float3 Vertex2;
-        float3 Centroid;
-    };
+    //    float3 Vertex0;
+    //    float3 Vertex1;
+    //    float3 Vertex2;
+    //    float3 Centroid;
+    //};
 
-    struct TriEx
-    {
-        using float3 = math::float3;
-        using float2 = math::float2;
+    //struct TriEx
+    //{
+    //    using float3 = math::float3;
+    //    using float2 = math::float2;
 
-        float2 uv0;
-        float2 uv1;
-        float2 uv2;
-        float3 N0;
-        float3 N1;
-        float3 N2;
-        float dummy;
-    };
+    //    float2 uv0;
+    //    float2 uv1;
+    //    float2 uv2;
+    //    float3 N0;
+    //    float3 N1;
+    //    float3 N2;
+    //    float dummy;
+    //};
 
     struct TriangulatedMesh
     {
         using float3 = math::float3;
 
-        BVHData*    bvh = nullptr;
-        std::vector<Tri>    Tris;
-        std::vector<TriEx>  TriExs;
+        std::vector<graphics::Tri>    Tris;
+        std::vector<graphics::TriEx>  TriExs;
         //Tri*        tri;
         //TriEx*      triEx;
         //float3*     P = nullptr;
@@ -155,5 +163,13 @@ namespace nv::graphics::bvh
         int         triCount = 0;
     };
 
-    void BuildBVH(const Mesh* mesh, BVHData& outBvh);
+    struct TLAS
+    {
+        nv::Vector<TLASNode> mTlasNodes;
+        uint32_t mNodesUsed = 0;
+        uint32_t BlasCount  = 0;
+    };
+
+    void BuildBVH(const Mesh* mesh, BVHData& outBvh, TriangulatedMesh& triMesh);
+    void BuildTLAS(Span<graphics::BVHInstance> bvhInstances, Span<graphics::AABB> aabbs, TLAS& outTlas);
 }

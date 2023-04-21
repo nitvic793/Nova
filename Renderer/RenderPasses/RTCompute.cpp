@@ -72,20 +72,68 @@ namespace nv::graphics
         sRTComputeObjects.mTraceParamsCBV = gpConstantBufferPool->GetConstantBuffer<TraceParams>();
     }
 
-    static void BuildBVHs(nv::Span<Mesh*> meshes)
+    static void BuildBVHs()
     {
-        for (auto pMesh : meshes)
+        nv::Vector<TriangulatedMesh> triMeshes;
+        nv::Vector<graphics::BVHInstance> bvhInstances;
+        nv::Vector<Handle<Entity>> entities;
+        nv::Vector<graphics::AABB> bvhAabbs;
+        TLAS tlas;
+        uint32_t index = 0;
+
+        // Create BVH Instances for all drawable entities, store in component - Done
+        // Build TLAS with all BVH instances - Done
+        // Create structured buffer of bvh nodes in each BVHData, store index of BVHData in BVH Instance
+        // Create structured buffer of BVH instances
+        // Create structured buffer of TLAS
+        gEntityManager.GetEntities(entities);
+
+        const auto getAabb = [](const float3& bmax, const float3& bmin, const float4x4& mat)
         {
-            if (pMesh)
+            auto bounds = bvh::AABB();
+            for (int32_t i = 0; i < 8; ++i)
             {
-                BuildBVH(pMesh, pMesh->GetBVH());
-                // Create BVH Instances for all drawable entities, store in component.
-                // Build TLAS with all BVH instances
-                // Create structured buffer of bvh nodes in each BVHData, store index of BVHData in BVH Instance
-                // Create structured buffer of BVH instances
-                // Create structured buffer of TLAS
+                auto position = float3(i & 1 ? bmax.x : bmin.x,
+                    i & 2 ? bmax.y : bmin.y, i & 4 ? bmax.z : bmin.z);
+                auto pos = Load(position);
+                auto transform = Load(mat);
+                pos = math::Vector3Transform(pos, transform);
+                Store(pos, position);
+                bounds.Grow(position);
+            }
+
+            return bounds.GfxAABB();
+        };
+
+        for (auto handle : entities)
+        {
+            Entity* pEntity = gEntityManager.GetEntity(handle);
+            if (pEntity->Has<Renderable>())
+            {
+                Renderable* renderable = pEntity->Get<Renderable>();
+                auto pMesh = gResourceManager->GetMesh(renderable->mMesh);
+                if (!pMesh)
+                    continue;
+
+                auto& bvh = pMesh->GetBVH();
+                if(bvh.mBvhNodes.empty())
+                    BuildBVH(pMesh, bvh, triMeshes.Emplace());
+
+                TransformRef transform = pEntity->GetTransform();
+                float4x4 mat = transform.GetTransformMatrixTransposed();
+                graphics::BVHInstance& bvhInstance = bvhInstances.Emplace();
+                auto& aabb = bvhAabbs.Emplace();
+                aabb = getAabb(bvh.mBvhNodes[0].AABBMax, bvh.mBvhNodes[0].AABBMin, transform.GetTransformMatrix());
+                
+                bvhInstance.transform = mat;
+                bvhInstance.invTransform = transform.GetTransformMatrixInverseTransposed();
+                bvhInstance.idx = index;
+                index++;
             }
         }
+
+        if(bvhInstances.size() > 0)
+            BuildTLAS(bvhInstances.Span(), bvhAabbs.Span(), tlas);
     }
 
     void RTCompute::Execute(const RenderPassData& renderPassData)
@@ -93,8 +141,7 @@ namespace nv::graphics
         static bool done = false;
         if (!done && renderPassData.mRenderData.mSize > 0)
         {
-            nv::Span<Mesh*> meshes{ renderPassData.mRenderData.mppMeshes, renderPassData.mRenderData.mSize };
-            BuildBVHs(meshes);
+            BuildBVHs();
             done = true;
         }
 

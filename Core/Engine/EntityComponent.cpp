@@ -37,6 +37,11 @@ namespace nv::ecs
         mEntities.Remove(entity);
     }
 
+    void EntityManager::GetEntities(Vector<Handle<Entity>>& outEntities) const
+    {
+        mEntities.GetAllHandles(outEntities);
+    }
+
     void Entity::AttachTransform(const Transform& transform)
     {
         auto pos = Add<Position>();

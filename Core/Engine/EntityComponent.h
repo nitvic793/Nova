@@ -233,6 +233,14 @@ namespace nv::ecs
             return pool->GetComponent(comp)->As<TComp>();
         }
 
+        template<typename TComp>
+        bool Has() const
+        {
+            constexpr StringID compId = GetComponentID<TComp>();
+            auto comp = mComponents.find(compId);
+            return comp != mComponents.end();
+        }
+
         constexpr void SetHandle(Handle<Entity> handle) { mHandle = handle; }
 
     public:
@@ -254,6 +262,7 @@ namespace nv::ecs
         
         Handle<Entity>  Create(Handle<Entity> parent = Null<Entity>());
         void            Remove(Handle<Entity> entity);
+        void            GetEntities(Vector<Handle<Entity>>& outEntities) const;
 
         constexpr Entity* GetEntity(Handle<Entity> handle) const { return mEntities.Get(handle); }
     private:

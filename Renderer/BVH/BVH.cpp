@@ -231,9 +231,8 @@ namespace nv::graphics::bvh
         Subdivide(rightChildIdx, bvhData, triMesh);
     }
 
-    void BuildBVH(const Mesh* mesh, BVHData& outBvh)
+    void BuildBVH(const Mesh* mesh, BVHData& outBvh, TriangulatedMesh& triMesh)
     {
-        TriangulatedMesh triMesh;
         GetTriangulatedMesh(mesh, triMesh);
 
         const auto triCount = triMesh.Tris.size();
@@ -255,5 +254,94 @@ namespace nv::graphics::bvh
             NV_EVENT("Renderer/BVH/Build");
             Subdivide(rootNodeIdx, outBvh, triMesh);
         }
+    }
+
+    constexpr float GetSurfaceArea(const float3& extent)
+    {
+        const auto& e = extent;
+        return e.x * e.y + e.y * e.z + e.z * e.x;
+    }
+
+    int FindBestMatch(int* list, int N, int A, TLAS& tlas)
+    {
+        float smallest = DIST_MAX;
+        int bestB = -1;
+        auto& tlasNode = tlas.mTlasNodes;
+
+        for (int B = 0; B < N; ++B)
+        {
+            if (B != A)
+            {
+                float3 bmax = Float3Max(tlasNode[list[A]].aabbMax, tlasNode[list[B]].aabbMax);
+                float3 bmin = Float3Min(tlasNode[list[A]].aabbMin, tlasNode[list[B]].aabbMin);
+                auto max = Load(bmax);
+                auto min = Load(bmin);
+                auto e = max - min;
+
+                float3 extent; 
+                Store(e, extent);
+
+                float surfaceArea = GetSurfaceArea(extent);
+                if (surfaceArea < smallest)
+                {
+                    smallest = surfaceArea;
+                    bestB = B;
+                }
+            }
+        }
+
+        return bestB;
+    }
+
+    void BuildTLAS(Span<graphics::BVHInstance> blas, Span<graphics::AABB> aabbs, TLAS& outTlas)
+    {
+        int nodeIdx[256];
+        int nodeIndices = (int)blas.Size();
+        auto& nodesUsed = outTlas.mNodesUsed;
+        auto& tlasNode = outTlas.mTlasNodes;
+        const uint32_t blasCount = (uint32_t)blas.Size();
+        tlasNode.SetSize(blasCount * 2);
+
+        nodesUsed = 1; // 0 is root node
+        for (uint i = 0; i < blasCount; ++i)
+        {
+            nodeIdx[i] = nodesUsed;
+            tlasNode[nodesUsed].aabbMin = aabbs[i].bmin;
+            tlasNode[nodesUsed].aabbMax = aabbs[i].bmax;
+            tlasNode[nodesUsed].BLAS = i;
+            tlasNode[nodesUsed].leftRight = 0; // 0 = leaf node
+            nodesUsed++;
+        }
+
+        // Agglomerative clustering algorithm
+        int A = 0;
+        int B = FindBestMatch(nodeIdx, nodeIndices, A, outTlas);
+        while (nodeIndices > 1)
+        {
+            int C = FindBestMatch(nodeIdx, nodeIndices, B, outTlas);
+            if (A == C)
+            {
+                int nodeIdxA = nodeIdx[A];
+                int nodeIdxB = nodeIdx[B];
+
+                TLASNode& nodeA = tlasNode[nodeIdxA];
+                TLASNode& nodeB = tlasNode[nodeIdxB];
+                TLASNode& newNode = tlasNode[nodesUsed];
+
+                newNode.leftRight = nodeIdxA + (nodeIdxB << 16);
+                newNode.aabbMin = Float3Min(nodeA.aabbMin, nodeB.aabbMin);
+                newNode.aabbMax = Float3Max(nodeA.aabbMax, nodeB.aabbMax);
+                nodeIdx[A] = nodesUsed++;
+                nodeIdx[B] = nodeIdx[nodeIndices - 1];
+                B = FindBestMatch(nodeIdx, --nodeIndices, A, outTlas);
+            }
+            else
+            {
+                A = B;
+                B = C;
+            }
+        }
+
+        tlasNode[0] = tlasNode[nodeIdx[A]];
     }
 }

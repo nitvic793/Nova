@@ -19,6 +19,7 @@ namespace nv
 
         float4x4 GetTransformMatrix() const;
         float4x4 GetTransformMatrixTransposed() const;
+        float4x4 GetTransformMatrixInverseTransposed() const;
     };
 
     struct TransformRef
@@ -29,6 +30,7 @@ namespace nv
 
         float4x4 GetTransformMatrix() const;
         float4x4 GetTransformMatrixTransposed() const;
+        float4x4 GetTransformMatrixInverseTransposed() const;
     };
 
     struct Position : ecs::IComponent
