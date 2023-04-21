@@ -35,6 +35,27 @@ namespace nv::graphics
     static RTComputeObjects sRTComputeObjects;
     constexpr uint32_t SCALE = 2;
 
+    Handle<Texture> CreateStructuredBuffer(uint32_t stride, uint32_t elemCount, Handle<GPUResource>& buffer)
+    {
+        const uint32_t bufferSize = stride * elemCount;
+        GPUResourceDesc desc = GPUResourceDesc::UploadConstBuffer(bufferSize);
+
+        buffer = gResourceManager->CreateResource(desc);
+        TextureDesc texDesc =
+        {
+            .mUsage = tex::USAGE_SHADER,
+            .mBuffer = buffer,
+            .mType = tex::Type::BUFFER,
+            .mBufferData = 
+            {
+                .mNumElements = elemCount,
+                .mStructureByteStride = stride
+            }
+        };
+
+        return gResourceManager->CreateTexture(texDesc);
+    }
+
     void RTCompute::Init()
     {
         auto cs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/RayTraceCS.hlsl") };
@@ -72,6 +93,7 @@ namespace nv::graphics
         sRTComputeObjects.mTraceParamsCBV = gpConstantBufferPool->GetConstantBuffer<TraceParams>();
     }
 
+    static Handle<Texture> testTex;
     static void BuildBVHs()
     {
         nv::Vector<TriangulatedMesh> triMeshes;
@@ -134,6 +156,15 @@ namespace nv::graphics
 
         if(bvhInstances.size() > 0)
             BuildTLAS(bvhInstances.Span(), bvhAabbs.Span(), tlas);
+
+        uint32_t test[] = { 1, 2, 3, 4 };
+        Handle<GPUResource> buffer;
+        testTex = CreateStructuredBuffer(sizeof(uint32_t), 4, buffer);
+
+        auto res = gResourceManager->GetGPUResource(buffer);
+
+        res->MapMemory();
+        res->UploadMapped((uint8_t*)test, sizeof(test), 0);
     }
 
     void RTCompute::Execute(const RenderPassData& renderPassData)
@@ -149,7 +180,14 @@ namespace nv::graphics
         auto ctx = gRenderer->GetContext();
         SetComputeDefault(ctx);
         
-        TraceParams params = { .Resolution = float2((float)gWindow->GetWidth(), (float)gWindow->GetHeight()), .ScaleFactor = 1.f / SCALE };
+        auto structTestTex = gResourceManager->GetTexture(testTex);
+        TraceParams params = 
+        {
+            .Resolution = float2((float)gWindow->GetWidth(), (float)gWindow->GetHeight()),
+            .ScaleFactor = 1.f / SCALE,
+            .StructBufferIdx = structTestTex? structTestTex->GetHeapIndex() : 0
+        };
+
         gRenderer->UploadToConstantBuffer(sRTComputeObjects.mTraceParamsCBV, (uint8_t*)&params, (uint32_t)sizeof(params));
 
         TransitionBarrier initBarriers[] = { {.mTo = STATE_COPY_DEST, .mResource = sRTComputeObjects.mOutputBuffer } };

@@ -115,7 +115,7 @@ namespace nv::graphics
     {
         float2 Resolution;
         float  ScaleFactor;
-        float  _Padding;
+        uint32_t  StructBufferIdx;
     };
 
     //BVH Reference: https://jacco.ompf2.com/2022/06/03/how-to-build-a-bvh-part-9a-to-the-gpu/

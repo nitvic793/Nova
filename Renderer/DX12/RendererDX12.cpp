@@ -532,7 +532,7 @@ namespace nv::graphics
                 D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
 
             CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
-            descRootSignature.Init(_countof(rootParameters), rootParameters, _countof(StaticSamplers), StaticSamplers);
+            descRootSignature.Init(_countof(rootParameters), rootParameters, _countof(StaticSamplers), StaticSamplers, D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED);
             createRootSig(descRootSignature, mComputeRootSignature.ReleaseAndGetAddressOf());
         }
     }

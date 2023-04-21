@@ -71,5 +71,11 @@ void main(uint3 DTid: SV_DispatchThreadID)
 
     float2 uv = GetSkyUV(ray, texDims);
 
+    if(Params.StructBufferIdx > 0)
+    { 
+        StructuredBuffer<uint> testBuffer = ResourceDescriptorHeap[Params.StructBufferIdx];
+        uv = float(testBuffer[0]) * uv;
+    }
+
     OutputTexture[DTid.xy] = SkyTexture[uv].xyz;//Trace(ray, DTid);
 }
