@@ -32,6 +32,18 @@ namespace nv::graphics
         ConstantBufferView  mTraceParamsCBV;
     };
 
+    struct BVHObjects
+    {
+        nv::Vector<TriangulatedMesh>        mTriMeshes;
+        nv::Vector<BVHData*>                mBVHs;
+        nv::Vector<graphics::BVHInstance>   mBvhInstances;
+        nv::Vector<Handle<Entity>>          mEntities;
+        nv::Vector<graphics::AABB>          mBvhAabbs;
+        nv::Vector<uint32_t>                mBvhHeapIndices;
+        TLAS                                mTlas;
+    };
+
+    static BVHObjects       sBVHObjects;
     static RTComputeObjects sRTComputeObjects;
     constexpr uint32_t SCALE = 2;
 
@@ -54,6 +66,21 @@ namespace nv::graphics
         };
 
         return gResourceManager->CreateTexture(texDesc);
+    }
+
+    template<typename T>
+    Handle<Texture> CreateAndUpload(nv::Span<T> data, Handle<GPUResource>& buffer)
+    {
+        constexpr uint32_t strideSize = (uint32_t)sizeof(T);
+        const uint32_t elemCount = (uint32_t)data.Size();
+        const uint32_t bufferSize = strideSize * elemCount;
+
+        Handle<Texture> texHandle = CreateStructuredBuffer(strideSize, elemCount, buffer);
+        auto res = gResourceManager->GetGPUResource(buffer);
+
+        res->MapMemory();
+        res->UploadMapped((uint8_t*)data.mData, bufferSize, 0);
+        return texHandle;
     }
 
     void RTCompute::Init()
@@ -96,11 +123,13 @@ namespace nv::graphics
     static Handle<Texture> testTex;
     static void BuildBVHs()
     {
-        nv::Vector<TriangulatedMesh> triMeshes;
-        nv::Vector<graphics::BVHInstance> bvhInstances;
-        nv::Vector<Handle<Entity>> entities;
-        nv::Vector<graphics::AABB> bvhAabbs;
-        TLAS tlas;
+        nv::Vector<TriangulatedMesh>& triMeshes         = sBVHObjects.mTriMeshes;
+        nv::Vector<graphics::BVHInstance>& bvhInstances = sBVHObjects.mBvhInstances;
+        nv::Vector<Handle<Entity>>& entities            = sBVHObjects.mEntities;
+        nv::Vector<graphics::AABB>& bvhAabbs            = sBVHObjects.mBvhAabbs;
+        nv::Vector<BVHData*>& bvhs                      = sBVHObjects.mBVHs;
+        TLAS& tlas                                      = sBVHObjects.mTlas;
+
         uint32_t index = 0;
 
         // Create BVH Instances for all drawable entities, store in component - Done
@@ -137,9 +166,12 @@ namespace nv::graphics
                 if (!pMesh)
                     continue;
 
-                auto& bvh = pMesh->GetBVH();
-                if(bvh.mBvhNodes.empty())
+                BVHData& bvh = pMesh->GetBVH();
+                if (bvh.mBvhNodes.empty())
+                {
                     BuildBVH(pMesh, bvh, triMeshes.Emplace());
+                    bvhs.Push(&bvh);
+                }
 
                 TransformRef transform = pEntity->GetTransform();
                 float4x4 mat = transform.GetTransformMatrixTransposed();
@@ -159,12 +191,21 @@ namespace nv::graphics
 
         uint32_t test[] = { 1, 2, 3, 4 };
         Handle<GPUResource> buffer;
-        testTex = CreateStructuredBuffer(sizeof(uint32_t), 4, buffer);
+        testTex = CreateAndUpload(Span{ &test[0], 4}, buffer);
 
-        auto res = gResourceManager->GetGPUResource(buffer);
+        for (auto& triMesh : triMeshes)
+        {
+            Handle<Texture> tex = CreateAndUpload(Span{ triMesh.Tris.data(), triMesh.Tris.size() }, buffer);
+            tex = CreateAndUpload(Span{ triMesh.TriExs.data(), triMesh.TriExs.size() }, buffer);
+        }
 
-        res->MapMemory();
-        res->UploadMapped((uint8_t*)test, sizeof(test), 0);
+        for (auto& bvh : bvhs)
+        {
+            Handle<Texture> tex = CreateAndUpload(Span{ bvh->mBvhNodes.data(), bvh->mBvhNodes.size() }, buffer);
+        }
+
+        Handle<Texture> tex = CreateAndUpload(bvhInstances.Span(), buffer);
+        tex = CreateAndUpload(tlas.mTlasNodes.Span(), buffer);
     }
 
     void RTCompute::Execute(const RenderPassData& renderPassData)
