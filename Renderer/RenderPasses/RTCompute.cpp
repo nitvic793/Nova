@@ -130,6 +130,9 @@ namespace nv::graphics
         nv::Vector<BVHData*>& bvhs                      = sBVHObjects.mBVHs;
         TLAS& tlas                                      = sBVHObjects.mTlas;
 
+        nv::Vector<uint32_t> meshHeapIndices;
+        nv::Vector<uint32_t> bvhIndices;
+
         uint32_t index = 0;
 
         // Create BVH Instances for all drawable entities, store in component - Done
@@ -197,15 +200,21 @@ namespace nv::graphics
         {
             Handle<Texture> tex = CreateAndUpload(Span{ triMesh.Tris.data(), triMesh.Tris.size() }, buffer);
             tex = CreateAndUpload(Span{ triMesh.TriExs.data(), triMesh.TriExs.size() }, buffer);
+            Texture* texture = gResourceManager->GetTexture(tex);
+            meshHeapIndices.Push(texture->GetHeapIndex());
         }
 
         for (auto& bvh : bvhs)
         {
             Handle<Texture> tex = CreateAndUpload(Span{ bvh->mBvhNodes.data(), bvh->mBvhNodes.size() }, buffer);
+            Texture* texture = gResourceManager->GetTexture(tex);
+            bvhIndices.Push(texture->GetHeapIndex());
         }
 
         Handle<Texture> tex = CreateAndUpload(bvhInstances.Span(), buffer);
         tex = CreateAndUpload(tlas.mTlasNodes.Span(), buffer);
+        tex = CreateAndUpload(meshHeapIndices.Span(), buffer);
+        tex = CreateAndUpload(bvhInstances.Span(), buffer);
     }
 
     void RTCompute::Execute(const RenderPassData& renderPassData)
