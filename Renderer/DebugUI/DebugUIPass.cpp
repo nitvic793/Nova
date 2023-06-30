@@ -25,6 +25,8 @@
 
 namespace nv::graphics
 {
+    static bool sbEnableDebugUI = true;
+
     Handle<DescriptorHeap> mDescriptorHeapHandle;
 
     static void ShowTexturePreview(bool& open)
@@ -79,6 +81,9 @@ namespace nv::graphics
 
     void DebugUIPass::Execute(const RenderPassData& renderPassData)
     {
+        if (!sbEnableDebugUI)
+            return;
+
         auto window = (WindowDX12*)gWindow;
         auto renderer = (RendererDX12*)gRenderer;
         auto ctx = (ContextDX12*)renderer->GetContext();
@@ -110,6 +115,16 @@ namespace nv::graphics
         ImGui_ImplDX12_Shutdown();
         ImGui_ImplWin32_Shutdown();
         ImGui::DestroyContext();
+    }
+
+    void SetEnableDebugUI(bool enable)
+    {
+        sbEnableDebugUI = enable;
+    }
+
+    bool IsDebugUIEnabled()
+    {
+        return sbEnableDebugUI;
     }
 }
 

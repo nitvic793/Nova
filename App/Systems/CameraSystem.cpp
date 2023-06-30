@@ -12,6 +12,8 @@
 #include <Renderer/Window.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/Device.h>
+#include "EntityCommon.h"
+#include <DebugUI/DebugUIPass.h>
 
 namespace nv
 {
@@ -21,22 +23,7 @@ namespace nv
 
     void CameraSystem::Init()
     {
-        const auto createEntity = [&](ResID mesh, ResID mat, const Transform& transform = Transform())
-        {
-            Handle<Material> matHandle = gResourceManager->GetMaterialHandle(mat);
-            Handle<Mesh> meshHandle = gResourceManager->GetMeshHandle(mesh);
-
-            Handle<Entity> e = ecs::gEntityManager.Create();
-            Entity* entity = gEntityManager.GetEntity(e);
-
-            entity->AttachTransform(transform);
-            auto renderable = entity->Add<components::Renderable>();
-            renderable->mMaterial = matHandle;
-            renderable->mMesh = meshHandle;
-            return e;
-        };
-
-        mEditorCamera = createEntity(RES_ID_NULL, RES_ID_NULL);
+        mEditorCamera = CreateEntity(RES_ID_NULL, RES_ID_NULL);
         auto comp = gEntityManager.GetEntity(mEditorCamera)->Add<CameraComponent>();
         gEntityManager.GetEntity(mEditorCamera)->GetTransform().mPosition = { 0, 0, -15 };
         comp->mCamera.SetParams(CameraDesc{ .mWidth = (float)graphics::gWindow->GetWidth(), .mHeight = (float)gWindow->GetHeight() });
@@ -44,27 +31,22 @@ namespace nv
         mPrevPos = { (float)input::GetInputState().mMouse.GetLastState().x,  (float)input::GetInputState().mMouse.GetLastState().y };
     }
 
-    void CameraSystem::Update(float deltaTime, float totalTime)
+    void EditorCameraUpdate(float deltaTime, CameraComponent* component, Handle<Entity> cameraEntity, math::float2& prevPos)
     {
-#if NV_ENABLE_DEBUG_UI
         const bool isDebugUIActive = graphics::IsDebugUIInputActive();
-#else
-        constexpr bool isDebugUIActive = false;
-#endif
 
         float speed = 3.f;
         float speedMultiplier = 3.f;
         float mouseSpeed = 0.005f;
 
-        auto comp = gEntityManager.GetEntity(mEditorCamera)->Get<CameraComponent>();
-        auto transform = gEntityManager.GetEntity(mEditorCamera)->GetTransform();
-        Camera& camera = comp->mCamera;
+        auto transform = gEntityManager.GetEntity(cameraEntity)->GetTransform();
+        Camera& camera = component->mCamera;
 
         auto up = VectorSet(0, 1, 0, 0);
         auto dir = Load(camera.GetDirection());
         auto pos = Load(transform.mPosition);
         auto rot = Load(transform.mRotation);
-        
+
         auto rotation = VectorSet(0, 0, 0, 0);
         float angle = 0.f;
         QuaternionToAxisAngle(rotation, angle, rot);
@@ -100,10 +82,10 @@ namespace nv
         float yDiff = 0;
 
         auto mousePos = float2{ (float)input::GetInputState().mMouse.GetLastState().x,  (float)input::GetInputState().mMouse.GetLastState().y };;
-        if (input::LeftMouseButtonState() == ButtonState::HELD && !isDebugUIActive) 
+        if (input::LeftMouseButtonState() == ButtonState::HELD && !isDebugUIActive)
         {
-            xDiff = (float)(mousePos.x - mPrevPos.x) * mouseSpeed;
-            yDiff = (float)(mousePos.y - mPrevPos.y) * mouseSpeed;
+            xDiff = (float)(mousePos.x - prevPos.x) * mouseSpeed;
+            yDiff = (float)(mousePos.y - prevPos.y) * mouseSpeed;
         }
 
         auto camRotatin = camera.GetRotation();
@@ -115,10 +97,23 @@ namespace nv
         if(!isDebugUIActive)
             Store(pos, transform.mPosition);
 
-        mPrevPos = { (float)input::GetInputState().mMouse.GetLastState().x,  (float)input::GetInputState().mMouse.GetLastState().y };
-
         camera.SetPosition(transform.mPosition);
         camera.UpdateViewProjection();
+    }
+
+    void CameraSystem::Update(float deltaTime, float totalTime)
+    {
+#if NV_ENABLE_DEBUG_UI
+        const bool isDebugUIEnabled = graphics::IsDebugUIEnabled();
+#else
+        constexpr bool isDebugUIEnabled = false;
+#endif
+        if (isDebugUIEnabled)
+        {
+            auto comp = gEntityManager.GetEntity(mEditorCamera)->Get<CameraComponent>();
+            EditorCameraUpdate(deltaTime, comp, mEditorCamera, mPrevPos);
+            mPrevPos = { (float)input::GetInputState().mMouse.GetLastState().x,  (float)input::GetInputState().mMouse.GetLastState().y };
+        }
     }
 
     void CameraSystem::Destroy()

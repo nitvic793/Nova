@@ -4,6 +4,7 @@
 
 #include "DriverSystem.h"
 #include "CameraSystem.h"
+#include "Player.h"
 
 namespace nv
 {
@@ -11,5 +12,6 @@ namespace nv
     {
         gSystemManager.CreateSystem<CameraSystem>();
         gSystemManager.CreateSystem<DriverSystem>();
+        gSystemManager.CreateSystem<PlayerController>();
     }
 }

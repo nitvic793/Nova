@@ -15,6 +15,10 @@ namespace nv::graphics
 
     private:
     };
+
+    void SetEnableDebugUI(bool enable);
+    bool IsDebugUIEnabled();
+
 #else
     // Empty implementation
     class DebugUIPass : public RenderPass

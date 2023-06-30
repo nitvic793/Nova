@@ -152,6 +152,8 @@
     <ClCompile Include="Systems\CameraSystem.cpp" />
     <ClCompile Include="Systems\DriverSystem.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="Systems\EntityCommon.cpp" />
+    <ClCompile Include="Systems\Player.cpp" />
     <ClCompile Include="Systems\Register.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -172,6 +174,8 @@
     <ClInclude Include="Systems\CameraSystem.h" />
     <ClInclude Include="Systems\DriverSystem.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Systems\EntityCommon.h" />
+    <ClInclude Include="Systems\Player.h" />
     <ClInclude Include="Systems\Register.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

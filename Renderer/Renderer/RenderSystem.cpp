@@ -244,8 +244,8 @@ namespace nv::graphics
 
         auto& camera = cams[0].mCamera;
 
-        mCamera.SetPosition({ 0,0, -5 });
-        mCamera.UpdateViewProjection();
+       // mCamera.SetPosition({ 0,0, -5 });
+       // mCamera.UpdateViewProjection();
         auto view = camera.GetViewTransposed();
         auto proj = camera.GetProjTransposed();
         auto projI = camera.GetProjInverseTransposed();
