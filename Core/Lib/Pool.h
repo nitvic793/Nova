@@ -289,16 +289,27 @@ namespace nv
             mHandleIndexMap.erase(handle.mHandle);
         }
 
-    private:
-        void GrowIfNeeded()
+        void CopyToPool(TDerived* pData, size_t count)
         {
-            if (mPool.Size() + 1 >= mCapacity)
+            mPool.Grow(count, true);
+            memcpy(mPool.Data(), pData, count * sizeof(TDerived));
+        }
+
+    private:
+        void GrowIfNeeded(size_t requestedSize)
+        {
+            if (requestedSize >= mCapacity)
             {
                 mCapacity = mCapacity * 2;
                 mGenerations.Grow(mCapacity, true);
                 for (uint32_t i = (uint32_t)mPool.Size(); i < mCapacity; ++i)
                     mGenerations[i] = 0;
             }
+        }
+
+        void GrowIfNeeded()
+        {
+            GrowIfNeeded(mPool.Size() + 1);
         }
 
     private:

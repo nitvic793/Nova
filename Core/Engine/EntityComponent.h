@@ -12,6 +12,10 @@
 #include <Engine/Component.h>
 #include <Engine/Transform.h>
 
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/cereal.hpp>
+
 namespace nv::ecs
 {
     struct Entity;
@@ -53,6 +57,8 @@ namespace nv::ecs
         virtual uint64_t            Create(Handle<Entity> entity) = 0;
         virtual void                Remove(uint64_t handle) = 0;
         virtual void                RemoveEntity(Handle<Entity> entity) = 0;
+        virtual void                Serialize(std::ostream& ostream) = 0;
+        virtual void                Deserialize(std::istream& istream) = 0;
 
         template<typename TComp>
         IComponent* GetComponent(Handle<TComp> handle)
@@ -140,6 +146,35 @@ namespace nv::ecs
             Remove(handle.mHandle);
         }
 
+        virtual void Serialize(std::ostream& ostream) override
+        {
+            using namespace cereal;
+
+            BinaryOutputArchive archive(ostream);
+            nv::Span<TComp> span = mComponents.Span();
+
+            archive(GetComponentID<TComp>());
+            archive(mComponents.Size());
+            archive(binary_data(span.begin(), static_cast<std::size_t>(span.Size()) * sizeof(TComp)));
+        }
+
+        virtual void Deserialize(std::istream& istream) override
+        {
+            using namespace cereal;
+            cereal::BinaryInputArchive archive(istream);
+
+            StringID compId;
+            size_t size;
+
+            archive(compId);
+            archive(size);
+            assert(compId == GetComponentID<TComp>());
+
+            void* buffer = Alloc(size * sizeof(TComp));
+            archive(binary_data(buffer, static_cast<std::size_t>(size) * sizeof(TComp)));
+            mComponents.CopyToPool((TComp*)buffer, size);
+        }
+
     private:
         ContiguousPool<TComp>   mComponents;
         EntityComponentMap      mEntityMap;
@@ -195,6 +230,11 @@ namespace nv::ecs
         bool IsPoolAvailable(StringID id) const
         {
             return mComponentPools.find(id) != mComponentPools.end();
+        }
+
+        const ComponentPoolMap& GetAllPools() const
+        {
+            return mComponentPools;
         }
 
         ~ComponentManager();
@@ -263,6 +303,7 @@ namespace nv::ecs
         Handle<Entity>  Create(Handle<Entity> parent = Null<Entity>());
         void            Remove(Handle<Entity> entity);
         void            GetEntities(Vector<Handle<Entity>>& outEntities) const;
+        constexpr Span<Entity> GetEntitySpan() const { return mEntities.Span(); }
 
         constexpr Entity* GetEntity(Handle<Entity> handle) const { return mEntities.Get(handle); }
     private:

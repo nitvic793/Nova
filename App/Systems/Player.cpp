@@ -11,6 +11,7 @@
 #include <Engine/Instance.h>
 #include <Interop/ShaderInteropTypes.h>
 #include <Input/InputState.h>
+#include <Engine/EventSystem.h>
 
 namespace nv
 {
@@ -24,7 +25,7 @@ namespace nv
 
     Handle<Entity> gpPlayerEntity = Null<Entity>();
     PlayerComponent* gpPlayerComponent = nullptr;
-
+    FrameRecordState gFrameState = FRAME_RECORD_STOPPED;
 
     void PlayerController::Init()
     {
@@ -32,10 +33,15 @@ namespace nv
         gpPlayerEntity = mPlayerEntity;
         auto playerEntity = gEntityManager.GetEntity(mPlayerEntity);
         gpPlayerComponent = playerEntity->Add<PlayerComponent>();
+
+        gEventBus.Subscribe(this, &PlayerController::OnFrameRecordStateChange);
     }
 
     void PlayerController::Update(float deltaTime, float totalTime)
     {
+        if (gFrameState == FRAME_RECORD_REWINDING)
+            return;
+
         Entity* entity = gEntityManager.GetEntity(mPlayerEntity);
 
         auto transform = entity->GetTransform();
@@ -54,6 +60,11 @@ namespace nv
 
     void PlayerController::Destroy()
     {
+    }
+
+    void PlayerController::OnFrameRecordStateChange(FrameRecordEvent* pEvent)
+    {
+        gFrameState = pEvent->mState;
     }
 
     ecs::Entity* GetPlayerEntity()

@@ -5,21 +5,38 @@
 #include <Components/Material.h>
 #include <Components/Renderable.h>
 #include <Engine/EntityComponent.h>
+#include <Engine/Component.h>
+#include <Engine/EventSystem.h>
+
 #include <Input/Input.h>
 #include <Engine/Log.h>
 #include <Engine/Instance.h>
 #include <Interop/ShaderInteropTypes.h>
 #include <DebugUI/DebugUIPass.h>
 #include "EntityCommon.h"
+#include <sstream>
 
 namespace nv
 {
+    using namespace ecs;
+
     constexpr float INPUT_DELAY_DEBUG_PRESS = 1.f;
     static bool sbEnableDebugUI = false;
 
     static float sDelayTimer = 0.f;
 
+    FrameRecordState mFrameRecordState = FRAME_RECORD_STOPPED;
     ecs::Entity* entity;
+
+    struct FrameData
+    {
+        std::stringstream mStream;
+    };
+
+    std::vector<FrameData> gFrameStack;
+
+    void PushFrame();
+    bool PopFrame();
 
     void DriverSystem::Init()
     {
@@ -56,8 +73,12 @@ namespace nv
     void DriverSystem::Update(float deltaTime, float totalTime)
     {
         using namespace input;
-        auto transform = entity->GetTransform();
-        transform.mPosition.y = sin(totalTime * 2.f);
+
+        if (mFrameRecordState != FRAME_RECORD_REWINDING)
+        {
+            auto transform = entity->GetTransform();
+            transform.mPosition.y = sin(totalTime * 2.f);
+        }
 
         auto kb = input::GetInputState().mpKeyboardInstance->GetState();
 
@@ -81,6 +102,61 @@ namespace nv
             sDelayTimer = 0.f;
             graphics::SetEnableDebugUI(sbEnableDebugUI);
         }
+
+        FrameRecordEvent frameEvent;
+
+        if (IsKeyPressed(Keys::F))
+        {
+            mFrameRecordState = FRAME_RECORD_IN_PROGRESS;
+        }
+
+        if (IsKeyPressed(Keys::P))
+        {
+            mFrameRecordState = FRAME_RECORD_REWINDING;
+        }
+
+        switch (mFrameRecordState)
+        {
+        case FRAME_RECORD_IN_PROGRESS:
+            PushFrame();
+            break;
+        case FRAME_RECORD_REWINDING:
+            if (!PopFrame())
+                mFrameRecordState = FRAME_RECORD_STOPPED;
+            break;
+        }
+
+        frameEvent.mState = mFrameRecordState;
+        gEventBus.Publish(&frameEvent);
+    }
+
+    void PushFrame()
+    {
+        FrameData& frame = gFrameStack.emplace_back();
+        const auto& componentPools = gComponentManager.GetAllPools();
+        for (auto& pool : componentPools)
+        {
+            pool.second->Serialize(frame.mStream);
+        }
+
+        size_t size = frame.mStream.tellp();
+        Span<Entity> entities = gEntityManager.GetEntitySpan();
+    }
+
+    bool PopFrame()
+    {
+        if (gFrameStack.empty())
+            return false;
+
+        FrameData& frame = gFrameStack.back();
+        const auto& componentPools = gComponentManager.GetAllPools();
+        for (auto& pool : componentPools)
+        {
+            pool.second->Deserialize(frame.mStream);
+        }
+
+        gFrameStack.pop_back();
+        return true;
     }
 
     void DriverSystem::Destroy()

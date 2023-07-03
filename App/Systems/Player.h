@@ -3,6 +3,8 @@
 #include <Engine/System.h>
 #include <Engine/EntityComponent.h>
 
+#include "EntityCommon.h"
+
 namespace nv
 {
     class PlayerController : public ISystem
@@ -11,6 +13,9 @@ namespace nv
         void Init() override;
         void Update(float deltaTime, float totalTime) override;
         void Destroy() override;
+
+        void OnFrameRecordStateChange(FrameRecordEvent* pEvent);
+
     private:
         Handle<ecs::Entity> mPlayerEntity;
     };
