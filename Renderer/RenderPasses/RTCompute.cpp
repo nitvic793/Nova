@@ -201,14 +201,14 @@ namespace nv::graphics
             Handle<Texture> tex = CreateAndUpload(Span{ triMesh.Tris.data(), triMesh.Tris.size() }, buffer);
             tex = CreateAndUpload(Span{ triMesh.TriExs.data(), triMesh.TriExs.size() }, buffer);
             Texture* texture = gResourceManager->GetTexture(tex);
-            meshHeapIndices.Push(texture->GetHeapIndex());
+            meshHeapIndices.Push(texture->GetHeapOffset()); // TODO: Copy HeapState to Constant Buffer when doing RT and do mTextureOffset + this Idx in shader
         }
 
         for (auto& bvh : bvhs)
         {
             Handle<Texture> tex = CreateAndUpload(Span{ bvh->mBvhNodes.data(), bvh->mBvhNodes.size() }, buffer);
             Texture* texture = gResourceManager->GetTexture(tex);
-            bvhIndices.Push(texture->GetHeapIndex());
+            bvhIndices.Push(texture->GetHeapOffset());
         }
 
         Handle<Texture> tex = CreateAndUpload(bvhInstances.Span(), buffer);
