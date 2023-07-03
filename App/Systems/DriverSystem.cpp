@@ -80,21 +80,8 @@ namespace nv
             transform.mPosition.y = sin(totalTime * 2.f);
         }
 
-        auto kb = input::GetInputState().mpKeyboardInstance->GetState();
-
         if (input::IsKeyPressed(input::Keys::Escape))
             Instance::SetInstanceState(INSTANCE_STATE_STOPPED);
-
-        if (input::IsKeyComboPressed(input::Keys::LeftShift, input::Keys::T))
-        {
-            log::Info("LShift + T Pressed");
-        }
-
-        if (input::IsKeyPressed(input::Keys::F) && input::IsKeyDown(input::Keys::LeftShift))
-            log::Info("LShift + F Pressed");
-
-        if (input::LeftMouseButtonState() == input::ButtonState::PRESSED)
-            log::Info("Left mouse button pressed");
 
         if (IsKeyPressed(Keys::OemTilde))
         {
@@ -138,9 +125,6 @@ namespace nv
         {
             pool.second->Serialize(frame.mStream);
         }
-
-        size_t size = frame.mStream.tellp();
-        Span<Entity> entities = gEntityManager.GetEntitySpan();
     }
 
     bool PopFrame()

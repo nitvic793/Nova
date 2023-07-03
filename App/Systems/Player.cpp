@@ -39,6 +39,13 @@ namespace nv
 
     void PlayerController::Update(float deltaTime, float totalTime)
     {
+
+        // TODO:
+        // 1. Scene Editor + ImGui +  Scene Serialization/Deserialization
+        // 2. Basic Level with Enemies?
+        // 3. PBR + IBL 
+        // 4. Animation
+
         if (gFrameState == FRAME_RECORD_REWINDING)
             return;
 
