@@ -238,11 +238,11 @@ namespace nv::graphics
 
     void RenderSystem::UploadDrawData()
     {
-        auto cams = ecs::gComponentManager.GetComponents<CameraComponent>();
-        if (cams.Size() == 0)
-            return;
+        auto camHandle = GetActiveCamera();
+        auto cam = ecs::gEntityManager.GetEntity(camHandle);
+        auto camComponent = cam->Get<CameraComponent>();
 
-        auto& camera = cams[0].mCamera;
+        auto& camera = camComponent->mCamera;
 
        // mCamera.SetPosition({ 0,0, -5 });
        // mCamera.UpdateViewProjection();

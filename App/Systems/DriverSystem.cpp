@@ -10,11 +10,13 @@
 #include <Engine/Instance.h>
 #include <Interop/ShaderInteropTypes.h>
 #include <DebugUI/DebugUIPass.h>
+#include "EntityCommon.h"
 
 namespace nv
 {
     constexpr float INPUT_DELAY_DEBUG_PRESS = 1.f;
     static bool sbEnableDebugUI = false;
+
     static float sDelayTimer = 0.f;
 
     ecs::Entity* entity;
@@ -25,34 +27,21 @@ namespace nv
         using namespace graphics;
         using namespace components;
 
-        Handle<Entity> playerEntity;
-
-        const auto createEntity = [&](ResID mesh, ResID mat, const Transform& transform = Transform())
+        const auto setupSky = [&]()
         {
-            Handle<Material> matHandle = gResourceManager->GetMaterialHandle(mat);
-            Handle<Mesh> meshHandle = gResourceManager->GetMeshHandle(mesh);
-
-            Handle<Entity> e = ecs::gEntityManager.Create();
-            Entity* entity = gEntityManager.GetEntity(e);
-
-            entity->AttachTransform(transform);
-            auto renderable = entity->Add<components::Renderable>();
-            renderable->mMaterial = matHandle;
-            renderable->mMesh = meshHandle;
-            return e;
+            auto e3 = CreateEntity(RES_ID_NULL, RES_ID_NULL);
+            auto directionalLight = gEntityManager.GetEntity(e3)->Add<DirectionalLight>();
+            directionalLight->Color = float3(0.9f, 0.9f, 0.9f);
+            directionalLight->Intensity = 1.f;
+            auto skybox = gEntityManager.GetEntity(e3)->Add<SkyboxComponent>();
+            skybox->mSkybox = gResourceManager->GetTextureHandle(ID("Textures/SunnyCubeMap.dds"));
+            Store(Vector3Normalize(VectorSet(1, -1, 1, 0)), directionalLight->Direction);
         };
 
-        auto entity1 = createEntity(ID("Mesh/torus.obj"), ID("Floor"));
-        playerEntity = createEntity(ID("Mesh/cube.obj"), ID("Bronze"));
-        auto e3 = createEntity(RES_ID_NULL, RES_ID_NULL);
-        auto directionalLight = gEntityManager.GetEntity(e3)->Add<DirectionalLight>();
-        directionalLight->Color = float3(0.9f, 0.9f, 0.9f);
-        directionalLight->Intensity = 1.f;
+        auto entity1 = CreateEntity(ID("Mesh/torus.obj"), ID("Floor"));
+        auto playerEntity = CreateEntity(ID("Mesh/cube.obj"), ID("Bronze"));
 
-        auto skybox = gEntityManager.GetEntity(e3)->Add<SkyboxComponent>();
-        skybox->mSkybox = gResourceManager->GetTextureHandle(ID("Textures/SunnyCubeMap.dds"));
-
-        Store(Vector3Normalize(VectorSet(1, -1, 1, 0)), directionalLight->Direction);
+        setupSky();
 
         entity = gEntityManager.GetEntity(playerEntity);
 
@@ -86,15 +75,12 @@ namespace nv
         if (input::LeftMouseButtonState() == input::ButtonState::PRESSED)
             log::Info("Left mouse button pressed");
 
-        if (IsKeyDown(Keys::OemTilde) && sDelayTimer > INPUT_DELAY_DEBUG_PRESS)
+        if (IsKeyPressed(Keys::OemTilde))
         {
             sbEnableDebugUI = !sbEnableDebugUI;
             sDelayTimer = 0.f;
             graphics::SetEnableDebugUI(sbEnableDebugUI);
         }
-
-        sDelayTimer += deltaTime;
-
     }
 
     void DriverSystem::Destroy()

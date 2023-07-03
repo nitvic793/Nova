@@ -22,15 +22,16 @@ namespace nv
         float mSpeed = 10.f;
     };
 
-    Entity* gpPlayerEntity = nullptr;
+    Handle<Entity> gpPlayerEntity = Null<Entity>();
     PlayerComponent* gpPlayerComponent = nullptr;
 
 
     void PlayerController::Init()
     {
         mPlayerEntity = CreateEntity(ID("Mesh/cube.obj"), ID("Bronze"));
-        gpPlayerEntity = gEntityManager.GetEntity(mPlayerEntity);
-        gpPlayerComponent = gpPlayerEntity->Add<PlayerComponent>();
+        gpPlayerEntity = mPlayerEntity;
+        auto playerEntity = gEntityManager.GetEntity(mPlayerEntity);
+        gpPlayerComponent = playerEntity->Add<PlayerComponent>();
     }
 
     void PlayerController::Update(float deltaTime, float totalTime)
@@ -57,6 +58,6 @@ namespace nv
 
     ecs::Entity* GetPlayerEntity()
     {
-        return gpPlayerEntity;
+        return gEntityManager.GetEntity(gpPlayerEntity);
     }
 }

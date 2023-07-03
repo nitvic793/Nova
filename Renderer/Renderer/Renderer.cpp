@@ -26,6 +26,7 @@ namespace nv::graphics
     IRenderer*          gRenderer           = nullptr;
     Window*             gWindow             = nullptr;
     ResourceManager*    gResourceManager    = nullptr;
+    Handle<ecs::Entity> gActiveCamHandle    = Null<ecs::Entity>();
 
     void InitGraphics(void* context)
     {
@@ -67,6 +68,16 @@ namespace nv::graphics
         return debugNav;
     }
 #endif
+
+    void SetActiveCamera(Handle<ecs::Entity> camHandle)
+    {
+        gActiveCamHandle = camHandle;
+    }
+
+    Handle<ecs::Entity> GetActiveCamera()
+    {
+        return gActiveCamHandle;
+    }
 
     Device* IRenderer::GetDevice() const
     {

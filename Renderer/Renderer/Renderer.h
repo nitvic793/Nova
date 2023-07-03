@@ -6,6 +6,11 @@
 #include <Renderer/CommonDefines.h>
 #include <Renderer/Format.h>
 
+namespace nv::ecs
+{
+    struct Entity;
+}
+
 namespace nv::graphics
 {
     class Shader;
@@ -93,4 +98,7 @@ namespace nv::graphics
 #if NV_ENABLE_DEBUG_UI
     bool IsDebugUIInputActive();
 #endif
+
+    void SetActiveCamera(Handle<ecs::Entity> camHandle);
+    Handle<ecs::Entity> GetActiveCamera();
 }
