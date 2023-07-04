@@ -92,15 +92,12 @@ namespace nv
 
         FrameRecordEvent frameEvent;
 
-        if (IsKeyPressed(Keys::F))
-        {
-            mFrameRecordState = FRAME_RECORD_IN_PROGRESS;
-        }
-
-        if (IsKeyPressed(Keys::P))
+        if (IsKeyDown(Keys::P))
         {
             mFrameRecordState = FRAME_RECORD_REWINDING;
         }
+        else
+            mFrameRecordState = FRAME_RECORD_IN_PROGRESS;
 
         switch (mFrameRecordState)
         {
@@ -109,7 +106,7 @@ namespace nv
             break;
         case FRAME_RECORD_REWINDING:
             if (!PopFrame())
-                mFrameRecordState = FRAME_RECORD_STOPPED;
+                mFrameRecordState = FRAME_RECORD_IN_PROGRESS;
             break;
         }
 
