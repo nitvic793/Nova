@@ -300,15 +300,19 @@ namespace nv::ecs
         // Pass Transform data to renderer 
         // Attach "Renderable" component manually for now.
         
-        Handle<Entity>  Create(Handle<Entity> parent = Null<Entity>());
+        Handle<Entity>  Create(Handle<Entity> parent = Null<Entity>(), const char* pDebugName = nullptr);
         void            Remove(Handle<Entity> entity);
         void            GetEntities(Vector<Handle<Entity>>& outEntities) const;
         constexpr Span<Entity> GetEntitySpan() const { return mEntities.Span(); }
 
         constexpr Entity* GetEntity(Handle<Entity> handle) const { return mEntities.Get(handle); }
+        constexpr std::unordered_map<std::string, Handle<Entity>>& GetEntityNameMap() { return mEntityNames; }
+
     private:
         Pool<Entity>            mEntities;
         Handle<Entity>          mRoot;
+
+        std::unordered_map<std::string, Handle<Entity>> mEntityNames;
     };
 
     extern EntityManager    gEntityManager;

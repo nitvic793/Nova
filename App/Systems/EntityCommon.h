@@ -21,5 +21,5 @@ namespace nv
         FrameRecordState mState;
     };
 
-    Handle<ecs::Entity> CreateEntity(graphics::ResID mesh, graphics::ResID mat, const Transform& transform = Transform());
+    Handle<ecs::Entity> CreateEntity(graphics::ResID mesh, graphics::ResID mat, const char* pDebugName = nullptr, const Transform& transform = Transform());
 }

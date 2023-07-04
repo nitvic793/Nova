@@ -29,7 +29,7 @@ namespace nv
 
     void PlayerController::Init()
     {
-        mPlayerEntity = CreateEntity(ID("Mesh/cube.obj"), ID("Bronze"));
+        mPlayerEntity = CreateEntity(ID("Mesh/cube.obj"), ID("Bronze"), "Player");
         gpPlayerEntity = mPlayerEntity;
         auto playerEntity = gEntityManager.GetEntity(mPlayerEntity);
         gpPlayerComponent = playerEntity->Add<PlayerComponent>();

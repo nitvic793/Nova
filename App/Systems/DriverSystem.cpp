@@ -46,7 +46,7 @@ namespace nv
 
         const auto setupSky = [&]()
         {
-            auto e3 = CreateEntity(RES_ID_NULL, RES_ID_NULL);
+            auto e3 = CreateEntity(RES_ID_NULL, RES_ID_NULL, "Sky");
             auto directionalLight = gEntityManager.GetEntity(e3)->Add<DirectionalLight>();
             directionalLight->Color = float3(0.9f, 0.9f, 0.9f);
             directionalLight->Intensity = 1.f;
@@ -55,8 +55,8 @@ namespace nv
             Store(Vector3Normalize(VectorSet(1, -1, 1, 0)), directionalLight->Direction);
         };
 
-        auto entity1 = CreateEntity(ID("Mesh/torus.obj"), ID("Floor"));
-        auto playerEntity = CreateEntity(ID("Mesh/cube.obj"), ID("Bronze"));
+        auto entity1 = CreateEntity(ID("Mesh/torus.obj"), ID("Floor"), "Torus");
+        auto playerEntity = CreateEntity(ID("Mesh/cube.obj"), ID("Bronze"), "Box");
 
         setupSky();
 

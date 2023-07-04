@@ -18,7 +18,7 @@ namespace nv::ecs
         mEntities.Destroy();
     }
 
-    Handle<Entity> EntityManager::Create(Handle<Entity> parent)
+    Handle<Entity> EntityManager::Create(Handle<Entity> parent, const char* pDebugName)
     {
         if (parent.IsNull())
         {
@@ -29,6 +29,15 @@ namespace nv::ecs
         Entity* entity = mEntities.Get(handle);
         entity->mHandle = handle;
         entity->mParent = parent;
+
+        std::string entityName;
+        if (!pDebugName)
+            entityName = "Entity " + std::to_string(handle.mIndex);
+        else
+            entityName = pDebugName;
+
+        mEntityNames[entityName] = handle;
+
         return handle;
     }
 
