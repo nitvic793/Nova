@@ -108,6 +108,7 @@ namespace nv::graphics
 
         loadMesh(ID("Mesh/cube.obj"));
         loadMesh(ID("Mesh/torus.obj"));
+        loadMesh(ID("Mesh/cone.obj"));
         loadMaterials();
         gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/SunnyCubeMap.dds") });
         gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/Sky.hdr") });

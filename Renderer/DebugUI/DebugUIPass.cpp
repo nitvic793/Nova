@@ -8,6 +8,7 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/Mesh.h>
 #include <Renderer/Device.h>
+#include <Engine/EntityComponent.h>
 
 #include "Imgui/imgui.h"
 
@@ -23,11 +24,15 @@
 #include <DX12/ContextDX12.h>
 #include <DX12/TextureDX12.h>
 
+using namespace nv::ecs;
+
 namespace nv::graphics
 {
     static bool sbEnableDebugUI = true;
 
     Handle<DescriptorHeap> mDescriptorHeapHandle;
+
+    void ListEntities(bool& open);
 
     static void ShowTexturePreview(bool& open)
     {
@@ -78,6 +83,7 @@ namespace nv::graphics
 
     static bool showDemoWindow = false;
     static bool showTexturePreview = false;
+    static bool showEntityList = false;
 
     void DebugUIPass::Execute(const RenderPassData& renderPassData)
     {
@@ -97,10 +103,14 @@ namespace nv::graphics
         ImGuiIO& io = ImGui::GetIO();
         {
             ImGui::Begin("Nova");                                 
-            ImGui::Checkbox("Texture Preview", &showTexturePreview);      
+            ImGui::Checkbox("Texture Preview", &showTexturePreview);
+            ImGui::Checkbox("Entity Manager", &showEntityList);
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
             ImGui::End();
         }
+
+        if(showEntityList)
+            ListEntities(showEntityList);
 
         if (showTexturePreview)
             ShowTexturePreview(showTexturePreview);
@@ -116,6 +126,31 @@ namespace nv::graphics
         ImGui_ImplWin32_Shutdown();
         ImGui::DestroyContext();
     }
+
+    void ListEntities(bool& open)
+    {
+        auto& nameMap = gEntityManager.GetEntityNameMap();
+
+        ImGui::Begin("Entity Manager", &open);
+        if (ImGui::BeginListBox("Entities"))
+        {
+            static int32_t selectedIdx = 0;
+            uint32_t idx = 0;
+            for (auto& e : nameMap)
+            {
+                const bool selected = idx == selectedIdx;
+                if (ImGui::Selectable(e.first.c_str(), selected))
+                    selectedIdx = idx;
+
+                idx++;
+
+
+            }
+            ImGui::EndListBox();
+        }
+        ImGui::End();
+    }
+
 
     void SetEnableDebugUI(bool enable)
     {

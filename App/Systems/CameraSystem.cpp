@@ -23,9 +23,9 @@ namespace nv
     using namespace math;
     using namespace graphics;
 
-    Handle<Entity> CreateCamera(float3 position)
+    Handle<Entity> CreateCamera(float3 position, const char* pDebugName = nullptr)
     {
-        auto entityHandle = CreateEntity(RES_ID_NULL, RES_ID_NULL);
+        auto entityHandle = CreateEntity(RES_ID_NULL, RES_ID_NULL, pDebugName);
         auto cameraEntity = gEntityManager.GetEntity(entityHandle);
         auto comp = cameraEntity->Add<CameraComponent>();
         cameraEntity->GetTransform().mPosition = { 0, 0, -15 };
@@ -36,8 +36,8 @@ namespace nv
 
     void CameraSystem::Init()
     {
-        mEditorCamera = CreateCamera({ 0, 0, -15 });
-        mPlayerCamera = CreateCamera({ 0, 0, -15 });
+        mEditorCamera = CreateCamera({ 0, 0, -15 }, "Editor Camera");
+        mPlayerCamera = CreateCamera({ 0, 0, -15 }, "Player Camera");
         mPrevPos = { (float)input::GetInputState().mMouse.GetLastState().x,  (float)input::GetInputState().mMouse.GetLastState().y };
         graphics::SetActiveCamera(mEditorCamera);
     }

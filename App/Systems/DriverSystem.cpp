@@ -92,7 +92,7 @@ namespace nv
 
         FrameRecordEvent frameEvent;
 
-        if (IsKeyDown(Keys::P))
+        if (IsKeyDown(Keys::F))
         {
             mFrameRecordState = FRAME_RECORD_REWINDING;
         }
