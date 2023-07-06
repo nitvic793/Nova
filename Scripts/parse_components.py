@@ -1,8 +1,41 @@
 import CppHeaderParser
 
-header = CppHeaderParser.CppHeader("D:\\Personal\\Nova\\Renderer\\Components\\Renderable.h")
+from components_common import FieldTypes
 
-print(header)
+TYPE_MAP = {
+    'float'  : FieldTypes.FIELD_FLOAT,
+    'float2' : FieldTypes.FIELD_FLOAT2,
+    'float3' : FieldTypes.FIELD_FLOAT3,
+    'float4' : FieldTypes.FIELD_FLOAT4,
+    'string' : FieldTypes.FIELD_STRING,
+    'int32_t': FieldTypes.FIELD_INT
+}
+
+def get_field_type(typeName):
+    if typeName in TYPE_MAP:
+        return TYPE_MAP[typeName]
+    
+    return FieldTypes.FIELD_UNDEFINED
+
+def generate_metadata(components:list):
+    metadata = {}
+    for comp in components:
+        comp_name = '{}::{}'.format(comp['namespace'], comp['name'])
+        metadata[comp_name] = []
+        properties = comp['properties']['public']
+        if len(properties)>0:
+            for prop in properties:
+                name = prop['name']
+                type = prop['type']
+                field_type = get_field_type(type)
+                metadata[comp_name].append({
+                    'Name': name,
+                    'Type': type,
+                    'FieldTypeEnum': field_type
+                })
+
+    return metadata
+
 
 def parse_components(base_dir = '../'):
     import glob
@@ -33,7 +66,8 @@ def parse_components(base_dir = '../'):
 
 def main():
     components = parse_components('./')
-    print(components)
+    metadata = generate_metadata(components=components)
+    print(metadata)
 
 if __name__=='__main__':
     main()
