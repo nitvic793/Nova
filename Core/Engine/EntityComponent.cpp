@@ -8,33 +8,26 @@
 #include <cereal/types/vector.hpp>
 #include <cereal/types/unordered_map.hpp>
 
-struct MetaField
+namespace cereal
 {
-    std::string mName;
-    std::string mType;
-    nv::ecs::FieldType mFieldType;
+    using namespace nv::ecs;
 
     template<class Archive>
-    void serialize(Archive& archive)
+    void serialize(Archive& archive, Metadata& metadata)
     {
         using namespace cereal;
-        archive(make_nvp("Name",            mName),
-                make_nvp("Type",            mType),
-                make_nvp("FieldTypeEnum",   mFieldType));
+        archive(make_nvp("Components", metadata.mComponents));
     }
-};
-
-struct Metadata
-{
-    std::unordered_map<std::string, std::vector<MetaField>> mComponents;
 
     template<class Archive>
-    void serialize(Archive& archive)
+    void serialize(Archive& archive, MetaField& field)
     {
         using namespace cereal;
-        archive(make_nvp("Components", mComponents));
+        archive(make_nvp("Name",            field.mName),
+                make_nvp("Type",            field.mType),
+                make_nvp("FieldTypeEnum",   field.mFieldType));
     }
-};
+}
 
 namespace nv::ecs
 {
@@ -109,6 +102,22 @@ namespace nv::ecs
         };
     }
 
+    IComponent* Entity::Get(StringID compId) const
+    {
+        auto comp = mComponents.at(compId);
+        IComponentPool* pool = gComponentManager.GetPool(compId);
+        return pool->GetComponent(comp);
+    }
+
+    void Entity::GetComponents(std::unordered_map<StringID, IComponent*>& outComponents) const
+    {
+        for (auto comp : mComponents)
+        {
+            IComponent* component = Get(comp.first);
+            outComponents[comp.first] = component;
+        }
+    }
+
     ComponentManager::~ComponentManager()
     {
         for (auto& it : mComponentPools)
@@ -117,14 +126,27 @@ namespace nv::ecs
         }
     }
 
+    const std::vector<MetaField>& ComponentManager::GetMetadata(StringID compId, std::string& outName) const
+    {
+        const auto& key = mMetadata.mNameMap.at(compId);
+        outName = key;
+        const auto& fields = mMetadata.mComponents.at(outName);
+        return fields;
+    }
+
     void ComponentManager::LoadMetadata()
     {
         const char* FILENAME = "metadata.json";
         std::ifstream infile(FILENAME, std::ios::in);
 
         cereal::JSONInputArchive archive(infile);
-        Metadata metadata;
+        archive(mMetadata);
 
-        archive(metadata);
+        for (auto& comp : mMetadata.mComponents)
+        {
+            auto& name = comp.first;
+            auto id = ID(name);
+            mMetadata.mNameMap[id] = name;
+        }
     }
 }

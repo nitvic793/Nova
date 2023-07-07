@@ -20,6 +20,7 @@ namespace nv::ecs
 {
     struct Entity;
 
+    // Need to keep in sync with FieldType enum in Scripts/components_common.py
     enum FieldType : uint8_t
     {
         FIELD_UNDEFINED = 0,
@@ -28,7 +29,39 @@ namespace nv::ecs
         FIELD_FLOAT2,
         FIELD_FLOAT3,
         FIELD_FLOAT4,
-        FIELD_STRING
+        FIELD_STRING,
+        FIELD_HANDLE_TEX = 7,
+        FIELD_HANDLE_MESH = 8,
+        FIELD_HANDLE_MAT = 9,
+        FIELD_COUNT
+    };
+
+    enum FieldTypeSize : size_t
+    {
+        FIELD_UNDEFINED_SIZE    = 0,
+        FIELD_FLOAT_SIZE        = sizeof(float),
+        FIELD_INT_SIZE          = sizeof(int32_t),
+        FIELD_FLOAT2_SIZE       = sizeof(math::float2),
+        FIELD_FLOAT3_SIZE       = sizeof(math::float3),
+        FIELD_FLOAT4_SIZE       = sizeof(math::float4),
+        FIELD_STRING_SIZE       = sizeof(std::string),
+        FIELD_HANDLE_TEX_SIZE   = sizeof(Handle<int32_t>),
+        FIELD_HANDLE_MESH_SIZE  = sizeof(Handle<int32_t>),
+        FIELD_HANDLE_MAT_SIZE   = sizeof(Handle<int32_t>)
+    };
+
+    static constexpr size_t gFieldSizeMap[FIELD_COUNT] =
+    {
+        FIELD_UNDEFINED_SIZE,
+        FIELD_FLOAT_SIZE ,
+        FIELD_INT_SIZE   ,
+        FIELD_FLOAT2_SIZE,
+        FIELD_FLOAT3_SIZE,
+        FIELD_FLOAT4_SIZE,
+        FIELD_STRING_SIZE,
+        FIELD_HANDLE_TEX_SIZE,
+        FIELD_HANDLE_MESH_SIZE,
+        FIELD_HANDLE_MAT_SIZE
     };
 
     struct Field
@@ -36,6 +69,19 @@ namespace nv::ecs
         std::string mFieldName;
         FieldType   mType       = FIELD_UNDEFINED;
         uint32_t    mOffset     = 0;
+    };
+
+    struct MetaField
+    {
+        std::string mName;
+        std::string mType;
+        nv::ecs::FieldType mFieldType;
+    };
+
+    struct Metadata
+    {
+        std::unordered_map<std::string, std::vector<MetaField>> mComponents;
+        std::unordered_map<StringID, std::string_view> mNameMap;
     };
 
     class IComponentPool 
@@ -222,6 +268,7 @@ namespace nv::ecs
         template<typename TComp>
         void CreatePool(Span<Field> fields)
         {
+            constexpr auto compName = GetComponentName<TComp>();
             constexpr StringID compId = GetComponentID<TComp>();
             void* buffer = Alloc<ComponentPool<TComp>>(SystemAllocator::gPtr, fields);
             mComponentPools[compId] = ScopedPtr<IComponentPool, true>((IComponentPool*)buffer);
@@ -237,12 +284,15 @@ namespace nv::ecs
             return mComponentPools;
         }
 
+        const std::vector<MetaField>& GetMetadata(StringID compId, std::string& outName) const;
+
         void LoadMetadata();
 
         ~ComponentManager();
 
     private:
         ComponentPoolMap mComponentPools;
+        Metadata mMetadata;
     };
 
     extern ComponentManager gComponentManager;
@@ -253,7 +303,9 @@ namespace nv::ecs
         template<typename TComp, typename ...Args>
         TComp* Add(Args&&... args)
         {
+            auto compName = GetComponentName<TComp>();
             constexpr StringID compId = GetComponentID<TComp>();
+            mComponentNames[std::string(compName)] = compId;
             if (!gComponentManager.IsPoolAvailable(compId))
                 gComponentManager.CreatePool<TComp>({ nullptr, 0 });
             
@@ -275,6 +327,8 @@ namespace nv::ecs
             return pool->GetComponent(comp)->As<TComp>();
         }
 
+        IComponent* Get(StringID compId) const;
+
         template<typename TComp>
         bool Has() const
         {
@@ -285,10 +339,14 @@ namespace nv::ecs
 
         constexpr void SetHandle(Handle<Entity> handle) { mHandle = handle; }
 
+        void GetComponents(std::unordered_map<StringID, IComponent*>& outComponents) const;
+
     public:
         Handle<Entity> mParent;
         Handle<Entity> mHandle;
+
         HashMap<StringID, uint64_t> mComponents;
+        std::unordered_map<std::string, StringID> mComponentNames;
     };
 
     class EntityManager

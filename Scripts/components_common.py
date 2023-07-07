@@ -8,3 +8,6 @@ class FieldTypes(enum.IntEnum):
     FIELD_FLOAT3    = 4
     FIELD_FLOAT4    = 5
     FIELD_STRING    = 6
+    FIELD_HANDLE_TEX    = 7
+    FIELD_HANDLE_MESH   = 8
+    FIELD_HANDLE_MAT    = 9

@@ -9,6 +9,7 @@
 #include <Renderer/Mesh.h>
 #include <Renderer/Device.h>
 #include <Engine/EntityComponent.h>
+#include <Engine/Camera.h>
 
 #include "Imgui/imgui.h"
 
@@ -127,6 +128,106 @@ namespace nv::graphics
         ImGui::DestroyContext();
     }
 
+    void Visit(int32_t* pVal, const MetaField& field, const char* pCompName)
+    {
+        ImGui::PushID(pCompName);
+        ImGui::DragInt(field.mName.c_str(), pVal, 0.05f);
+        ImGui::PopID();
+    }
+
+    void Visit(float* pVal, const MetaField& field, const char* pCompName)
+    {
+        ImGui::PushID(pCompName);
+        ImGui::DragFloat(field.mName.c_str(), pVal, 0.05f);
+        ImGui::PopID();
+    }
+
+    void Visit(float2* pVal, const MetaField& field, const char* pCompName)
+    {
+        ImGui::PushID(pCompName);
+        ImGui::DragFloat2(field.mName.c_str(), &pVal->x, 0.05f);
+        ImGui::PopID();
+    }
+
+    void Visit(float3* pVal, const MetaField& field, const char* pCompName)
+    {
+        ImGui::PushID(pCompName);
+        ImGui::DragFloat3(field.mName.c_str(), &pVal->x, 0.05f);
+        ImGui::PopID();
+    }
+
+    void Visit(float4* pVal, const MetaField& field, const char* pCompName)
+    {
+        ImGui::PushID(pCompName);
+        ImGui::DragFloat4(field.mName.c_str(), &pVal->x, 0.05f);
+        ImGui::PopID();
+    }
+
+    void Visit(std::string* pVal, const MetaField& field, const char* pCompName)
+    {
+        ImGui::PushID(pCompName);
+        ImGui::Text("%s: %s", field.mName.c_str(), pVal->data());
+        ImGui::PopID();
+    }
+
+    void VisitFields(const std::vector<MetaField>& fields, const char* pName, IComponent* pComponent)
+    {
+        size_t offset = 0;
+        const uint8_t* pBuffer = (uint8_t*)pComponent;
+        if (ImGui::CollapsingHeader(pName, ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            for (auto& field : fields)
+            {
+                const size_t fieldSize = gFieldSizeMap[field.mFieldType];
+                const uint8_t* pCurrent = pBuffer + offset;
+                switch (field.mFieldType)
+                {
+                case FIELD_INT:
+                    Visit((int32_t*)pCurrent, field, pName); break;
+                case FIELD_FLOAT:
+                    Visit((float*)pCurrent, field, pName); break;
+                case FIELD_FLOAT2:                         
+                    Visit((float2*)pCurrent, field, pName); break;
+                case FIELD_FLOAT3:                       
+                    Visit((float3*)pCurrent, field, pName); break;
+                case FIELD_FLOAT4:                        
+                    Visit((float4*)pCurrent, field, pName); break;
+                case FIELD_STRING:
+                    Visit((std::string*)pCurrent, field, pName); break;
+                case FIELD_UNDEFINED:
+                    if (field.mType == "Camera")
+                        offset += sizeof(Camera);
+                    break;
+                default:
+                    // Do Nothing
+                    break;
+                }
+
+                offset += fieldSize;
+            }
+        }
+    }
+
+    void ListComponents(Handle<Entity> entityHandle, bool& open)
+    {
+        Entity* e = gEntityManager.GetEntity(entityHandle);
+        std::unordered_map<StringID, IComponent*> components;
+        e->GetComponents(components);
+
+        const auto& drawComponent = [&](StringID compId, IComponent* component)
+        {
+            std::string name;
+            const auto& fields = gComponentManager.GetMetadata(compId, name);
+            VisitFields(fields, name.c_str(), component);
+        };
+
+        ImGui::Begin("Components", &open);
+        for (const auto& comp : components)
+            drawComponent(comp.first, comp.second);
+
+        ImGui::End();
+    }
+
     void ListEntities(bool& open)
     {
         auto& nameMap = gEntityManager.GetEntityNameMap();
@@ -140,11 +241,17 @@ namespace nv::graphics
             {
                 const bool selected = idx == selectedIdx;
                 if (ImGui::Selectable(e.first.c_str(), selected))
+                {    
                     selectedIdx = idx;
+                }
+
+                if (selected)
+                {
+                    static bool showComponents = true;
+                    ListComponents(e.second, showComponents);
+                }
 
                 idx++;
-
-
             }
             ImGui::EndListBox();
         }

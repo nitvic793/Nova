@@ -3,12 +3,15 @@ import json
 from components_common import FieldTypes
 
 TYPE_MAP = {
-    'float': FieldTypes.FIELD_FLOAT,
-    'float2': FieldTypes.FIELD_FLOAT2,
-    'float3': FieldTypes.FIELD_FLOAT3,
-    'float4': FieldTypes.FIELD_FLOAT4,
-    'string': FieldTypes.FIELD_STRING,
-    'int32_t': FieldTypes.FIELD_INT
+    'float'             : FieldTypes.FIELD_FLOAT,
+    'float2'            : FieldTypes.FIELD_FLOAT2,
+    'float3'            : FieldTypes.FIELD_FLOAT3,
+    'float4'            : FieldTypes.FIELD_FLOAT4,
+    'string'            : FieldTypes.FIELD_STRING,
+    'int32_t'           : FieldTypes.FIELD_INT,
+    'Handle<Mesh >'     : FieldTypes.FIELD_HANDLE_MESH,
+    'Handle<Material >' : FieldTypes.FIELD_HANDLE_MAT,
+    'Handle<Texture >'  : FieldTypes.FIELD_HANDLE_TEX,
 }
 
 
@@ -21,8 +24,12 @@ def get_field_type(typeName):
 
 def generate_metadata(components: list):
     metadata = []
+    processed_components = []
     for comp in components:
         comp_name = '{}::{}'.format(comp['namespace'], comp['name'])
+        if comp_name in processed_components:
+            continue
+
         properties = comp['properties']['public']
         comp_data = {
             'key': comp_name,
@@ -39,36 +46,47 @@ def generate_metadata(components: list):
                     'Type': type,
                     'FieldTypeEnum': field_type
                 })
-
+                
+        processed_components.append(comp_name)
         metadata.append(comp_data)
 
     return {"Components": metadata}
 
+def process_file(file):
+    components = []
+    try:
+        header = CppHeaderParser.CppHeader(file, str="file", encoding=None, preprocessed=True)
+    except:
+        print('Unable to parse "{}"'.format(file))
+        return components
+
+    if len(header.classes) > 0:
+        for clsKey in header.classes:
+            cls = header.classes[clsKey]
+            if len(header.classes[clsKey]['inherits']) > 0:
+                for base_cls in cls['inherits']:
+                    if 'IComponent' in base_cls['class'] and 'IComponentPool' not in base_cls['class']:
+                        components.append(cls)
+            elif 'NV_COMPONENT' in clsKey:
+                clsName = clsKey.replace('NV_COMPONENT', '')
+                cls['name'] = clsName
+                components.append(cls)
+    return components
 
 def parse_components(base_dir='../'):
     import glob
     import os
 
     components = []
-
-    # glob.glob() return a list of file name with specified pathname
     for file in glob.glob(base_dir + '**/*.h', recursive=True):
         if '.\\packages\\' in file or '.\\Shared\\' in file:
             continue
+        components.extend(process_file(file))
 
-        try:
-            header = CppHeaderParser.CppHeader(file)
-        except:
-            print('Unable to parse "{}"'.format(file))
+    for file in glob.glob(base_dir + '**/*.cpp', recursive=True):
+        if '.\\packages\\' in file:
             continue
-
-        if len(header.classes) > 0:
-            for clsKey in header.classes:
-                if len(header.classes[clsKey]['inherits']) > 0:
-                    cls = header.classes[clsKey]
-                    for base_cls in cls['inherits']:
-                        if 'IComponent' in base_cls['class'] and 'IComponentPool' not in base_cls['class']:
-                            components.append(cls)
+        components.extend(process_file(file))
 
     return components
 
