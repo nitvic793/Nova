@@ -237,6 +237,8 @@ namespace nv::ecs
             return mComponentPools;
         }
 
+        void LoadMetadata();
+
         ~ComponentManager();
 
     private:

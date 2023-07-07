@@ -120,6 +120,10 @@
     <PostBuildEvent>
       <Command>xcopy $(SolutionDir)Shared\External\assimp\bin\Release\ $(TargetDir) /s /d /Y  &amp; xcopy $(SolutionDir)Shared\External\dxc\bin\x64\ $(TargetDir) /s /d /Y &amp; xcopy $(SolutionDir)Data $(TargetDir)Data\ /s /d /Y &amp; xcopy $(SolutionDir)Shared\External\Optick\lib\x64\release\ $(TargetDir) /s /d /Y </Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>

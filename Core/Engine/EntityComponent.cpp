@@ -2,6 +2,40 @@
 #include "EntityComponent.h"
 #include <Engine/Transform.h>
 
+#include <fstream>
+#include <cereal/archives/binary.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/unordered_map.hpp>
+
+struct MetaField
+{
+    std::string mName;
+    std::string mType;
+    nv::ecs::FieldType mFieldType;
+
+    template<class Archive>
+    void serialize(Archive& archive)
+    {
+        using namespace cereal;
+        archive(make_nvp("Name",            mName),
+                make_nvp("Type",            mType),
+                make_nvp("FieldTypeEnum",   mFieldType));
+    }
+};
+
+struct Metadata
+{
+    std::unordered_map<std::string, std::vector<MetaField>> mComponents;
+
+    template<class Archive>
+    void serialize(Archive& archive)
+    {
+        using namespace cereal;
+        archive(make_nvp("Components", mComponents));
+    }
+};
+
 namespace nv::ecs
 {
     ComponentManager gComponentManager;
@@ -81,5 +115,16 @@ namespace nv::ecs
         {
             it.second->~IComponentPool();
         }
+    }
+
+    void ComponentManager::LoadMetadata()
+    {
+        const char* FILENAME = "metadata.json";
+        std::ifstream infile(FILENAME, std::ios::in);
+
+        cereal::JSONInputArchive archive(infile);
+        Metadata metadata;
+
+        archive(metadata);
     }
 }

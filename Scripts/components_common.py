@@ -1,6 +1,6 @@
 import enum
 
-class FieldTypes(enum.Enum):
+class FieldTypes(enum.IntEnum):
     FIELD_UNDEFINED = 0
     FIELD_FLOAT     = 1
     FIELD_INT       = 2

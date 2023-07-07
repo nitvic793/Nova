@@ -44,6 +44,8 @@ namespace nv
         using namespace graphics;
         using namespace components;
 
+        gComponentManager.LoadMetadata();
+
         const auto setupSky = [&]()
         {
             auto e3 = CreateEntity(RES_ID_NULL, RES_ID_NULL, "Sky");

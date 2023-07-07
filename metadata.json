@@ -1,0 +1,75 @@
+{
+    "Components": {
+        "Components": [
+            {
+                "key": "nv::CameraComponent",
+                "value": [
+                    {
+                        "Name": "mCamera",
+                        "Type": "Camera",
+                        "FieldTypeEnum": 0
+                    }
+                ]
+            },
+            {
+                "key": "nv::Position",
+                "value": [
+                    {
+                        "Name": "mPosition",
+                        "Type": "float3",
+                        "FieldTypeEnum": 4
+                    }
+                ]
+            },
+            {
+                "key": "nv::Scale",
+                "value": [
+                    {
+                        "Name": "mScale",
+                        "Type": "float3",
+                        "FieldTypeEnum": 4
+                    }
+                ]
+            },
+            {
+                "key": "nv::Rotation",
+                "value": [
+                    {
+                        "Name": "mRotation",
+                        "Type": "float4",
+                        "FieldTypeEnum": 5
+                    }
+                ]
+            },
+            {
+                "key": "nv::graphics::components::Renderable",
+                "value": [
+                    {
+                        "Name": "mMesh",
+                        "Type": "Handle<Mesh >",
+                        "FieldTypeEnum": 0
+                    },
+                    {
+                        "Name": "mMaterial",
+                        "Type": "Handle<Material >",
+                        "FieldTypeEnum": 0
+                    }
+                ]
+            },
+            {
+                "key": "nv::graphics::components::SkyboxComponent",
+                "value": [
+                    {
+                        "Name": "mSkybox",
+                        "Type": "Handle<Texture >",
+                        "FieldTypeEnum": 0
+                    }
+                ]
+            },
+            {
+                "key": "nv::graphics::Mesh",
+                "value": []
+            }
+        ]
+    }
+}
