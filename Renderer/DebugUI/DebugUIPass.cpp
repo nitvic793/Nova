@@ -151,8 +151,13 @@ namespace nv::graphics
 
     void Visit(float3* pVal, const MetaField& field, const char* pCompName)
     {
+        const char* pName = field.mName.c_str();
+
         ImGui::PushID(pCompName);
-        ImGui::DragFloat3(field.mName.c_str(), &pVal->x, 0.05f);
+        if (field.mName.find("Color") != std::string::npos)
+            ImGui::ColorEdit3(pName, &pVal->x);
+        else
+            ImGui::DragFloat3(pName, &pVal->x, 0.05f);
         ImGui::PopID();
     }
 
@@ -214,7 +219,7 @@ namespace nv::graphics
         std::unordered_map<StringID, IComponent*> components;
         e->GetComponents(components);
 
-        const auto& drawComponent = [&](StringID compId, IComponent* component)
+        const auto drawComponent = [&](StringID compId, IComponent* component)
         {
             std::string name;
             const auto& fields = gComponentManager.GetMetadata(compId, name);

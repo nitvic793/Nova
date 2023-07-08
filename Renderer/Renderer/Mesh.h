@@ -36,6 +36,11 @@ namespace nv::graphics
         constexpr size_t GetIndexCount() const { return mDesc.mIndices.size(); }
         inline bvh::BVHData& GetBVH() { return mBVH; }
 
+        template<class Archive>
+        void serialize(Archive& archive)
+        {
+        }
+
     protected:
         MeshDesc mDesc;
         bvh::BVHData mBVH;

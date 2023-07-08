@@ -8,6 +8,7 @@
 #include <Lib/Pool.h>
 #include <Lib/Map.h>
 #include <Lib/ScopedPtr.h>
+#include <Lib/Serializer.h>
 
 #include <Engine/Component.h>
 #include <Engine/Transform.h>
@@ -103,6 +104,8 @@ namespace nv::ecs
         virtual uint64_t            Create(Handle<Entity> entity) = 0;
         virtual void                Remove(uint64_t handle) = 0;
         virtual void                RemoveEntity(Handle<Entity> entity) = 0;
+        virtual void                SerializeForFrame(std::ostream& ostream) = 0;
+        virtual void                DeserializeForFrame(std::istream& istream) = 0;
         virtual void                Serialize(std::ostream& ostream) = 0;
         virtual void                Deserialize(std::istream& istream) = 0;
 
@@ -124,7 +127,7 @@ namespace nv::ecs
     template<typename TComp>
     class ComponentPool : public IComponentPool
     {
-        using EntityComponentMap = HashMap<uint64_t, Handle<TComp>>;
+        using EntityComponentMap = UnorderedMap<uint64_t, Handle<TComp>>;
 
     public:
         ComponentPool(Span<Field> fields):
@@ -192,7 +195,7 @@ namespace nv::ecs
             Remove(handle.mHandle);
         }
 
-        virtual void Serialize(std::ostream& ostream) override
+        virtual void SerializeForFrame(std::ostream& ostream) override
         {
             using namespace cereal;
 
@@ -204,7 +207,7 @@ namespace nv::ecs
             archive(binary_data(span.begin(), static_cast<std::size_t>(span.Size()) * sizeof(TComp)));
         }
 
-        virtual void Deserialize(std::istream& istream) override
+        virtual void DeserializeForFrame(std::istream& istream) override
         {
             using namespace cereal;
             cereal::BinaryInputArchive archive(istream);
@@ -221,6 +224,23 @@ namespace nv::ecs
             mComponents.CopyToPool((TComp*)buffer, size);
         }
 
+        virtual void Serialize(std::ostream& ostream) override
+        {
+            using namespace cereal;
+
+            Serializer::Serialize(mComponents, ostream);
+            BinaryOutputArchive archive(ostream);
+            archive(mEntityMap);
+        }
+
+        virtual void Deserialize(std::istream& istream) override
+        {
+            using namespace cereal;
+            Serializer::Deserialize(mComponents, istream);
+            cereal::BinaryInputArchive archive(istream);
+            archive(mEntityMap);
+        }
+
     private:
         ContiguousPool<TComp>   mComponents;
         EntityComponentMap      mEntityMap;
@@ -230,7 +250,8 @@ namespace nv::ecs
 
     class ComponentManager
     {
-        using ComponentPoolMap = HashMap<StringID, ScopedPtr<IComponentPool, true>>;
+        using ComponentPoolMap = UnorderedMap<StringID, ScopedPtr<IComponentPool, true>>;
+        using EntityComponentMap = UnorderedMap<StringID, uint64_t>;
 
     public:
         template<typename TComp>
@@ -288,14 +309,39 @@ namespace nv::ecs
 
         void LoadMetadata();
 
+        void Serialize(std::ostream& o);
+        void Deserialize(std::istream& i);
+
+        EntityComponentMap& GetEntityComponentMap(Handle<Entity> entity)
+        {
+            auto it = mEntityComponents.find(entity.mHandle);
+            if (it == mEntityComponents.end())
+                mEntityComponents[entity.mHandle] = EntityComponentMap();
+
+            return mEntityComponents[entity.mHandle];
+        }
+
+        void RemoveEntityComponentMap(Handle<Entity> entity)
+        {
+            auto it = mEntityComponents.find(entity.mHandle);
+            if (it != mEntityComponents.end())
+            {
+                mEntityComponents[entity.mHandle].clear();
+                mEntityComponents.erase(it);
+            }
+        }
+
         ~ComponentManager();
 
     private:
         ComponentPoolMap mComponentPools;
+        UnorderedMap<uint64_t, EntityComponentMap> mEntityComponents;
+
         Metadata mMetadata;
     };
 
     extern ComponentManager gComponentManager;
+    extern std::unordered_map<std::string, StringID> gComponentNames;
 
     struct Entity
     {
@@ -305,15 +351,19 @@ namespace nv::ecs
         {
             auto compName = GetComponentName<TComp>();
             constexpr StringID compId = GetComponentID<TComp>();
-            mComponentNames[std::string(compName)] = compId;
+            gComponentNames[std::string(compName)] = compId;
             if (!gComponentManager.IsPoolAvailable(compId))
                 gComponentManager.CreatePool<TComp>({ nullptr, 0 });
             
+            auto& compMap = gComponentManager.GetEntityComponentMap(mHandle);
+
             ComponentPool<TComp>* pool = gComponentManager.GetPool<TComp>();
             auto handle = pool->Create(mHandle);
-            mComponents[compId] = handle;
+            compMap[compId] = handle;
             return pool->GetComponent(handle)->As<TComp>();
         }
+
+        IComponent* Add(StringID compId);
 
         void AttachTransform(const Transform& transform = Transform());
         TransformRef GetTransform() const;
@@ -322,7 +372,8 @@ namespace nv::ecs
         TComp* Get() const
         {
             constexpr StringID compId = GetComponentID<TComp>();
-            auto comp = mComponents.at(compId);
+            auto& compMap = gComponentManager.GetEntityComponentMap(mHandle);
+            auto comp = compMap.at(compId);
             ComponentPool<TComp>* pool = gComponentManager.GetPool<TComp>();
             return pool->GetComponent(comp)->As<TComp>();
         }
@@ -333,8 +384,9 @@ namespace nv::ecs
         bool Has() const
         {
             constexpr StringID compId = GetComponentID<TComp>();
-            auto comp = mComponents.find(compId);
-            return comp != mComponents.end();
+            auto& compMap = gComponentManager.GetEntityComponentMap(mHandle);
+            auto comp = compMap.find(compId);
+            return comp != compMap.end();
         }
 
         constexpr void SetHandle(Handle<Entity> handle) { mHandle = handle; }
@@ -344,9 +396,6 @@ namespace nv::ecs
     public:
         Handle<Entity> mParent;
         Handle<Entity> mHandle;
-
-        HashMap<StringID, uint64_t> mComponents;
-        std::unordered_map<std::string, StringID> mComponentNames;
     };
 
     class EntityManager
@@ -372,10 +421,13 @@ namespace nv::ecs
         Pool<Entity>            mEntities;
         Handle<Entity>          mRoot;
 
-        std::unordered_map<std::string, Handle<Entity>> mEntityNames;
+        UnorderedMap<std::string, Handle<Entity>> mEntityNames;
     };
 
     extern EntityManager    gEntityManager;
+
+    void SerializeScene(std::ostream& o);
+    void DeserializeScene(std::istream& i);
 }
 
 #endif // !NV_ENGINE_ENTITYCOMPONENT

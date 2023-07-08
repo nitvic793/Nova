@@ -98,6 +98,9 @@ def main():
     with open("metadata.json", "w") as outfile:
         outfile.write(meta_json)
 
+    import shutil
+    shutil.copy2("metadata.json", ".\\x64\\Debug\\")
+    shutil.copy2("metadata.json", ".\\x64\\Release\\")
 
 if __name__ == '__main__':
     main()

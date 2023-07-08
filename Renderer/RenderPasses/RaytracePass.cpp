@@ -12,6 +12,7 @@
 #include <Renderer/ConstantBufferPool.h>
 #include <Debug/Error.h>
 #include <Engine/Log.h>
+#include <Types/Serializers.h>
 
 #if NV_RENDERER_DX12
 #include <DX12/MeshDX12.h>

@@ -21,6 +21,12 @@ namespace nv
     struct PlayerComponent : public ecs::IComponent
     {
         float mSpeed = 10.f;
+
+        template<class Archive>
+        void serialize(Archive& archive)
+        {
+            archive(mSpeed);
+        }
     };
 
     Handle<Entity> gpPlayerEntity = Null<Entity>();

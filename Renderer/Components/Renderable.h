@@ -4,6 +4,7 @@
 #include <Renderer/Mesh.h>
 #include <Engine/Component.h>
 #include <Components/Material.h>
+#include <Types/Serializers.h>
 
 namespace nv::graphics::components
 {
@@ -11,10 +12,23 @@ namespace nv::graphics::components
     {
         Handle<Mesh>        mMesh       = Null<Mesh>();
         Handle<Material>    mMaterial   = Null<Material>();
+
+        template<class Archive>
+        void serialize(Archive& archive)
+        {
+            archive(mMesh);
+            archive(mMaterial);
+        }
     };
 
     struct SkyboxComponent : public ecs::IComponent
     {
         Handle<Texture> mSkybox = Null<Texture>();
+
+        template<class Archive>
+        void serialize(Archive& archive)
+        {
+            archive(mSkybox);
+        }
     };
 }

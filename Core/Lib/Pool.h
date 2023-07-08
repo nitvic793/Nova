@@ -167,13 +167,19 @@ namespace nv
     private:
         void GrowIfNeeded()
         {
-            if (mSize + 1 > mCapacity)
+            GrowIfNeeded(mSize + 1);
+        }
+
+        void GrowIfNeeded(size_t requestSize)
+        {
+            if (requestSize > mCapacity)
             {
                 auto oldCapacity = mCapacity;
                 mCapacity *= 2;
+                mCapacity = mCapacity >= requestSize ? mCapacity : (uint32_t)requestSize;
                 void* pBuffer = SystemAllocator::gPtr->Allocate(sizeof(TDerived) * mCapacity);// , mBuffer);
                 memcpy(pBuffer, mBuffer, oldCapacity * sizeof(TDerived));
-                if(mBuffer)
+                if (mBuffer)
                     SystemAllocator::gPtr->Free(mBuffer);
                 mBuffer = (TDerived*)pBuffer;
 
@@ -192,6 +198,8 @@ namespace nv
         uint32_t                mCapacity;
         nv::Vector<uint32_t>    mFreeIndices;
         nv::Vector<uint32_t>    mGenerations;
+
+        friend class Serializer;
     };
 
     // Gauranteed to have elements contiguously in memory. Useful for iterating.
@@ -317,6 +325,8 @@ namespace nv
         nv::Vector<TDerived>    mPool;
         nv::Vector<uint32_t>    mGenerations;
 
-        HashMap<uint64_t, uint32_t> mHandleIndexMap;
+        UnorderedMap<uint64_t, uint32_t> mHandleIndexMap;
+
+        friend class Serializer;
     };
 }

@@ -1,6 +1,9 @@
 #include "pch.h"
+
+#include <Types/Serializers.h>
 #include "EntityComponent.h"
 #include <Engine/Transform.h>
+#include <Engine/Log.h>
 
 #include <fstream>
 #include <cereal/archives/binary.hpp>
@@ -33,6 +36,7 @@ namespace nv::ecs
 {
     ComponentManager gComponentManager;
     EntityManager    gEntityManager;
+    std::unordered_map<std::string, StringID> gComponentNames;
 
     void EntityManager::Init()
     {
@@ -71,11 +75,27 @@ namespace nv::ecs
     void EntityManager::Remove(Handle<Entity> entity)
     {
         mEntities.Remove(entity);
+        gComponentManager.RemoveEntityComponentMap(entity);
     }
 
     void EntityManager::GetEntities(Vector<Handle<Entity>>& outEntities) const
     {
         mEntities.GetAllHandles(outEntities);
+    }
+
+    IComponent* Entity::Add(StringID compId)
+    {
+        if (!gComponentManager.IsPoolAvailable(compId))
+        {
+            log::Error("[Component] {} not found", compId);
+            return nullptr;
+        }
+
+        IComponentPool* pool = gComponentManager.GetPool(compId);
+        auto handle = pool->Create(mHandle);
+        auto& compMap = gComponentManager.GetEntityComponentMap(mHandle);
+        compMap[compId] = handle;
+        return pool->GetComponent(handle);
     }
 
     void Entity::AttachTransform(const Transform& transform)
@@ -104,14 +124,16 @@ namespace nv::ecs
 
     IComponent* Entity::Get(StringID compId) const
     {
-        auto comp = mComponents.at(compId);
+        auto compMap = gComponentManager.GetEntityComponentMap(mHandle);
+        auto comp = compMap.at(compId);
         IComponentPool* pool = gComponentManager.GetPool(compId);
         return pool->GetComponent(comp);
     }
 
     void Entity::GetComponents(std::unordered_map<StringID, IComponent*>& outComponents) const
     {
-        for (auto comp : mComponents)
+        auto& compMap = gComponentManager.GetEntityComponentMap(mHandle);
+        for (auto comp : compMap)
         {
             IComponent* component = Get(comp.first);
             outComponents[comp.first] = component;
@@ -148,5 +170,21 @@ namespace nv::ecs
             auto id = ID(name);
             mMetadata.mNameMap[id] = name;
         }
+    }
+
+    void ComponentManager::Serialize(std::ostream& o)
+    {
+    }
+
+    void ComponentManager::Deserialize(std::istream& i)
+    {
+    }
+
+    void SerializeScene(std::ostream& o)
+    {
+    }
+
+    void DeserializeScene(std::istream& i)
+    {
     }
 }

@@ -1,0 +1,215 @@
+{
+    "Components": {
+        "Components": [
+            {
+                "key": "nv::CameraComponent",
+                "value": [
+                    {
+                        "Name": "mCamera",
+                        "Type": "Camera",
+                        "FieldTypeEnum": 0
+                    }
+                ]
+            },
+            {
+                "key": "nv::Position",
+                "value": [
+                    {
+                        "Name": "mPosition",
+                        "Type": "float3",
+                        "FieldTypeEnum": 4
+                    }
+                ]
+            },
+            {
+                "key": "nv::Scale",
+                "value": [
+                    {
+                        "Name": "mScale",
+                        "Type": "float3",
+                        "FieldTypeEnum": 4
+                    }
+                ]
+            },
+            {
+                "key": "nv::Rotation",
+                "value": [
+                    {
+                        "Name": "mRotation",
+                        "Type": "float4",
+                        "FieldTypeEnum": 5
+                    }
+                ]
+            },
+            {
+                "key": "nv::graphics::DirectionalLight",
+                "value": [
+                    {
+                        "Name": "Direction",
+                        "Type": "float3",
+                        "FieldTypeEnum": 4
+                    },
+                    {
+                        "Name": "Intensity",
+                        "Type": "float",
+                        "FieldTypeEnum": 1
+                    },
+                    {
+                        "Name": "Color",
+                        "Type": "float3",
+                        "FieldTypeEnum": 4
+                    },
+                    {
+                        "Name": "_Padding",
+                        "Type": "float",
+                        "FieldTypeEnum": 1
+                    }
+                ]
+            },
+            {
+                "key": "nv::graphics::PointLight",
+                "value": [
+                    {
+                        "Name": "Position",
+                        "Type": "float3",
+                        "FieldTypeEnum": 4
+                    },
+                    {
+                        "Name": "Intensity",
+                        "Type": "float",
+                        "FieldTypeEnum": 1
+                    },
+                    {
+                        "Name": "Color",
+                        "Type": "float3",
+                        "FieldTypeEnum": 4
+                    },
+                    {
+                        "Name": "Range",
+                        "Type": "float",
+                        "FieldTypeEnum": 1
+                    }
+                ]
+            },
+            {
+                "key": "nv::graphics::SpotLight",
+                "value": [
+                    {
+                        "Name": "Color",
+                        "Type": "float3",
+                        "FieldTypeEnum": 4
+                    },
+                    {
+                        "Name": "Intensity",
+                        "Type": "float",
+                        "FieldTypeEnum": 1
+                    },
+                    {
+                        "Name": "Position",
+                        "Type": "float3",
+                        "FieldTypeEnum": 4
+                    },
+                    {
+                        "Name": "Range",
+                        "Type": "float",
+                        "FieldTypeEnum": 1
+                    },
+                    {
+                        "Name": "Direction",
+                        "Type": "float3",
+                        "FieldTypeEnum": 4
+                    },
+                    {
+                        "Name": "SpotFalloff",
+                        "Type": "float",
+                        "FieldTypeEnum": 1
+                    }
+                ]
+            },
+            {
+                "key": "nv::graphics::components::Renderable",
+                "value": [
+                    {
+                        "Name": "mMesh",
+                        "Type": "Handle<Mesh >",
+                        "FieldTypeEnum": 8
+                    },
+                    {
+                        "Name": "mMaterial",
+                        "Type": "Handle<Material >",
+                        "FieldTypeEnum": 9
+                    }
+                ]
+            },
+            {
+                "key": "nv::graphics::components::SkyboxComponent",
+                "value": [
+                    {
+                        "Name": "mSkybox",
+                        "Type": "Handle<Texture >",
+                        "FieldTypeEnum": 7
+                    }
+                ]
+            },
+            {
+                "key": "nv::graphics::Mesh",
+                "value": []
+            },
+            {
+                "key": "nv::PlayerComponent",
+                "value": [
+                    {
+                        "Name": "mSpeed",
+                        "Type": "float",
+                        "FieldTypeEnum": 1
+                    }
+                ]
+            },
+            {
+                "key": "nv::tests::TestComponent",
+                "value": [
+                    {
+                        "Name": "mSpeed",
+                        "Type": "float",
+                        "FieldTypeEnum": 1
+                    },
+                    {
+                        "Name": "mMuliplier",
+                        "Type": "float",
+                        "FieldTypeEnum": 1
+                    }
+                ]
+            },
+            {
+                "key": "nv::tests::AComponent",
+                "value": [
+                    {
+                        "Name": "mSpeed",
+                        "Type": "float",
+                        "FieldTypeEnum": 1
+                    },
+                    {
+                        "Name": "mMuliplier",
+                        "Type": "float",
+                        "FieldTypeEnum": 1
+                    }
+                ]
+            },
+            {
+                "key": "nv::tests::BComponent",
+                "value": [
+                    {
+                        "Name": "mString",
+                        "Type": "std::string",
+                        "FieldTypeEnum": 0
+                    },
+                    {
+                        "Name": "mCount",
+                        "Type": "uint64_t",
+                        "FieldTypeEnum": 0
+                    }
+                ]
+            }
+        ]
+    }
+}

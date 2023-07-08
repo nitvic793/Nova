@@ -57,6 +57,14 @@ namespace nv::graphics
         float   Intensity;
         float3  Color;
         float   _Padding;
+
+        #ifdef __cplusplus
+        template<class Archive>
+        void serialize(Archive& archive)
+        {
+            archive(Direction, Intensity, Color);
+        }
+        #endif
     };
 
     struct PointLight NV_COMPONENT
@@ -65,6 +73,14 @@ namespace nv::graphics
         float   Intensity;
         float3  Color;
         float   Range;
+
+        #ifdef __cplusplus
+        template<class Archive>
+        void serialize(Archive& archive)
+        {
+            archive(Position, Intensity, Color, Range);
+        }
+        #endif
     };
 
     struct SpotLight NV_COMPONENT
@@ -75,6 +91,14 @@ namespace nv::graphics
         float Range;
         float3 Direction;
         float SpotFalloff;
+
+        #ifdef __cplusplus
+        template<class Archive>
+        void serialize(Archive& archive)
+        {
+            archive(Color, Intensity, Range, Direction, SpotFalloff);
+        }
+        #endif
     };
 
     struct FrameData

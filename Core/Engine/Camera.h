@@ -19,6 +19,13 @@ namespace nv
         float       mFarZ = 1000.f;
         float       mFovAngle = 60.f; 
         CameraType  mType = CAMERA_PERSPECTIVE;
+
+
+        template<class Archive>
+        void serialize(Archive& archive)
+        {
+            archive(mWidth, mHeight, mNearZ, mFarZ, mFovAngle, mType);
+        }
     };
 
     class Camera
@@ -57,10 +64,22 @@ namespace nv
         float4x4    mView;
 
         CameraDesc  mDesc;
+
+        friend struct CameraComponent;
     };
 
     struct CameraComponent : public ecs::IComponent
     {
         Camera mCamera;
+
+        template<class Archive>
+        void serialize(Archive& archive)
+        {
+            archive(mCamera.mPosition);
+            archive(mCamera.mDirection);
+            archive(mCamera.mRotation);
+            archive(mCamera.mProjection);
+            archive(mCamera.mView);
+        }
     };
 }

@@ -15,6 +15,7 @@
 #include <DebugUI/DebugUIPass.h>
 #include "EntityCommon.h"
 #include <sstream>
+#include <fstream>
 
 namespace nv
 {
@@ -94,6 +95,18 @@ namespace nv
 
         FrameRecordEvent frameEvent;
 
+        if (IsKeyPressed(Keys::F5))
+        {
+            std::ofstream file("save.bin");
+            SerializeScene(file);
+        }
+
+        if (IsKeyPressed(Keys::F6))
+        {
+            std::ifstream file("save.bin");
+            DeserializeScene(file);
+        }
+
         if (IsKeyDown(Keys::F))
         {
             mFrameRecordState = FRAME_RECORD_REWINDING;
@@ -122,7 +135,7 @@ namespace nv
         const auto& componentPools = gComponentManager.GetAllPools();
         for (auto& pool : componentPools)
         {
-            pool.second->Serialize(frame.mStream);
+            pool.second->SerializeForFrame(frame.mStream);
         }
     }
 
@@ -135,7 +148,7 @@ namespace nv
         const auto& componentPools = gComponentManager.GetAllPools();
         for (auto& pool : componentPools)
         {
-            pool.second->Deserialize(frame.mStream);
+            pool.second->DeserializeForFrame(frame.mStream);
         }
 
         gFrameStack.pop_back();
