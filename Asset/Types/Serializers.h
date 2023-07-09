@@ -144,11 +144,34 @@ namespace cereal
     }
 
     template<class Archive>
+    void serialize(Archive& archive, BoneInfo& v)
+    {
+        archive(v.FinalTransform);
+        archive(v.OffsetMatrix);
+    }
+
+    template<class Archive>
+    void serialize(Archive& archive, VertexBoneData& v)
+    {
+        using namespace cereal;
+        archive(binary_data(&v.IDs[0], static_cast<std::size_t>(MAX_BONES_PER_VERTEX) * sizeof(uint32_t)));
+        archive(binary_data(&v.Weights[0], static_cast<std::size_t>(MAX_BONES_PER_VERTEX) * sizeof(float)));
+    }
+
+    template<class Archive>
     void serialize(Archive& archive, MeshDesc & m)
     {
         archive(m.mMeshEntries);
         archive(m.mVertices);
         archive(m.mIndices);
+    }
+
+    template<class Archive>
+    void serialize(Archive& archive, MeshBoneDesc& m)
+    {
+        archive(m.mBones);
+        archive(m.mBoneInfoList);
+        archive(m.mBoneMapping);
     }
 
     template<class Archive>

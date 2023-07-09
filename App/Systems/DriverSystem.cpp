@@ -107,28 +107,33 @@ namespace nv
             DeserializeScene(file);
         }
 
-        if (IsKeyDown(Keys::F))
-        {
-            mFrameRecordState = FRAME_RECORD_REWINDING;
-        }
-        else
-            mFrameRecordState = FRAME_RECORD_IN_PROGRESS;
+        static bool bEnableFrameRecord = false;
 
-        switch (mFrameRecordState)
+        if (bEnableFrameRecord)
         {
-        case FRAME_RECORD_IN_PROGRESS:
-            PushFrame();
-            break;
-        case FRAME_RECORD_REWINDING:
-            if (!PopFrame())
+            if (IsKeyDown(Keys::F))
+            {
+                mFrameRecordState = FRAME_RECORD_REWINDING;
+            }
+            else
                 mFrameRecordState = FRAME_RECORD_IN_PROGRESS;
-            break;
-        default:
-            break;
-        }
 
-        frameEvent.mState = mFrameRecordState;
-        gEventBus.Publish(&frameEvent);
+            switch (mFrameRecordState)
+            {
+            case FRAME_RECORD_IN_PROGRESS:
+                PushFrame();
+                break;
+            case FRAME_RECORD_REWINDING:
+                if (!PopFrame())
+                    mFrameRecordState = FRAME_RECORD_IN_PROGRESS;
+                break;
+            default:
+                break;
+            }
+
+            frameEvent.mState = mFrameRecordState;
+            gEventBus.Publish(&frameEvent);
+        }
     }
 
     void PushFrame()

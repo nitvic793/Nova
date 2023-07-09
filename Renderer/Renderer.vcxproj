@@ -146,6 +146,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Animation\Animation.h" />
     <ClInclude Include="BVH\BVH.h" />
     <ClInclude Include="Components\Material.h" />
     <ClInclude Include="Components\Renderable.h" />
@@ -210,6 +211,7 @@
     <ClInclude Include="RenderPasses\Skybox.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Animation\Animation.cpp" />
     <ClCompile Include="BVH\BVH.cpp" />
     <ClCompile Include="DebugUI\DebugUIPass.cpp" />
     <ClCompile Include="DebugUI\Imgui\imgui.cpp" />

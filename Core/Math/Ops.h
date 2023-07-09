@@ -124,7 +124,6 @@ inline void QuaternionToAxisAngle(Vector& axis, float& angle, Vector rotation)
 {
     DirectX::XMQuaternionToAxisAngle(&axis, &angle, rotation);
 }
-
 }
 
 #endif
