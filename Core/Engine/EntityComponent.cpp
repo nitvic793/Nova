@@ -10,6 +10,7 @@
 #include <cereal/archives/json.hpp>
 #include <cereal/types/vector.hpp>
 #include <cereal/types/unordered_map.hpp>
+#include <cereal/types/string.hpp>
 
 namespace cereal
 {
@@ -34,6 +35,8 @@ namespace cereal
 
 namespace nv::ecs
 {
+    using namespace cereal;
+
     ComponentManager gComponentManager;
     EntityManager    gEntityManager;
     std::unordered_map<std::string, StringID> gComponentNames;
@@ -78,9 +81,31 @@ namespace nv::ecs
         gComponentManager.RemoveEntityComponentMap(entity);
     }
 
-    void EntityManager::GetEntities(Vector<Handle<Entity>>& outEntities) const
+    void EntityManager::GetEntities(nv::Vector<Handle<Entity>>& outEntities) const
     {
         mEntities.GetAllHandles(outEntities);
+    }
+
+    void EntityManager::Serialize(std::ostream& o)
+    {
+        {
+            BinaryOutputArchive archive(o);
+            archive(mRoot);
+            archive(mEntityNames);
+        }
+        
+        Serializer::Serialize(mEntities, o);
+    }
+
+    void EntityManager::Deserialize(std::istream& i)
+    {
+        {
+            BinaryInputArchive archive(i);
+            archive(mRoot);
+            archive(mEntityNames);
+        }
+
+        Serializer::Deserialize(mEntities, i);
     }
 
     IComponent* Entity::Add(StringID compId)
@@ -174,17 +199,60 @@ namespace nv::ecs
 
     void ComponentManager::Serialize(std::ostream& o)
     {
+        {
+            BinaryOutputArchive archive(o);
+            archive(mComponentPools.size());
+        }
+
+        for (auto& pool : mComponentPools)
+        {
+            {
+                BinaryOutputArchive archive(o);
+                archive(pool.first);
+            }
+            pool.second->Serialize(o);
+        }
+
+        {
+            BinaryOutputArchive archive(o);
+            archive(mEntityComponents);
+        }
     }
 
     void ComponentManager::Deserialize(std::istream& i)
     {
+        size_t size;
+        {
+            BinaryInputArchive archive(i);
+            archive(size);
+        }
+
+        for (size_t idx = 0; idx < size; ++idx)
+        {
+            StringID compId;
+            {
+                BinaryInputArchive archive(i);
+                archive(compId);
+            }
+            
+            mComponentPools[compId]->Deserialize(i);
+        }
+
+        {
+            BinaryInputArchive archive(i);
+            archive(mEntityComponents);
+        }
     }
 
     void SerializeScene(std::ostream& o)
     {
+        gEntityManager.Serialize(o);
+        gComponentManager.Serialize(o);
     }
 
     void DeserializeScene(std::istream& i)
     {
+        gEntityManager.Deserialize(i);
+        gComponentManager.Deserialize(i);
     }
 }

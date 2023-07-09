@@ -36,6 +36,18 @@ namespace cereal
     template<class Archive, typename T>
     typename std::enable_if<traits::is_input_serializable<BinaryData<T>, Archive>::value
         && std::is_arithmetic<T>::value && !std::is_same<T, bool>::value, void>::type
+        load(Archive& archive, nv::Vector<T>&& v)
+    {
+        v.Clear();
+        size_type size;
+        archive(make_size_tag(size));
+        v.Grow(size, true);
+        archive(binary_data(v.Data(), static_cast<std::size_t>(v.Size()) * sizeof(T)));
+    }
+
+    template<class Archive, typename T>
+    typename std::enable_if<traits::is_input_serializable<BinaryData<T>, Archive>::value
+        && std::is_arithmetic<T>::value && !std::is_same<T, bool>::value, void>::type
     save(Archive& archive, const nv::Vector<T>& v)
     {
         archive(make_size_tag(static_cast<size_type>(v.Size())));

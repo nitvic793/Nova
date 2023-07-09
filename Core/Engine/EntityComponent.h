@@ -149,7 +149,7 @@ namespace nv::ecs
 
         virtual IComponent* GetComponent(uint32_t index) const override
         {
-            return static_cast<IComponent*>(&mComponents[index]);
+            return (IComponent*)(&mComponents[index]);
         }
 
         virtual IComponent* GetComponent(uint64_t handle) const override
@@ -393,6 +393,9 @@ namespace nv::ecs
 
         void GetComponents(std::unordered_map<StringID, IComponent*>& outComponents) const;
 
+        template<class Archive>
+        void serialize(Archive& archive) { archive(mParent, mHandle); }
+
     public:
         Handle<Entity> mParent;
         Handle<Entity> mHandle;
@@ -411,11 +414,14 @@ namespace nv::ecs
         
         Handle<Entity>  Create(Handle<Entity> parent = Null<Entity>(), const char* pDebugName = nullptr);
         void            Remove(Handle<Entity> entity);
-        void            GetEntities(Vector<Handle<Entity>>& outEntities) const;
+        void            GetEntities(nv::Vector<Handle<Entity>>& outEntities) const;
         constexpr Span<Entity> GetEntitySpan() const { return mEntities.Span(); }
 
         constexpr Entity* GetEntity(Handle<Entity> handle) const { return mEntities.Get(handle); }
         constexpr std::unordered_map<std::string, Handle<Entity>>& GetEntityNameMap() { return mEntityNames; }
+
+        void Serialize(std::ostream& o);
+        void Deserialize(std::istream& i);
 
     private:
         Pool<Entity>            mEntities;

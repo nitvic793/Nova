@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "Vector.h"
+#include <Lib/Vector.h>
 #include <Lib/Util.h>
 #include <Lib/Pool.h>
 
@@ -20,7 +20,7 @@ namespace nv
         static void Serialize(Pool<T, TDerived>& pool, std::ostream& o)
         {
             using namespace cereal;
-            cereal::JSONOutputArchive archive(o);
+            cereal::BinaryOutputArchive archive(o);
             archive(pool.mCapacity);
             archive(make_size_tag(static_cast<size_type>(pool.mSize)));
             archive(binary_data(pool.mBuffer, static_cast<std::size_t>(pool.mSize) * sizeof(TDerived)));
@@ -32,7 +32,7 @@ namespace nv
         static void Serialize(ContiguousPool<T, TDerived>& pool, std::ostream& o)
         {
             using namespace cereal;
-            cereal::JSONOutputArchive archive(o);
+            cereal::BinaryOutputArchive archive(o);
             archive(pool.mCapacity);
             archive(pool.mPool);
             archive(pool.mHandleIndexMap);
@@ -43,7 +43,7 @@ namespace nv
         static void Deserialize(Pool<T, TDerived>& pool, std::istream& i)
         {
             using namespace cereal;
-            cereal::JSONInputArchive archive(i);
+            cereal::BinaryInputArchive archive(i);
             archive(pool.mCapacity);
             pool.GrowIfNeeded(pool.mCapacity);
             archive(make_size_tag(static_cast<size_type>(pool.mSize)));
@@ -56,7 +56,7 @@ namespace nv
         static void Deserialize(ContiguousPool<T, TDerived>& pool, std::istream& i)
         {
             using namespace cereal;
-            cereal::JSONInputArchive archive(i);
+            cereal::BinaryInputArchive archive(i);
             archive(pool.mCapacity);
             archive(pool.mPool);
             archive(pool.mHandleIndexMap);

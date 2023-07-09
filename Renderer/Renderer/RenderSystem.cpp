@@ -240,6 +240,9 @@ namespace nv::graphics
     void RenderSystem::UploadDrawData()
     {
         auto camHandle = GetActiveCamera();
+        if (camHandle.IsNull())
+            return;
+
         auto cam = ecs::gEntityManager.GetEntity(camHandle);
         auto camComponent = cam->Get<CameraComponent>();
 

@@ -123,6 +123,8 @@ namespace nv
             if (!PopFrame())
                 mFrameRecordState = FRAME_RECORD_IN_PROGRESS;
             break;
+        default:
+            break;
         }
 
         frameEvent.mState = mFrameRecordState;
