@@ -85,7 +85,8 @@ namespace nv::graphics
         {
             auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_MESH, meshId });
             auto m = asset->DeserializeTo<asset::MeshAsset>();
-            return gResourceManager->CreateMesh(m.GetData(), meshId);
+            auto handle = gResourceManager->CreateMesh(m.GetData(), meshId);
+            m.Register(handle);
         };
 
         nv::Vector<PBRMaterial> materials;
@@ -109,6 +110,7 @@ namespace nv::graphics
         loadMesh(ID("Mesh/cube.obj"));
         loadMesh(ID("Mesh/torus.obj"));
         loadMesh(ID("Mesh/cone.obj"));
+        loadMesh(ID("Mesh/male.fbx"));
         loadMaterials();
         gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/SunnyCubeMap.dds") });
         gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/Sky.hdr") });

@@ -2,9 +2,11 @@
 
 #include <Animation/Animation.h>
 
-namespace nv::animation
+namespace nv::graphics::animation
 {
 	using namespace DirectX;
+
+	AnimationManager gAnimManager;
 
 	uint32_t FindPosition(float AnimationTime, const AnimationChannel* channel)
 	{
@@ -118,5 +120,108 @@ namespace nv::animation
 		Out = XMQuaternionNormalize(Out);
 		XMStoreFloat4(&outFloat4, Out);
 		return outFloat4;
+	}
+
+	void AnimationManager::Register(Handle<Mesh> meshHandle, const MeshAnimNodeData& data)
+	{
+		mMeshAnimNodeMap[meshHandle.mHandle] = ScopedPtr<MeshAnimNodeData, true>( new MeshAnimNodeData(data));
+	}
+
+	void AnimationManager::Register(uint64_t handle, Mesh* pMesh)
+	{
+		const auto& boneData = pMesh->GetBoneData();
+		const auto size = boneData.mBoneInfoList.size();
+
+		mAnimInstanceMap[handle] = MakeScoped<AnimationInstanceData, true>();
+		auto& instance = *mAnimInstanceMap[handle];
+
+		memcpy(&instance.mBoneInfoList[0], boneData.mBoneInfoList.data(), size * sizeof(BoneInfo));
+		instance.mBoneInfoSize = (uint32_t)size;
+	}
+
+	void AnimationManager::Register(const AnimationStore& store)
+	{
+		mAnimStore.Animations.insert(mAnimStore.Animations.end(), store.Animations.begin(), store.Animations.end());
+		for (uint32_t i = 0; i < mAnimStore.Animations.size(); ++i)
+		{
+			const auto& anim = mAnimStore.Animations[i];
+			mAnimStore.AnimationIndexMap[anim.AnimationName] = i;
+		}
+	}
+
+	AnimationInstanceData& AnimationManager::GetInstance(uint64_t handle)
+	{
+		return *mAnimInstanceMap.at(handle);
+	}
+
+	MeshAnimNodeData& AnimationManager::GetMeshAnimNodeData(Handle<Mesh> meshHandle)
+	{
+		return *mMeshAnimNodeMap.at(meshHandle.mHandle);
+	}
+
+
+	Animation* AnimationManager::GetAnimation(const std::string& animName)
+	{
+		if (mAnimStore.AnimationIndexMap.find(animName) == mAnimStore.AnimationIndexMap.end())
+		{
+			return nullptr;
+		}
+
+		return &mAnimStore.Animations[mAnimStore.AnimationIndexMap[animName]];
+	}
+
+	const Animation& AnimationManager::GetAnimation(uint32_t index) const
+	{
+		return mAnimStore.Animations[index];
+	}
+
+	const std::string& AnimationManager::GetAnimationName(uint32_t index) const
+	{
+		return mAnimStore.Animations[index].AnimationName;
+	}
+
+	int32_t AnimationManager::GetChannelIndex(uint32_t animationIndex, const std::string& node) const
+	{
+		auto& map = mAnimStore.Animations[animationIndex].NodeChannelMap;
+		auto index = -1;
+		while (map.find(node) == map.end())
+		{
+			return index;
+		}
+
+		index = map.find(node)->second;
+		return index;
+	}
+
+	const AnimationChannel* AnimationManager::GetChannel(uint32_t animIndex, const std::string& node) const
+	{
+		auto channelIndex = GetChannelIndex(animIndex, node);
+		if (channelIndex == -1)
+		{
+			return nullptr;
+		}
+
+		return &mAnimStore.Animations[animIndex].Channels[channelIndex];
+	}
+
+	std::vector<std::string> AnimationManager::GetAnimationNames() const
+	{
+		std::vector<std::string> animNames;
+		for (auto anim : mAnimStore.AnimationIndexMap)
+		{
+			animNames.push_back(anim.first);
+		}
+
+		return animNames;
+	}
+
+	uint32_t AnimationManager::GetAnimationCount() const
+	{
+		return (uint32_t)mAnimStore.Animations.size();
+	}
+
+	bool AnimationManager::IsAnimationIndexValid(uint32_t animationIndex) const
+	{
+		return (animationIndex <= mAnimStore.Animations.size() - 1 && animationIndex >= 0);
 	}
 }

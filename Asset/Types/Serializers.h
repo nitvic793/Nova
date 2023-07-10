@@ -164,6 +164,7 @@ namespace cereal
         archive(m.mMeshEntries);
         archive(m.mVertices);
         archive(m.mIndices);
+        archive(m.mBoneDesc);
     }
 
     template<class Archive>

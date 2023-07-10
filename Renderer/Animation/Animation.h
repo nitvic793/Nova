@@ -4,19 +4,35 @@
 #include <unordered_map>
 #include <string>
 #include <Lib/Pool.h>
+#include <AssetBase.h>
+#include <Engine/Component.h>
+#include <Renderer/Mesh.h>
+#include <Interop/ShaderInteropTypes.h>
+#include <Lib/ScopedPtr.h>
 
-namespace nv::animation
+namespace nv::graphics::animation
 {
+	struct AnimationInstanceData
+	{
+		PerArmature			mArmatureConstantBuffer;
+		BoneInfo			mBoneInfoList[MAX_BONES];
+		uint32_t			mBoneInfoSize = 0;
+	};
+
 	struct VectorKey
 	{
 		double			Time;
 		math::float3	Value;
+
+		NV_SERIALIZE(Time, Value)
 	};
 
 	struct QuaternionKey
 	{
 		double			Time;
 		math::float4	Value;
+
+		NV_SERIALIZE(Time, Value)
 	};
 
 	struct AnimationChannel
@@ -25,6 +41,8 @@ namespace nv::animation
 		std::vector<VectorKey>		PositionKeys;
 		std::vector<QuaternionKey>	RotationKeys;
 		std::vector<VectorKey>		ScalingKeys;
+
+		NV_SERIALIZE(NodeName, PositionKeys, RotationKeys, ScalingKeys)
 	};
 
 	struct Animation
@@ -34,6 +52,8 @@ namespace nv::animation
 		double Duration;
 		std::vector<AnimationChannel> Channels;
 		std::unordered_map<std::string, uint32_t> NodeChannelMap;
+
+		NV_SERIALIZE(AnimationName, TicksPerSecond, Duration, Channels, NodeChannelMap)
 	};
 
 	struct MeshAnimNodeData
@@ -42,6 +62,8 @@ namespace nv::animation
 		math::float4x4 GlobalInverseTransform;
 		std::unordered_map<std::string, std::vector<std::string>> NodeHeirarchy;
 		std::unordered_map<std::string, math::float4x4> NodeTransformsMap;
+
+		NV_SERIALIZE(RootNode, GlobalInverseTransform, NodeHeirarchy, NodeTransformsMap)
 	};
 
 	struct AnimationStore
@@ -49,71 +71,7 @@ namespace nv::animation
 		std::vector<Animation> Animations;
 		std::unordered_map<std::string, uint32_t> AnimationIndexMap;
 
-		Animation* GetAnimation(const std::string& animName)
-		{
-			if (AnimationIndexMap.find(animName) == AnimationIndexMap.end())
-			{
-				return nullptr;
-			}
-
-			return &Animations[AnimationIndexMap[animName]];
-		}
-
-		const Animation& GetAnimation(uint32_t index) const
-		{
-			return Animations[index];
-		}
-
-		const std::string& GetAnimationName(uint32_t index) const
-		{
-			return Animations[index].AnimationName;
-		}
-
-		int32_t GetChannelIndex(uint32_t animationIndex, const std::string& node) const
-		{
-			auto& map = Animations[animationIndex].NodeChannelMap;
-			auto index = -1;
-			while (map.find(node) == map.end())
-			{
-				return index;
-			}
-
-			index = map.find(node)->second;
-			return index;
-		}
-
-		const AnimationChannel* GetChannel(uint32_t animIndex, const std::string& node) const
-		{
-			auto channelIndex = GetChannelIndex(animIndex, node);
-			if (channelIndex == -1)
-			{
-				return nullptr;
-			}
-
-			return &Animations[animIndex].Channels[channelIndex];
-		}
-
-		std::vector<std::string> GetAnimationNames() const
-		{
-			std::vector<std::string> animNames;
-			for (auto anim : AnimationIndexMap)
-			{
-				animNames.push_back(anim.first);
-			}
-
-			return animNames;
-		}
-
-		uint32_t GetAnimationCount() const
-		{
-			return (uint32_t)Animations.size();
-		}
-
-		bool IsAnimationIndexValid(uint32_t animationIndex) const
-		{
-			return (animationIndex <= Animations.size() - 1 && animationIndex >= 0);
-		}
-
+		NV_SERIALIZE(Animations, AnimationIndexMap)
 	};
 
 	uint32_t FindPosition(float AnimationTime, const AnimationChannel* channel);
@@ -123,5 +81,31 @@ namespace nv::animation
 	DirectX::XMVECTOR InterpolatePosition(float animTime, const AnimationChannel* channel);
 	DirectX::XMVECTOR InterpolateScaling(float animTime, const AnimationChannel* channel);
 	DirectX::XMFLOAT4 InterpolateRotation(float animTime, const AnimationChannel* channel);
+
+	class AnimationManager
+	{
+	public:
+		void Register(Handle<Mesh> meshHandle, const MeshAnimNodeData& data);
+		void Register(uint64_t handle, Mesh* pMesh);
+		void Register(const AnimationStore& store);
+
+		AnimationInstanceData&		GetInstance(uint64_t handle);
+		MeshAnimNodeData&			GetMeshAnimNodeData(Handle<Mesh> meshHandle);
+		Animation*					GetAnimation(const std::string& animName);
+		const Animation&			GetAnimation(uint32_t index) const;
+		const std::string&			GetAnimationName(uint32_t index) const;
+		int32_t						GetChannelIndex(uint32_t animationIndex, const std::string& node) const;
+		const AnimationChannel*		GetChannel(uint32_t animIndex, const std::string& node) const;
+		std::vector<std::string>	GetAnimationNames() const;
+		uint32_t					GetAnimationCount() const;
+		bool						IsAnimationIndexValid(uint32_t animationIndex) const;
+
+	private:
+		std::unordered_map<uint64_t, ScopedPtr<AnimationInstanceData, true>> mAnimInstanceMap; // Maps to Handle<Entity>
+		std::unordered_map<uint64_t, ScopedPtr<MeshAnimNodeData, true>> mMeshAnimNodeMap; // Maps to Handle<Mesh>
+		AnimationStore mAnimStore;
+	};
+
+	extern AnimationManager gAnimManager;
 }
 

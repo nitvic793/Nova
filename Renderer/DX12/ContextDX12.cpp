@@ -87,7 +87,16 @@ namespace nv::graphics
         const auto& vbv = dxMesh->GetVertexBufferView();
 
         mCommandList->IASetIndexBuffer(&ibv);
-        mCommandList->IASetVertexBuffers(0, 1, &vbv);
+        if (!mesh->HasBones())
+        {
+            mCommandList->IASetVertexBuffers(0, 1, &vbv);
+        }
+        else
+        {
+            const auto& bbv = dxMesh->GetBoneBufferView();
+            const D3D12_VERTEX_BUFFER_VIEW views[] = { vbv , bbv };
+            mCommandList->IASetVertexBuffers(0, _countof(views), views);
+        }
     }
 
     void ContextDX12::SetPipeline(Handle<PipelineState> pipeline)

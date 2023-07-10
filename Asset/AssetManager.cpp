@@ -435,10 +435,13 @@ namespace nv::asset
                 std::ostringstream sstream;
                 TextureAsset texture;
                 TextureAsset::Type type = TextureAsset::WIC;
-                if (path.find(".dds") != std::string::npos)
+                std::string texPath = path;
+                std::transform(texPath.begin(), texPath.end(), texPath.begin(),
+                    [](unsigned char c) { return std::tolower(c); });
+                if (texPath.find(".dds") != std::string::npos)
                     type = TextureAsset::DDS;
 
-                if (path.find(".hdr") != std::string::npos)
+                if (texPath.find(".hdr") != std::string::npos)
                     type = TextureAsset::HDR;
 
                 texture.Export(data, sstream, type);
@@ -497,7 +500,9 @@ namespace nv::asset
                 log::Info("[Asset] Loaded from package: {}", name.c_str());
                 mAssetPathMap[pAsset->GetID()] = name;
                 size = istream.tellg() - curPos;
+                return size;
             }
+
             return size;
         }
 

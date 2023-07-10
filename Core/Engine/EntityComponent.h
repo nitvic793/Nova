@@ -34,6 +34,10 @@ namespace nv::ecs
         FIELD_HANDLE_TEX = 7,
         FIELD_HANDLE_MESH = 8,
         FIELD_HANDLE_MAT = 9,
+        FIELD_UINT = 10,
+        FIELD_BOOL = 11,
+        FIELD_INT64 = 12,
+        FIELD_UINT64 = 13,
         FIELD_COUNT
     };
 
@@ -48,7 +52,11 @@ namespace nv::ecs
         FIELD_STRING_SIZE       = sizeof(std::string),
         FIELD_HANDLE_TEX_SIZE   = sizeof(Handle<int32_t>),
         FIELD_HANDLE_MESH_SIZE  = sizeof(Handle<int32_t>),
-        FIELD_HANDLE_MAT_SIZE   = sizeof(Handle<int32_t>)
+        FIELD_HANDLE_MAT_SIZE   = sizeof(Handle<int32_t>),
+        FIELD_UINT_SIZE         = sizeof(uint32_t),
+        FIELD_BOOL_SIZE         = sizeof(bool),
+        FIELD_INT64_SIZE        = sizeof(int64_t),
+        FIELD_UINT64_SIZE       = sizeof(uint64_t)
     };
 
     static constexpr size_t gFieldSizeMap[FIELD_COUNT] =
@@ -62,7 +70,11 @@ namespace nv::ecs
         FIELD_STRING_SIZE,
         FIELD_HANDLE_TEX_SIZE,
         FIELD_HANDLE_MESH_SIZE,
-        FIELD_HANDLE_MAT_SIZE
+        FIELD_HANDLE_MAT_SIZE,
+        FIELD_UINT_SIZE,
+        FIELD_BOOL_SIZE,
+        FIELD_INT64_SIZE,
+        FIELD_UINT64_SIZE
     };
 
     struct Field
@@ -83,6 +95,13 @@ namespace nv::ecs
     {
         std::unordered_map<std::string, std::vector<MetaField>> mComponents;
         std::unordered_map<StringID, std::string_view> mNameMap;
+    };
+
+    template<typename TComp>
+    struct EntityComponents
+    {
+        nv::Vector<Handle<Entity>> mEntities;
+        nv::Vector<TComp*> mComponents;
     };
 
     class IComponentPool 
@@ -239,6 +258,18 @@ namespace nv::ecs
             Serializer::Deserialize(mComponents, istream);
             cereal::BinaryInputArchive archive(istream);
             archive(mEntityMap);
+        }
+
+        void GetEntityComponents(EntityComponents<TComp>& outEntityComponents) const
+        {
+            for (auto e : mEntityMap)
+            {
+                auto handle = Handle<Entity>{};
+                TComp* const pComp = (TComp * const)mComponents.GetAsDerived(e.second);
+                handle.mHandle = e.first;
+                outEntityComponents.mEntities.Push(handle);
+                outEntityComponents.mComponents.Push(pComp);
+            }
         }
 
     private:
@@ -416,6 +447,7 @@ namespace nv::ecs
         void            Remove(Handle<Entity> entity);
         void            GetEntities(nv::Vector<Handle<Entity>>& outEntities) const;
         constexpr Span<Entity> GetEntitySpan() const { return mEntities.Span(); }
+        constexpr Handle<Entity> GetRootEntity() const { return mRoot; }
 
         constexpr Entity* GetEntity(Handle<Entity> handle) const { return mEntities.Get(handle); }
         constexpr std::unordered_map<std::string, Handle<Entity>>& GetEntityNameMap() { return mEntityNames; }

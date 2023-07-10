@@ -28,10 +28,16 @@ namespace nv::graphics
 
     void ForwardPass::Execute(const RenderPassData& renderPassData)
     {
+        uint32_t bonesCbIdx = 0;
         auto ctx = gRenderer->GetContext();
-        const auto bindAndDrawObject = [&](ConstantBufferView objCb, ConstantBufferView matCb, Mesh* mesh)
+        const auto bindAndDrawObject = [&](ConstantBufferView objCb, ConstantBufferView matCb, Mesh* mesh, ConstantBufferView* bonesCb)
         {
             ctx->BindConstantBuffer(0, (uint32_t)objCb.mHeapIndex);
+            if (bonesCb)
+            {
+                ctx->BindConstantBuffer(4, (uint32_t)bonesCb->mHeapIndex);
+                bonesCbIdx++;
+            }
             //ctx->BindConstantBuffer(4, (uint32_t)matCb.mHeapIndex);
             ctx->SetMesh(mesh);
             for (auto entry : mesh->GetDesc().mMeshEntries)
@@ -46,13 +52,24 @@ namespace nv::graphics
 
         auto objectCbs = renderPassData.mRenderDataArray.GetObjectDescriptors();
         auto materialCbs = renderPassData.mRenderDataArray.GetMaterialDescriptors();
+        auto boneCbs = renderPassData.mRenderDataArray.GetMaterialDescriptors();
         for (size_t i = 0; i < objectCbs.Size(); ++i)
         {
             const auto& objectCb = objectCbs[i];
             const auto& matCb = materialCbs[i];
             const auto mesh = renderPassData.mRenderData[i].mpMesh;
+
+            RenderDescriptors::CBV* boneCb = nullptr;
             if (mesh)
-                bindAndDrawObject(objectCb, matCb, mesh);
+            {      
+                if (mesh->HasBones())
+                {
+                    boneCb = &boneCbs[bonesCbIdx];
+                    //Set Animated PSO
+                } // else reset PSO
+
+                bindAndDrawObject(objectCb, matCb, mesh, boneCb); // Increments bonesCbIdx
+            }
         }
     }
 

@@ -3,6 +3,7 @@
 #include <Types/Serializers.h>
 #include "MeshAsset.h"
 #include <Animation/Animation.h>
+#include <Renderer/ResourceManager.h>
 
 #include <assimp/PostProcess.h>
 #include <assimp/Importer.hpp>
@@ -10,6 +11,8 @@
 
 #include <cereal/archives/binary.hpp>
 #include <cereal/types/vector.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/unordered_map.hpp>
 
 #include <IO/File.h>
 #include <DirectXMesh.h>
@@ -107,7 +110,10 @@ namespace nv::asset
 	{
 		nv::io::MemoryStream istream((char*)data.mData, data.mSize);
 		cereal::BinaryInputArchive archive(istream);
+
 		archive(mData);
+		archive(mAnimNodeData);
+		archive(mAnimStore);
 	}
 
 	void MeshAsset::Export(const AssetData& data, std::ostream& ostream)
@@ -121,6 +127,7 @@ namespace nv::asset
 		uint32_t numMeshes = pScene->mNumMeshes;
 		uint32_t numVertices = 0;
 		uint32_t numIndices = 0;
+		bool bHasBones = false;
 
 		mData.mMeshEntries.resize(numMeshes);
 		for (uint32_t i = 0; i < numMeshes; i++)
@@ -132,18 +139,41 @@ namespace nv::asset
 
 			numVertices += pScene->mMeshes[i]->mNumVertices;
 			numIndices += pScene->mMeshes[i]->mNumFaces * kNumPerFace;
+			bHasBones = bHasBones || pScene->mMeshes[i]->HasBones();
 		}
 
 		mData.mIndices.reserve(numIndices);
 		mData.mVertices.reserve(numVertices);
+		if(bHasBones)
+			mData.mBoneDesc.mBones.resize(numVertices);
 
+		uint32_t numBones = 0;
+		uint32_t boneIndex = 0;
 		for (uint32_t i = 0; i < numMeshes; ++i)
 		{
 			utility::ProcessMesh(i, pScene->mMeshes[i], pScene, mData.mVertices, mData.mIndices);
+			utility::LoadBones(i, pScene->mMeshes[i], pScene, 
+				mData.mMeshEntries, mData.mBoneDesc.mBoneMapping, mData.mBoneDesc.mBoneInfoList, mData.mBoneDesc.mBones, 
+				numBones, boneIndex);
+		}
+
+		AnimationStore animStore;
+		MeshAnimNodeData animNodeData;
+		if (pScene->HasAnimations())
+		{
+			utility::LoadAnimations(pScene, animNodeData, animStore);
 		}
 
 		cereal::BinaryOutputArchive archive(ostream);
 		archive(mData);
+		archive(animNodeData);
+		archive(animStore);
+	}
+
+	void MeshAsset::Register(Handle<graphics::Mesh> handle)
+	{
+		gAnimManager.Register(handle, mAnimNodeData);
+		gAnimManager.Register(mAnimStore);
 	}
 
 	MeshAsset::~MeshAsset()

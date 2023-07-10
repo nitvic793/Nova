@@ -8,18 +8,28 @@ TYPE_MAP = {
     'float3'            : FieldTypes.FIELD_FLOAT3,
     'float4'            : FieldTypes.FIELD_FLOAT4,
     'string'            : FieldTypes.FIELD_STRING,
+    'std::string'       : FieldTypes.FIELD_STRING,
     'int32_t'           : FieldTypes.FIELD_INT,
+    'int'               : FieldTypes.FIELD_INT,
     'Handle<Mesh >'     : FieldTypes.FIELD_HANDLE_MESH,
     'Handle<Material >' : FieldTypes.FIELD_HANDLE_MAT,
     'Handle<Texture >'  : FieldTypes.FIELD_HANDLE_TEX,
+    'uint32_t'          : FieldTypes.FIELD_UINT,
+    'bool'              : FieldTypes.FIELD_BOOL,
+    'uint64_t'          : FieldTypes.FIELD_UINT64,
+    'int64_t'           : FieldTypes.FIELD_INT64,
 }
 
 
-def get_field_type(typeName):
+def get_field_type(typeName, raw_type = None):
     if typeName in TYPE_MAP:
-        return TYPE_MAP[typeName]
+        return TYPE_MAP[typeName], typeName
+    
+    if raw_type in TYPE_MAP:
+        typeName = raw_type
+        return TYPE_MAP[raw_type], typeName
 
-    return FieldTypes.FIELD_UNDEFINED
+    return (FieldTypes.FIELD_UNDEFINED, typeName)
 
 
 def generate_metadata(components: list):
@@ -40,7 +50,8 @@ def generate_metadata(components: list):
             for prop in properties:
                 name = prop['name']
                 type = prop['type']
-                field_type = get_field_type(type)
+                raw_type = prop['raw_type']
+                field_type, type = get_field_type(type, raw_type)
                 comp_data['value'].append({
                     'Name': name,
                     'Type': type,

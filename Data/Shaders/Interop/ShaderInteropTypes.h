@@ -4,6 +4,7 @@
 #pragma once
 
 static const uint32_t MAX_DIRECTIONAL_LIGHTS = 2;
+static const uint32_t MAX_BONES = 128;
 
 #ifdef __cplusplus
 #include <Math/Math.h>
@@ -114,6 +115,11 @@ namespace nv::graphics
         uint32_t            DirLightsCount;
         float               _Padding1;
     };
+
+    struct PerArmature
+	{
+		float4x4 Bones[MAX_BONES];
+	};
 
     struct ViewportDesc
     {

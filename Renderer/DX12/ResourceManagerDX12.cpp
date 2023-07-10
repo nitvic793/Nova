@@ -401,7 +401,40 @@ namespace nv::graphics
         mGpuResources.Remove(vertexBufferUpload);
         mGpuResources.Remove(indexBufferUpload);
 
-        MeshDX12* mesh = mMeshes.CreateInstance(handle, desc, vertexBuffer, indexBuffer);
+        Handle<GPUResource> boneBuffer = Null<GPUResource>();
+        if (!desc.mBoneDesc.mBones.empty())
+        {
+            auto& bDesc = desc.mBoneDesc;
+            const uint32_t boneBufferSize = (uint32_t)(sizeof(VertexBoneData) * bDesc.mBones.size());
+            Handle<GPUResource> boneBufferUpload = CreateResource({ .mSize = boneBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_GENERIC_READ, .mBufferMode = buffer::BUFFER_MODE_UPLOAD });
+            boneBuffer = CreateResource({ .mSize = boneBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_COPY_DEST });
+            UploadData uploadData =
+            {
+                .mpData = reinterpret_cast<const BYTE*>(bDesc.mBones.data()),
+                .mRowPitch = boneBufferSize,
+                .mSlicePitch = boneBufferSize
+            };
+
+            auto boneUploadResource = (GPUResourceDX12*)this->GetGPUResource(boneBufferUpload);
+            auto boneResource = (GPUResourceDX12*)this->GetGPUResource(boneBuffer);
+
+            {
+                AutoLocalContext localContext(pDevice, ContextType::CONTEXT_GFX, ((RendererDX12*)(gRenderer))->GetCommandQueue());
+                boneResource->UploadResource(localContext.GetCommandList(), uploadData, boneUploadResource->GetResource().Get());
+
+                auto ctx = localContext.GetContext();
+                TransitionBarrier barriers[] =
+                {
+                    {.mFrom = buffer::STATE_COPY_DEST, .mTo = buffer::STATE_INDEX_BUFFER, .mResource = boneBuffer },
+                };
+
+                ctx->ResourceBarrier({ barriers, _countof(barriers) });
+            }
+
+            mGpuResources.Remove(boneBufferUpload);
+        }
+
+        MeshDX12* mesh = mMeshes.CreateInstance(handle, desc, vertexBuffer, indexBuffer, boneBuffer);
         return handle;
     }
 

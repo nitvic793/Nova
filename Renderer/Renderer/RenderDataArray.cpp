@@ -7,12 +7,14 @@
 #include <Engine/EntityComponent.h>
 #include <Components/Renderable.h>
 #include <Components/Material.h>
+#include <Animation/Animation.h>
 
 namespace nv::graphics
 {
     ConstantBufferPool* gpConstantBufferPool = nullptr;
     constexpr size_t MAX_OBJECT_COUNT = 1024;
     constexpr size_t MAX_OBJECT_DESCRIPTOR_COUNT = MAX_OBJECT_COUNT;
+    constexpr size_t MAX_ANIM_BONES_DESCRIPTOR_COUNT = 32;
 
     RenderDataArray::RenderDataArray()
     {
@@ -22,6 +24,7 @@ namespace nv::graphics
     {
         mRenderDescriptors.mObjectCBs.Clear();
         mRenderDescriptors.mMaterialCBs.Clear();
+        mRenderDescriptors.mBoneCBs.Clear();
     }
 
     void RenderDataArray::QueueRenderData()
@@ -34,6 +37,12 @@ namespace nv::graphics
             RenderData renderData;
             mRenderDataQueue.Pop(renderData); 
         }
+
+        nv::Vector<Handle<ecs::Entity>> entityList;
+        ecs::gEntityManager.GetEntities(entityList);
+        Span<Handle<ecs::Entity>> entities = entityList.Span();
+        if (entities[0] == ecs::gEntityManager.GetRootEntity())
+            entities = entities.Slice(1, entities.Size());
 
         auto renderables = ecs::gComponentManager.GetComponents<components::Renderable>();
 
@@ -60,6 +69,11 @@ namespace nv::graphics
                 rd.mObjectData.World = transform.GetTransformMatrixTransposed();
                 rd.mpMesh = mesh;
                 rd.mpMaterial = mat;
+                if (renderable.HasFlag(components::RENDERABLE_FLAG_ANIMATED))
+                {
+                    auto& instance = animation::gAnimManager.GetInstance(entities[i]);
+                    rd.mpBones = &instance.mArmatureConstantBuffer;
+                }
             }
 
             mRenderDataQueue.Push(renderData);
@@ -75,6 +89,12 @@ namespace nv::graphics
             auto matCb = gpConstantBufferPool->GetConstantBuffer<MaterialData, MAX_OBJECT_DESCRIPTOR_COUNT>();
             mRenderDescriptors.mObjectCBs.Push(objectCb);
             mRenderDescriptors.mMaterialCBs.Push(matCb);
+
+            if (rd.mppBones[i] != nullptr)
+            {
+                auto boneCB = gpConstantBufferPool->GetConstantBuffer<PerArmature, MAX_ANIM_BONES_DESCRIPTOR_COUNT>();
+                mRenderDescriptors.mBoneCBs.Push(boneCB);
+            }
         }
     }
 }

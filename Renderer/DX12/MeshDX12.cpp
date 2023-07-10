@@ -8,12 +8,13 @@
 
 namespace nv::graphics
 {
-    MeshDX12::MeshDX12(const MeshDesc& desc, Handle<GPUResource> vertexBuffer, Handle<GPUResource> indexBuffer):
+    MeshDX12::MeshDX12(const MeshDesc& desc, Handle<GPUResource> vertexBuffer, Handle<GPUResource> indexBuffer, Handle<GPUResource> boneBuffer):
         Mesh(desc),
         mVertexBuffer(vertexBuffer),
         mIndexBuffer(indexBuffer),
         mIndexBufferView(),
-        mVertexBufferView()
+        mVertexBufferView(),
+        mBoneBufferView()
     {
         auto vb = (GPUResourceDX12*)gResourceManager->GetGPUResource(vertexBuffer);
         auto ib = (GPUResourceDX12*)gResourceManager->GetGPUResource(indexBuffer);
@@ -28,6 +29,16 @@ namespace nv::graphics
         mIndexBufferView.BufferLocation = ib->GetResource()->GetGPUVirtualAddress();
         mIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
         mIndexBufferView.SizeInBytes = indexBufferSize;
+
+        if (!boneBuffer.IsNull())
+        {
+            auto res = (GPUResourceDX12*)gResourceManager->GetGPUResource(boneBuffer);
+            const uint32_t boneBufferSize = sizeof(VertexBoneData) * (uint32_t)desc.mBoneDesc.mBones.size();
+
+            mBoneBufferView.BufferLocation = res->GetResource()->GetGPUVirtualAddress();
+            mBoneBufferView.StrideInBytes = sizeof(VertexBoneData);
+            mBoneBufferView.SizeInBytes = boneBufferSize;
+        }
     }
 
     void MeshDX12::GenerateBufferSRVs() 

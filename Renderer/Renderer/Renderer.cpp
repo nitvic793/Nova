@@ -7,6 +7,7 @@
 #include <Renderer/Format.h>
 #include <Types/MeshAsset.h>
 #include <AssetManager.h>
+#include <Animation/AnimationSystem.h>
 
 #if NV_PLATFORM_WINDOWS && NV_RENDERER_DX12
 #include <DX12/WindowDX12.h>
@@ -46,6 +47,7 @@ namespace nv::graphics
 
         gSystemManager.CreateSystem<RenderSystem>(width, height);
 #endif
+        gSystemManager.CreateSystem<animation::AnimationSystem>();
     }
 
     void DestroyGraphics()

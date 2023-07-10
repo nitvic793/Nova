@@ -138,6 +138,36 @@
                         "Name": "mMaterial",
                         "Type": "Handle<Material >",
                         "FieldTypeEnum": 9
+                    },
+                    {
+                        "Name": "mFlags",
+                        "Type": "int",
+                        "FieldTypeEnum": 2
+                    }
+                ]
+            },
+            {
+                "key": "nv::graphics::components::AnimationComponent",
+                "value": [
+                    {
+                        "Name": "mCurrentAnimationIndex",
+                        "Type": "uint32_t",
+                        "FieldTypeEnum": 10
+                    },
+                    {
+                        "Name": "mTotalTime",
+                        "Type": "float",
+                        "FieldTypeEnum": 1
+                    },
+                    {
+                        "Name": "mAnimationSpeed",
+                        "Type": "float",
+                        "FieldTypeEnum": 1
+                    },
+                    {
+                        "Name": "mIsPlaying",
+                        "Type": "bool",
+                        "FieldTypeEnum": 11
                     }
                 ]
             },
@@ -201,12 +231,12 @@
                     {
                         "Name": "mString",
                         "Type": "std::string",
-                        "FieldTypeEnum": 0
+                        "FieldTypeEnum": 6
                     },
                     {
                         "Name": "mCount",
                         "Type": "uint64_t",
-                        "FieldTypeEnum": 0
+                        "FieldTypeEnum": 13
                     }
                 ]
             }

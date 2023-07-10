@@ -77,8 +77,8 @@ namespace nv
 		return ptr;
 	}
 
-	template<typename T, typename ...Args>
-	static ScopedPtr<T> MakeScopedArgs(Args&& ... args)
+	template<typename T, bool TCallSysFree = false, typename ...Args>
+	static ScopedPtr<T, TCallSysFree> MakeScopedArgs(Args&& ... args)
 	{
 		auto allocator = SystemAllocator::gPtr;
 		auto alloc = allocator->Allocate(sizeof(T));
@@ -86,8 +86,8 @@ namespace nv
 		return ptr;
 	}
 
-	template<typename T, typename ...Args>
-	static ScopedPtr<T> MakeScopedArgsAlloc(IAllocator* allocator, Args&&... args)
+	template<typename T, bool TCallSysFree = false, typename ...Args>
+	static ScopedPtr<T, TCallSysFree> MakeScopedArgsAlloc(IAllocator* allocator, Args&&... args)
 	{
 		auto alloc = allocator->Allocate(sizeof(T));
 		ScopedPtr<T> ptr(new(alloc) T(std::forward<Args>(args)...));

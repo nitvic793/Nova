@@ -31,6 +31,7 @@ namespace nv
             mBuffer = (TDerived*)SystemAllocator::gPtr->Allocate(sizeof(TDerived) * kDefaultPoolCount);
             mGenerations.resize(kDefaultPoolCount);
             mFreeIndices.reserve(kDefaultPoolCount);
+            memset(mGenerations.data(), 0, mGenerations.size() * sizeof(uint32_t));
         }
 
         void Destroy()
