@@ -16,5 +16,6 @@ namespace nv::graphics
 
     private:
         Handle<PipelineState> mForwardPSO;
+        Handle<PipelineState> mForwardAnimPSO;
     };
 }

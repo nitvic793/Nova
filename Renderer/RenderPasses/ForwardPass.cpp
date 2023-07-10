@@ -15,6 +15,7 @@ namespace nv::graphics
     {
         auto ps = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultPS.hlsl") };
         auto vs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultVS.hlsl") };
+        auto vsAnim = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultAnimationVS.hlsl") };
 
         PipelineStateDesc psoDesc = {};
         psoDesc.mPipelineType = PIPELINE_RASTER;
@@ -24,6 +25,10 @@ namespace nv::graphics
         psoDesc.mRenderTargetFormats[0] = gRenderer->GetDefaultRenderTargetFormat();
         psoDesc.mDepthFormat = gRenderer->GetDepthSurfaceFormat();
         mForwardPSO = gResourceManager->CreatePipelineState(psoDesc);
+
+        psoDesc.mVS = gResourceManager->CreateShader({ vsAnim, shader::VERTEX });
+        psoDesc.mbUseAnimLayout = true;
+        mForwardAnimPSO = gResourceManager->CreatePipelineState(psoDesc);
     }
 
     void ForwardPass::Execute(const RenderPassData& renderPassData)
@@ -38,7 +43,7 @@ namespace nv::graphics
                 ctx->BindConstantBuffer(4, (uint32_t)bonesCb->mHeapIndex);
                 bonesCbIdx++;
             }
-            //ctx->BindConstantBuffer(4, (uint32_t)matCb.mHeapIndex);
+
             ctx->SetMesh(mesh);
             for (auto entry : mesh->GetDesc().mMeshEntries)
             {
@@ -52,7 +57,7 @@ namespace nv::graphics
 
         auto objectCbs = renderPassData.mRenderDataArray.GetObjectDescriptors();
         auto materialCbs = renderPassData.mRenderDataArray.GetMaterialDescriptors();
-        auto boneCbs = renderPassData.mRenderDataArray.GetMaterialDescriptors();
+        auto boneCbs = renderPassData.mRenderDataArray.GetBoneDescriptors();
         for (size_t i = 0; i < objectCbs.Size(); ++i)
         {
             const auto& objectCb = objectCbs[i];
@@ -65,8 +70,12 @@ namespace nv::graphics
                 if (mesh->HasBones())
                 {
                     boneCb = &boneCbs[bonesCbIdx];
-                    //Set Animated PSO
-                } // else reset PSO
+                    ctx->SetPipeline(mForwardAnimPSO);
+                }
+                else
+                {
+                    ctx->SetPipeline(mForwardPSO);
+                }
 
                 bindAndDrawObject(objectCb, matCb, mesh, boneCb); // Increments bonesCbIdx
             }

@@ -135,10 +135,24 @@ namespace nv::graphics
         ImGui::PopID();
     }
 
+    void Visit(uint32_t* pVal, const MetaField& field, const char* pCompName)
+    {
+        ImGui::PushID(pCompName);
+        ImGui::DragInt(field.mName.c_str(), (int*)pVal, 0.05f);
+        ImGui::PopID();
+    }
+
     void Visit(float* pVal, const MetaField& field, const char* pCompName)
     {
         ImGui::PushID(pCompName);
         ImGui::DragFloat(field.mName.c_str(), pVal, 0.05f);
+        ImGui::PopID();
+    }
+
+    void Visit(bool* pVal, const MetaField& field, const char* pCompName)
+    {
+        ImGui::PushID(pCompName);
+        ImGui::Checkbox(field.mName.c_str(), pVal);
         ImGui::PopID();
     }
 
@@ -189,6 +203,10 @@ namespace nv::graphics
                 {
                 case FIELD_INT:
                     Visit((int32_t*)pCurrent, field, pName); break;
+                case FIELD_UINT:
+                    Visit((uint32_t*)pCurrent, field, pName); break;
+                case FIELD_BOOL:
+                    Visit((bool*)pCurrent, field, pName); break;
                 case FIELD_FLOAT:
                     Visit((float*)pCurrent, field, pName); break;
                 case FIELD_FLOAT2:                         

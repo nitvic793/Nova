@@ -213,9 +213,18 @@ namespace nv::graphics
         sampleDesc.Count = 1;
 
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+        if (desc.mbUseAnimLayout)
+        {
+            psoDesc.InputLayout.pInputElementDescs = dx12::AnimationLayout;
+            psoDesc.InputLayout.NumElements = _countof(dx12::AnimationLayout);
+        }
+        else
+        {
 
-        psoDesc.InputLayout.pInputElementDescs = dx12::DefaultLayout;
-        psoDesc.InputLayout.NumElements = _countof(dx12::DefaultLayout);
+            psoDesc.InputLayout.pInputElementDescs = dx12::DefaultLayout;
+            psoDesc.InputLayout.NumElements = _countof(dx12::DefaultLayout);
+        }
+
         psoDesc.pRootSignature = renderer->mRootSignature.Get();
 
         setShaderByteCode(desc.mPS, psoDesc.PS);

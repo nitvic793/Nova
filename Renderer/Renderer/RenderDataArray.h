@@ -107,6 +107,11 @@ namespace nv::graphics
             mppMaterials = (Material**)Alloc(sizeof(Material*) * size);
             mpObjectData = (ObjectData*)Alloc(sizeof(ObjectData) * size);
             mppBones = (PerArmature**)Alloc(sizeof(PerArmature*) * size);
+
+            memset(mppMeshes, 0, sizeof(Mesh*) * size);
+            memset(mppMaterials, 0, sizeof(Material*) * size);
+            memset(mpObjectData, 0, sizeof(ObjectData) * size);
+            memset(mppBones, 0, sizeof(PerArmature*) * size);
         }
 
         void Clear()
@@ -127,6 +132,7 @@ namespace nv::graphics
                 mppMeshes = nullptr;
                 mppMaterials = nullptr;
                 mpObjectData = nullptr;
+                mppBones = nullptr;
             }
         }
 

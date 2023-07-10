@@ -135,6 +135,7 @@ namespace nv::graphics::animation
 		mAnimInstanceMap[handle] = MakeScoped<AnimationInstanceData, true>();
 		auto& instance = *mAnimInstanceMap[handle];
 
+		memset((void*)&instance.mArmatureConstantBuffer, 0, sizeof(PerArmature));
 		memcpy(&instance.mBoneInfoList[0], boneData.mBoneInfoList.data(), size * sizeof(BoneInfo));
 		instance.mBoneInfoSize = (uint32_t)size;
 	}

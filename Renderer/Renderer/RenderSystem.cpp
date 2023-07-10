@@ -283,14 +283,17 @@ namespace nv::graphics
         HeapState state = { .ConstBufferOffset = heapState.mConstBufferOffset, .TextureOffset = heapState.mTextureOffset };
         gRenderer->UploadToConstantBuffer(mHeapStateCB, (uint8_t*)&state, sizeof(state));
 
+        uint32_t boneIdx = 0;
         auto objectCbs = mRenderData.GetObjectDescriptors();
         auto materialCbs = mRenderData.GetMaterialDescriptors();
+        auto boneCbs = mRenderData.GetBoneDescriptors();
 
         for (size_t i = 0; i < objectCbs.Size(); ++i)
         {
             auto& objectCb = objectCbs[i];
             auto& objdata = mCurrentRenderData[i].mObjectData;
             auto& mat = mCurrentRenderData[i].mpMaterial;
+            auto& bones = mCurrentRenderData[i].mpBones;
             auto& matCb = materialCbs[i];
 
             objdata.MaterialIndex = gRenderer->GetHeapIndex(matCb);
@@ -304,6 +307,13 @@ namespace nv::graphics
                 matData.RoughnessOffset = gResourceManager->GetTexture(mat->mTextures[Material::ROUGHNESS])->GetHeapIndex();
                 matData.MetalnessOffset = gResourceManager->GetTexture(mat->mTextures[Material::METALNESS])->GetHeapIndex();
                 gRenderer->UploadToConstantBuffer(matCb, (uint8_t*)&matData, sizeof(MaterialData));
+            }
+
+            if (bones)
+            {
+                auto boneCb = boneCbs[boneIdx];
+                gRenderer->UploadToConstantBuffer(boneCb, (uint8_t*)bones, sizeof(PerArmature));
+                boneIdx++;
             }
         }
     }

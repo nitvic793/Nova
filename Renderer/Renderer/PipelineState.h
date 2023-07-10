@@ -30,6 +30,7 @@ namespace nv::graphics
         format::SurfaceFormat   mRenderTargetFormats[MAX_RENDER_TARGET_COUNT];
         format::SurfaceFormat   mDepthFormat        = format::D32_FLOAT;
         PrimitiveTopologyType   mPrimitiveTopology  = PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        bool                    mbUseAnimLayout     = false;
     };
 
     class PipelineState

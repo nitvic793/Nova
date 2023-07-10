@@ -35,11 +35,12 @@ namespace nv
 
     void PlayerController::Init()
     {
-        mPlayerEntity = CreateEntity(ID("Mesh/cone.obj"), ID("Bronze"), "Player");
+        mPlayerEntity = CreateEntity(ID("Mesh/male.fbx"), ID("Bronze"), "Player");
         gpPlayerEntity = mPlayerEntity;
         auto playerEntity = gEntityManager.GetEntity(mPlayerEntity);
         gpPlayerComponent = playerEntity->Add<PlayerComponent>();
-
+        playerEntity->GetTransform().mScale = float3(0.05f, 0.05f, 0.05f);
+        playerEntity->Get<graphics::components::AnimationComponent>()->mCurrentAnimationIndex = 1;
         gEventBus.Subscribe(this, &PlayerController::OnFrameRecordStateChange);
     }
 
