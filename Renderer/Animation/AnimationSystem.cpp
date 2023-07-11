@@ -5,6 +5,8 @@
 #include <Components/Renderable.h>
 #include <Renderer/ResourceManager.h>
 
+#include <Debug/Profiler.h>
+
 namespace nv::graphics::animation
 {
 	using namespace components;
@@ -18,6 +20,7 @@ namespace nv::graphics::animation
 
 	void AnimationSystem::Update(float deltaTime, float totalTime)
 	{
+		NV_EVENT("AnimationSystem/Update")
 		auto pComponentPool = ecs::gComponentManager.GetPool<AnimationComponent>();
 		if (!pComponentPool)
 			return;
@@ -56,6 +59,7 @@ namespace nv::graphics::animation
 
 	void BoneTransform(AnimationComponent& animComponent, AnimationInstanceData& instanceData, const Animation& animation, const MeshAnimNodeData& nodeData, const MeshBoneDesc& boneDesc)
 	{
+		NV_EVENT("AnimationSystem/BoneTransform")
 		float totalTime = animComponent.mTotalTime;
 		float TicksPerSecond = (float)(animation.TicksPerSecond != 0 ? animation.TicksPerSecond : 25.0f);
 		float TimeInTicks = totalTime * TicksPerSecond;
