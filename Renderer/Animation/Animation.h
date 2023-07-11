@@ -99,6 +99,8 @@ namespace nv::graphics::animation
 		std::vector<std::string>	GetAnimationNames() const;
 		uint32_t					GetAnimationCount() const;
 		bool						IsAnimationIndexValid(uint32_t animationIndex) const;
+		void						Lock();
+		void						Unlock();
 
 	private:
 		std::unordered_map<uint64_t, ScopedPtr<AnimationInstanceData, true>> mAnimInstanceMap; // Maps to Handle<Entity>

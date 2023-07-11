@@ -5,6 +5,8 @@
 #include <Asset.h>
 #include <ostream>
 
+struct aiScene;
+
 namespace nv::asset
 {
     class MeshAsset 
@@ -16,6 +18,8 @@ namespace nv::asset
     public:
         void Deserialize(const AssetData& data);
         void Export(const AssetData& data, std::ostream& ostream);
+        void Export(const char* pFilename, std::ostream& ostream);
+        void ExportScene(const aiScene* pScene, std::ostream& ostream);
         void Register(Handle<graphics::Mesh> handle);
 
         const MeshDesc& GetData() const { return mData; }

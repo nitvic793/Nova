@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include <Animation/Animation.h>
+#include <mutex>
 
 namespace nv::graphics::animation
 {
@@ -224,5 +225,17 @@ namespace nv::graphics::animation
 	bool AnimationManager::IsAnimationIndexValid(uint32_t animationIndex) const
 	{
 		return (animationIndex <= mAnimStore.Animations.size() - 1 && animationIndex >= 0);
+	}
+
+	std::mutex gMutex;
+
+	void AnimationManager::Lock()
+	{
+		gMutex.lock();
+	}
+
+	void animation::AnimationManager::Unlock()
+	{
+		gMutex.unlock();
 	}
 }

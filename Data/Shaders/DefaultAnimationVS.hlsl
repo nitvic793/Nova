@@ -4,7 +4,7 @@ ConstantBuffer<ObjectData>  Object      : register(b0);
 ConstantBuffer<FrameData>   Frame       : register(b1);
 ConstantBuffer<PerArmature> Armature    : register(b2);
 
-float4x4 SkinTransform(float4 weights, uint4 boneIndices, matrix bones[MAX_BONES])
+float4x4 SkinTransform(float4 weights, uint4 boneIndices, in float4x4 bones[MAX_BONES])
 {
 	// Calculate the skin transform from up to four bones and weights
     float4x4 skinTransform =

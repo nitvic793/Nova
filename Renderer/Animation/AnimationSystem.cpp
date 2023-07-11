@@ -9,8 +9,8 @@ namespace nv::graphics::animation
 {
 	using namespace components;
 
-	void ReadNodeHeirarchy(AnimationComponent& animComponent, const Animation& animation, MeshAnimNodeData& nodeData, AnimationInstanceData& instanceData, const MeshBoneDesc& boneDesc, float animationTime);
-	void BoneTransform(AnimationComponent& animComponent, AnimationInstanceData& instanceData, const Animation& animation, MeshAnimNodeData& nodeData, const MeshBoneDesc& boneDesc);
+	void ReadNodeHeirarchy(AnimationComponent& animComponent, const Animation& animation, const MeshAnimNodeData& nodeData, AnimationInstanceData& instanceData, const MeshBoneDesc& boneDesc, float animationTime);
+	void BoneTransform(AnimationComponent& animComponent, AnimationInstanceData& instanceData, const Animation& animation, const MeshAnimNodeData& nodeData, const MeshBoneDesc& boneDesc);
 
 	void AnimationSystem::Init()
 	{
@@ -28,6 +28,9 @@ namespace nv::graphics::animation
 		for (size_t i = 0; i < components.mComponents.size(); ++i)
 		{
 			AnimationComponent* pComp = components.mComponents[i];
+			if (!pComp->mIsPlaying)
+				return;
+
 			Handle<ecs::Entity> entityHandle = components.mEntities[i];
 			auto pEntity = ecs::gEntityManager.GetEntity(entityHandle);
 			auto& instanceData = gAnimManager.GetInstance(entityHandle);
@@ -40,15 +43,18 @@ namespace nv::graphics::animation
 			auto& nodeData = gAnimManager.GetMeshAnimNodeData(meshHandle);
 			auto& boneDesc = pMesh->GetBoneData();
 
+			gAnimManager.Lock();
 			BoneTransform(*pComp, instance, animation, nodeData, boneDesc);
+			gAnimManager.Unlock();
 		}
+
 	}
 
 	void AnimationSystem::Destroy()
 	{
 	}
 
-	void BoneTransform(AnimationComponent& animComponent, AnimationInstanceData& instanceData, const Animation& animation, MeshAnimNodeData& nodeData, const MeshBoneDesc& boneDesc)
+	void BoneTransform(AnimationComponent& animComponent, AnimationInstanceData& instanceData, const Animation& animation, const MeshAnimNodeData& nodeData, const MeshBoneDesc& boneDesc)
 	{
 		float totalTime = animComponent.mTotalTime;
 		float TicksPerSecond = (float)(animation.TicksPerSecond != 0 ? animation.TicksPerSecond : 25.0f);
@@ -64,7 +70,7 @@ namespace nv::graphics::animation
 		}
 	}
 
-	void ReadNodeHeirarchy(AnimationComponent& animComponent, const Animation& animation, MeshAnimNodeData& nodeData, AnimationInstanceData& instanceData, const MeshBoneDesc& boneDesc, float animationTime)
+	void ReadNodeHeirarchy(AnimationComponent& animComponent, const Animation& animation, const MeshAnimNodeData& nodeData, AnimationInstanceData& instanceData, const MeshBoneDesc& boneDesc, float animationTime)
 	{
 		XMFLOAT4X4 identity;
 		XMFLOAT4X4 globalFloat4x4;
@@ -98,11 +104,13 @@ namespace nv::graphics::animation
 
 				auto r = InterpolateRotation(animationTime, anim);
 				auto rotation = XMMatrixRotationQuaternion(XMVectorSet(r.y, r.z, r.w, r.x));
+				//auto rotation = XMMatrixRotationQuaternion(XMLoadFloat4(&r));
 
 				auto t = InterpolatePosition(animationTime, anim);
 				auto translation = XMMatrixTranslationFromVector(t);
 
 				nodeTransformation = XMMatrixAffineTransformation(s, XMVectorSet(r.y, r.z, r.w, r.x), XMVectorSet(r.y, r.z, r.w, r.x), t);
+				//nodeTransformation = XMMatrixAffineTransformation(s, XMVectorSet(r.y, r.z, r.w, r.x), XMLoadFloat4(&r), t);
 				//nodeTransformation += scaling * rotation * translation;
 			}
 

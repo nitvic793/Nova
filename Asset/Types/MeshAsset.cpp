@@ -122,8 +122,23 @@ namespace nv::asset
 
 		const aiScene* pScene = importer.ReadFileFromMemory(data.mData, data.mSize,
 			aiProcess_Triangulate |
+			aiProcess_ConvertToLeftHanded | aiProcess_ValidateDataStructure | aiProcess_JoinIdenticalVertices , "");
+
+		ExportScene(pScene, ostream);
+	}
+
+	void MeshAsset::Export(const char* pFilename, std::ostream& ostream)
+	{
+		static Assimp::Importer importer;
+		const aiScene* pScene = importer.ReadFile(pFilename,
+			aiProcess_Triangulate |
 			aiProcess_ConvertToLeftHanded | aiProcess_ValidateDataStructure | aiProcess_JoinIdenticalVertices);
 
+		ExportScene(pScene, ostream);
+	}
+
+	void MeshAsset::ExportScene(const aiScene* pScene, std::ostream& ostream)
+	{
 		uint32_t numMeshes = pScene->mNumMeshes;
 		uint32_t numVertices = 0;
 		uint32_t numIndices = 0;
@@ -144,7 +159,7 @@ namespace nv::asset
 
 		mData.mIndices.reserve(numIndices);
 		mData.mVertices.reserve(numVertices);
-		if(bHasBones)
+		if (bHasBones)
 			mData.mBoneDesc.mBones.resize(numVertices);
 
 		uint32_t numBones = 0;
@@ -152,8 +167,8 @@ namespace nv::asset
 		for (uint32_t i = 0; i < numMeshes; ++i)
 		{
 			utility::ProcessMesh(i, pScene->mMeshes[i], pScene, mData.mVertices, mData.mIndices);
-			utility::LoadBones(i, pScene->mMeshes[i], pScene, 
-				mData.mMeshEntries, mData.mBoneDesc.mBoneMapping, mData.mBoneDesc.mBoneInfoList, mData.mBoneDesc.mBones, 
+			utility::LoadBones(i, pScene->mMeshes[i], pScene,
+				mData.mMeshEntries, mData.mBoneDesc.mBoneMapping, mData.mBoneDesc.mBoneInfoList, mData.mBoneDesc.mBones,
 				numBones, boneIndex);
 		}
 

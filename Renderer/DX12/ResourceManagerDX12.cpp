@@ -434,7 +434,7 @@ namespace nv::graphics
                 auto ctx = localContext.GetContext();
                 TransitionBarrier barriers[] =
                 {
-                    {.mFrom = buffer::STATE_COPY_DEST, .mTo = buffer::STATE_INDEX_BUFFER, .mResource = boneBuffer },
+                    {.mFrom = buffer::STATE_COPY_DEST, .mTo = buffer::STATE_VERTEX_BUFFER, .mResource = boneBuffer },
                 };
 
                 ctx->ResourceBarrier({ barriers, _countof(barriers) });

@@ -399,7 +399,8 @@ namespace nv::asset
         void ExportAsset(Asset* asset, std::ostream& ostream)
         {
             cereal::BinaryOutputArchive archive(ostream);
-            auto path = GetNormalizedBuildPath(fs::relative(mAssetPathMap[asset->GetID()], fs::current_path()).string());
+            const auto& filePath = mAssetPathMap[asset->GetID()];
+            auto path = GetNormalizedBuildPath(fs::relative(filePath, fs::current_path()).string());
 
             const auto writeHeader = [asset, &archive, this, &path](size_t size)
             {
@@ -415,6 +416,7 @@ namespace nv::asset
                 MeshAsset mesh;
                 std::ostringstream sstream;
                 mesh.Export(asset->GetAssetData(), sstream);
+               // mesh.Export(filePath.c_str(), ostream); // Unfortunately, Assimp's load from memory doesn't seem to work as expected
                 writeHeader((size_t)sstream.tellp());
                 ostream.write(sstream.str().c_str(), sstream.str().size());
                 break;

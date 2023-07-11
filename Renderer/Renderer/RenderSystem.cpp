@@ -311,9 +311,11 @@ namespace nv::graphics
 
             if (bones)
             {
+                animation::gAnimManager.Lock();
                 auto boneCb = boneCbs[boneIdx];
-                gRenderer->UploadToConstantBuffer(boneCb, (uint8_t*)bones, sizeof(PerArmature));
+                gRenderer->UploadToConstantBuffer(boneCb, (uint8_t*)&bones->Bones[0], sizeof(PerArmature));
                 boneIdx++;
+                animation::gAnimManager.Unlock();
             }
         }
     }
