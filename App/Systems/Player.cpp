@@ -84,6 +84,8 @@ namespace nv
         auto transform = entity->GetTransform();
         const float speed = gpPlayerComponent->mSpeed;
 
+        // TODO: Use Velocity instead of manipulating speed directly. 
+        // Apply terms to velocity and then position = position + velocity * time;
         gpPlayerComponent->mPlayerState = PLAYER_STATE_IDLE;
 
         if (transform.mPosition.y > 0)
