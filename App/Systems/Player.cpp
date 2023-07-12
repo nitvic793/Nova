@@ -17,15 +17,26 @@ namespace nv
 {
     using namespace ecs;
     using namespace input;
+    using namespace graphics::components;
+
+    enum PlayerState : uint32_t
+    {
+        PLAYER_STATE_IDLE = 0,
+        PLAYER_STATE_RUNNING = 1,
+        PLAYER_STATE_JUMP = 2
+    };
 
     struct PlayerComponent : public ecs::IComponent
     {
-        float mSpeed = 10.f;
+        float       mSpeed          = 10.f;
+        PlayerState mPlayerState    = PLAYER_STATE_IDLE;
+        float3      mVelocity       = float3(0,0,0);
 
         template<class Archive>
         void serialize(Archive& archive)
         {
             archive(mSpeed);
+            archive(mPlayerState);
         }
     };
 
@@ -33,14 +44,25 @@ namespace nv
     PlayerComponent* gpPlayerComponent = nullptr;
     FrameRecordState gFrameState = FRAME_RECORD_STOPPED;
 
+    constexpr float DegToRags(float x)
+    {
+        return 2 * XM_PI * x * (1.f / 360.f);
+    }
+
     void PlayerController::Init()
     {
         mPlayerEntity = CreateEntity(ID("Mesh/male.fbx"), ID("Bronze"), "Player");
         gpPlayerEntity = mPlayerEntity;
         auto playerEntity = gEntityManager.GetEntity(mPlayerEntity);
         gpPlayerComponent = playerEntity->Add<PlayerComponent>();
-        playerEntity->GetTransform().mScale = float3(0.05f, 0.05f, 0.05f);
-        playerEntity->Get<graphics::components::AnimationComponent>()->mCurrentAnimationIndex = 1;
+        auto transform = playerEntity->GetTransform();
+        transform.mScale = float3(0.01f, 0.01f, 0.01f);
+
+        auto rotation = XMQuaternionRotationAxis(XMVectorSet(0, 1, 0, 0), DegToRags(270));
+        math::Store(rotation, transform.mRotation);
+
+        playerEntity->Get<AnimationComponent>()->mCurrentAnimationIndex = 1;
+        playerEntity->Get<AnimationComponent>()->mIsPlaying = true;
         gEventBus.Subscribe(this, &PlayerController::OnFrameRecordStateChange);
     }
 
@@ -57,18 +79,53 @@ namespace nv
             return;
 
         Entity* entity = gEntityManager.GetEntity(mPlayerEntity);
+        auto anim = entity->Get<AnimationComponent>();
 
         auto transform = entity->GetTransform();
         const float speed = gpPlayerComponent->mSpeed;
 
+        gpPlayerComponent->mPlayerState = PLAYER_STATE_IDLE;
+
+        if (transform.mPosition.y > 0)
+        {
+            transform.mPosition.y -= 2.f * deltaTime;
+            gpPlayerComponent->mPlayerState = PLAYER_STATE_JUMP;
+        }
+
+        if (IsKeyDown(Keys::Space))
+        {
+            gpPlayerComponent->mPlayerState = PLAYER_STATE_JUMP;
+        }
+
         if (IsKeyDown(Keys::D))
         {
+            auto rotation = XMQuaternionRotationAxis(XMVectorSet(0, 1, 0, 0), DegToRags(-90));
+            math::Store(rotation, transform.mRotation);
+
             transform.mPosition.x += speed * deltaTime;
+            gpPlayerComponent->mPlayerState = PLAYER_STATE_RUNNING;
         }
 
         if (IsKeyDown(Keys::A))
         {
+            auto rotation = XMQuaternionRotationAxis(XMVectorSet(0, 1, 0, 0), DegToRags(90));
+            math::Store(rotation, transform.mRotation);
+
             transform.mPosition.x -= speed * deltaTime;
+            gpPlayerComponent->mPlayerState = PLAYER_STATE_RUNNING;
+        }
+
+        switch (gpPlayerComponent->mPlayerState)
+        {
+        case PLAYER_STATE_IDLE:
+            anim->mCurrentAnimationIndex = 1;
+            break;
+        case PLAYER_STATE_JUMP:
+            anim->mCurrentAnimationIndex = 2;
+            break;
+        case PLAYER_STATE_RUNNING:
+            anim->mCurrentAnimationIndex = 3;
+            break;
         }
     }
 

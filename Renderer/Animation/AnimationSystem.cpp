@@ -4,7 +4,7 @@
 #include <Animation/Animation.h>
 #include <Components/Renderable.h>
 #include <Renderer/ResourceManager.h>
-
+#include <Engine/JobSystem.h>
 #include <Debug/Profiler.h>
 
 namespace nv::graphics::animation
@@ -46,9 +46,14 @@ namespace nv::graphics::animation
 			auto& nodeData = gAnimManager.GetMeshAnimNodeData(meshHandle);
 			auto& boneDesc = pMesh->GetBoneData();
 
-			gAnimManager.Lock();
-			BoneTransform(*pComp, instance, animation, nodeData, boneDesc);
-			gAnimManager.Unlock();
+			auto handle = jobs::Execute([&](void*) 
+				{
+					gAnimManager.Lock();
+					BoneTransform(*pComp, instance, animation, nodeData, boneDesc);
+					gAnimManager.Unlock();
+				});
+
+			jobs::Wait(handle);
 		}
 
 	}
