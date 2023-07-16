@@ -8,6 +8,8 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/Mesh.h>
 #include <Renderer/Device.h>
+#include <Components/Renderable.h>
+#include <Animation/Animation.h>
 #include <Engine/EntityComponent.h>
 #include <Engine/Camera.h>
 
@@ -29,11 +31,15 @@ using namespace nv::ecs;
 
 namespace nv::graphics
 {
+    using namespace components;
+    using namespace animation;
+
     static bool sbEnableDebugUI = true;
 
     Handle<DescriptorHeap> mDescriptorHeapHandle;
 
     void ListEntities(bool& open);
+    void ShowAnimationPane(bool& open);
 
     static void ShowTexturePreview(bool& open)
     {
@@ -85,6 +91,7 @@ namespace nv::graphics
     static bool showDemoWindow = false;
     static bool showTexturePreview = false;
     static bool showEntityList = false;
+    static bool showAnimPane = false;
 
     void DebugUIPass::Execute(const RenderPassData& renderPassData)
     {
@@ -106,6 +113,7 @@ namespace nv::graphics
             ImGui::Begin("Nova");                                 
             ImGui::Checkbox("Texture Preview", &showTexturePreview);
             ImGui::Checkbox("Entity Manager", &showEntityList);
+            ImGui::Checkbox("Animation", &showAnimPane);
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
             ImGui::End();
         }
@@ -115,6 +123,9 @@ namespace nv::graphics
 
         if (showTexturePreview)
             ShowTexturePreview(showTexturePreview);
+
+        if (showAnimPane)
+            ShowAnimationPane(showAnimPane);
 
         ImGui::Render();
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), ctx->GetCommandList());
@@ -251,6 +262,8 @@ namespace nv::graphics
         ImGui::End();
     }
 
+    static Handle<Entity> gSelectedEntity = Null<Entity>();
+
     void ListEntities(bool& open)
     {
         auto& nameMap = gEntityManager.GetEntityNameMap();
@@ -270,6 +283,7 @@ namespace nv::graphics
 
                 if (selected)
                 {
+                    gSelectedEntity = e.second;
                     static bool showComponents = true;
                     ListComponents(e.second, showComponents);
                 }
@@ -278,6 +292,54 @@ namespace nv::graphics
             }
             ImGui::EndListBox();
         }
+        ImGui::End();
+    }
+
+    void ShowAnimationPane(bool& open)
+    {
+        if (gSelectedEntity.IsNull())
+            return;
+
+        ImGui::Begin("Animation", &open);
+        auto names = gAnimManager.GetAnimationNames();
+        Entity* pEntity = gEntityManager.GetEntity(gSelectedEntity);
+        AnimationComponent* pAnimComp = pEntity->Has<AnimationComponent>() ? pEntity->Get<AnimationComponent>() : nullptr;
+
+        static const char* currentAnim = NULL;
+
+        if (pAnimComp)
+        {
+            const std::string& currentEntityAnim = gAnimManager.GetAnimationName(pAnimComp->mCurrentAnimationIndex);
+            currentAnim = currentEntityAnim.c_str();
+        }
+        else
+        {
+            currentAnim = nullptr;
+        }
+        
+        if (ImGui::BeginCombo("##animCombo", currentAnim)) // The second parameter is the label previewed before opening the combo.
+        {
+            for (int n = 0; n < names.size(); n++)
+            {
+                bool bIsSelected = (names[n] == (currentAnim ? currentAnim : "")); // You can store your selection however you want, outside or inside your objects
+                if (ImGui::Selectable(names[n].data(), bIsSelected))
+                    currentAnim = names[n].data();
+                    if (bIsSelected)
+                        ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+            }
+            ImGui::EndCombo();
+        }
+
+
+        if (pAnimComp)
+        {
+            if (currentAnim)
+            {
+                auto animIdx = gAnimManager.GetAnimationIndex(currentAnim);
+                pAnimComp->mCurrentAnimationIndex = animIdx;
+            }
+        }
+
         ImGui::End();
     }
 

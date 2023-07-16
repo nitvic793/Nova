@@ -4,6 +4,7 @@
 #include <Renderer/ResourceManager.h>
 #include <Components/Renderable.h>
 #include <Animation/Animation.h>
+#include <DebugUI/DebugUIPass.h>
 
 namespace nv
 {
@@ -37,6 +38,11 @@ namespace nv
         }
 
         return e;
+    }
+
+    bool IsDebugUIEnabled()
+    {
+        return graphics::IsDebugUIEnabled();
     }
 
 }

@@ -46,14 +46,21 @@ namespace nv::graphics::animation
 			auto& nodeData = gAnimManager.GetMeshAnimNodeData(meshHandle);
 			auto& boneDesc = pMesh->GetBoneData();
 
-			auto handle = jobs::Execute([&](void*) 
-				{
-					gAnimManager.Lock();
-					BoneTransform(*pComp, instance, animation, nodeData, boneDesc);
-					gAnimManager.Unlock();
-				});
+			jobs::Job::Fn animJob = [&](void*)
+			{
+				gAnimManager.Lock();
+				BoneTransform(*pComp, instance, animation, nodeData, boneDesc);
+				gAnimManager.Unlock();
+			};
 
-			jobs::Wait(handle);
+			animJob(nullptr);
+
+			//auto handle = jobs::Execute([&](void*) 
+			//	{
+
+			//	});
+
+			//jobs::Wait(handle);
 		}
 
 	}
@@ -71,16 +78,21 @@ namespace nv::graphics::animation
 		float AnimationTime = fmod(TimeInTicks, (float)animation.Duration);
 		ReadNodeHeirarchy(animComponent, animation, nodeData, instanceData, boneDesc, AnimationTime);
 
-		for (uint32_t i = 0; i < instanceData.mBoneInfoSize; i++)
 		{
-			float4x4 finalTransform;
-			XMStoreFloat4x4(&finalTransform, XMMatrixTranspose(XMLoadFloat4x4(&instanceData.mBoneInfoList[i].FinalTransform)));
-			instanceData.mArmatureConstantBuffer.Bones[i] = finalTransform;
+			NV_EVENT("AnimationSystem/CopyBoneTransforms");
+			for (uint32_t i = 0; i < instanceData.mBoneInfoSize; i++)
+			{
+				float4x4 finalTransform;
+				XMStoreFloat4x4(&finalTransform, XMMatrixTranspose(XMLoadFloat4x4(&instanceData.mBoneInfoList[i].FinalTransform)));
+				instanceData.mArmatureConstantBuffer.Bones[i] = finalTransform;
+			}
 		}
 	}
 
 	void ReadNodeHeirarchy(AnimationComponent& animComponent, const Animation& animation, const MeshAnimNodeData& nodeData, AnimationInstanceData& instanceData, const MeshBoneDesc& boneDesc, float animationTime)
 	{
+		NV_EVENT("AnimationSystem/ReadNodeHeirarchy");
+
 		XMFLOAT4X4 identity;
 		XMFLOAT4X4 globalFloat4x4;
 		std::stack<const std::string*> nodeQueue;
@@ -98,6 +110,8 @@ namespace nv::graphics::animation
 
 		while (!nodeQueue.empty())
 		{
+			NV_EVENT("AnimationSystem/Interpolation");
+
 			const auto& node = nodeQueue.top();
 			auto parentTransformation = XMLoadFloat4x4(&transformationQueue.top());
 			auto nodeTransformation = XMLoadFloat4x4(&nodeData.NodeTransformsMap.find(*node)->second);
@@ -119,7 +133,7 @@ namespace nv::graphics::animation
 				auto translation = XMMatrixTranslationFromVector(t);
 
 				nodeTransformation = XMMatrixAffineTransformation(s, XMVectorSet(r.y, r.z, r.w, r.x), XMVectorSet(r.y, r.z, r.w, r.x), t);
-				//nodeTransformation = XMMatrixAffineTransformation(s, XMVectorSet(r.y, r.z, r.w, r.x), XMLoadFloat4(&r), t);
+				//nodeTransformation = XMMatrixAffineTransformation(s, XMVectorSet(r.x, r.y, r.z, r.w), XMLoadFloat4(&r), t);
 				//nodeTransformation += scaling * rotation * translation;
 			}
 

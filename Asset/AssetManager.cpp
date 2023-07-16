@@ -413,7 +413,7 @@ namespace nv::asset
             {
             case ASSET_MESH:
             {
-                MeshAsset mesh;
+                MeshAsset mesh(path);
                 std::ostringstream sstream;
                 mesh.Export(asset->GetAssetData(), sstream);
                // mesh.Export(filePath.c_str(), ostream); // Unfortunately, Assimp's load from memory doesn't seem to work as expected

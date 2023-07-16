@@ -31,8 +31,8 @@ namespace nv::graphics
 
     void InitGraphics(void* context)
     {
-        uint32_t width = 1920;
-        uint32_t height = 1080;
+        uint32_t width = 1280;
+        uint32_t height = 720;
         const bool isFullscreen = false;
 
 #if NV_PLATFORM_WINDOWS && NV_RENDERER_DX12

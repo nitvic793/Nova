@@ -73,14 +73,18 @@ namespace nv
 
     void PlayerController::Update(float deltaTime, float totalTime)
     {
+        const bool bIsDebugUIEnabled = IsDebugUIEnabled();
+        if (bIsDebugUIEnabled)
+            return;
+
         using namespace math;
         const float VELOCITY_DECAY_SPEED = 15.f;
         const float JUMP_MULTIPLIER = 2.f;
         // TODO:
-        // 1. Scene Editor + ImGui +  Scene Serialization/Deserialization
+        // 1. [Done] Scene Editor + ImGui +  Scene Serialization/Deserialization
         // 2. Basic Level with Enemies?
         // 3. PBR + IBL 
-        // 4. Animation
+        // 4. [Done] Animation
 
         if (gFrameState == FRAME_RECORD_REWINDING)
             return;

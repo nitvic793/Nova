@@ -361,6 +361,10 @@ namespace nv::graphics
     Handle<Mesh> ResourceManagerDX12::CreateMesh(const MeshDesc& desc)
     {
         Handle<Mesh> handle;
+
+        if (desc.mVertices.empty() || desc.mIndices.empty())
+            return handle;
+
         const uint32_t indexBufferSize = sizeof(uint32_t) * (uint32_t)desc.mIndices.size();
         const uint32_t vertexBufferSize = sizeof(Vertex) * (uint32_t)desc.mVertices.size();
 

@@ -9,6 +9,10 @@ namespace nv::graphics::animation
 
 	AnimationManager gAnimManager;
 
+	constexpr bool ENABLE_ANIM_ASSERT = false;
+
+#define ANIM_ASSERT(expression) if constexpr(ENABLE_ANIM_ASSERT) assert(expression);
+
 	uint32_t FindPosition(float AnimationTime, const AnimationChannel* channel)
 	{
 		const auto keySize = channel->PositionKeys.size();
@@ -18,7 +22,7 @@ namespace nv::graphics::animation
 			}
 		}
 
-		assert(0);
+		ANIM_ASSERT(0);
 		return 0;
 	}
 
@@ -31,7 +35,7 @@ namespace nv::graphics::animation
 			}
 		}
 
-		assert(0);
+		ANIM_ASSERT(0);
 		return 0;
 	}
 
@@ -44,7 +48,7 @@ namespace nv::graphics::animation
 			}
 		}
 
-		assert(0);
+		ANIM_ASSERT(0);
 		return 0;
 	}
 
@@ -59,11 +63,11 @@ namespace nv::graphics::animation
 
 		uint32_t PositionIndex = FindPosition(animTime, channel);
 		uint32_t NextPositionIndex = (PositionIndex + 1);
-		assert(NextPositionIndex < channel->PositionKeys.size());
+		ANIM_ASSERT(NextPositionIndex < channel->PositionKeys.size());
 
 		float DeltaTime = (float)(channel->PositionKeys[NextPositionIndex].Time - channel->PositionKeys[PositionIndex].Time);
 		float Factor = (animTime - (float)channel->PositionKeys[PositionIndex].Time) / DeltaTime;
-		assert(Factor >= 0.0f && Factor <= 1.0f);
+		ANIM_ASSERT(Factor >= 0.0f && Factor <= 1.0f);
 
 		auto Start = XMLoadFloat3(&channel->PositionKeys[PositionIndex].Value);
 		auto End = XMLoadFloat3(&channel->PositionKeys[NextPositionIndex].Value);
@@ -84,11 +88,11 @@ namespace nv::graphics::animation
 
 		uint32_t ScaleIndex = FindScaling(animTime, channel);
 		uint32_t NextScaleIndex = (ScaleIndex + 1);
-		assert(NextScaleIndex < channel->ScalingKeys.size());
+		ANIM_ASSERT(NextScaleIndex < channel->ScalingKeys.size());
 
 		float DeltaTime = (float)(channel->ScalingKeys[NextScaleIndex].Time - channel->ScalingKeys[ScaleIndex].Time);
 		float Factor = (animTime - (float)channel->ScalingKeys[ScaleIndex].Time) / DeltaTime;
-		assert(Factor >= 0.0f && Factor <= 1.0f);
+		ANIM_ASSERT(Factor >= 0.0f && Factor <= 1.0f);
 
 		auto Start = XMLoadFloat3(&channel->ScalingKeys[ScaleIndex].Value);
 		auto End = XMLoadFloat3(&channel->ScalingKeys[NextScaleIndex].Value);
@@ -109,11 +113,11 @@ namespace nv::graphics::animation
 
 		uint32_t RotationIndex = FindRotation(animTime, channel);
 		uint32_t NextRotationIndex = (RotationIndex + 1);
-		assert(NextRotationIndex < channel->RotationKeys.size());
+		ANIM_ASSERT(NextRotationIndex < channel->RotationKeys.size());
 
 		float DeltaTime = (float)(channel->RotationKeys[NextRotationIndex].Time - channel->RotationKeys[RotationIndex].Time);
 		float Factor = (animTime - (float)channel->RotationKeys[RotationIndex].Time) / DeltaTime;
-		assert(Factor >= 0.0f && Factor <= 1.0f);
+		ANIM_ASSERT(Factor >= 0.0f && Factor <= 1.0f);
 
 		auto StartRotationQ = XMLoadFloat4(&channel->RotationKeys[RotationIndex].Value);
 		auto EndRotationQ = XMLoadFloat4(&channel->RotationKeys[NextRotationIndex].Value);
@@ -206,12 +210,12 @@ namespace nv::graphics::animation
 		return &mAnimStore.Animations[animIndex].Channels[channelIndex];
 	}
 
-	std::vector<std::string> AnimationManager::GetAnimationNames() const
+	std::vector<std::string_view> AnimationManager::GetAnimationNames() const
 	{
-		std::vector<std::string> animNames;
-		for (auto anim : mAnimStore.AnimationIndexMap)
+		std::vector<std::string_view> animNames;
+		for (const auto& anim : mAnimStore.AnimationIndexMap)
 		{
-			animNames.push_back(anim.first);
+			animNames.push_back(anim.first.c_str());
 		}
 
 		return animNames;
@@ -220,6 +224,11 @@ namespace nv::graphics::animation
 	uint32_t AnimationManager::GetAnimationCount() const
 	{
 		return (uint32_t)mAnimStore.Animations.size();
+	}
+
+	uint32_t animation::AnimationManager::GetAnimationIndex(const char* pName) const
+	{
+		return mAnimStore.AnimationIndexMap.at(pName);
 	}
 
 	bool AnimationManager::IsAnimationIndexValid(uint32_t animationIndex) const

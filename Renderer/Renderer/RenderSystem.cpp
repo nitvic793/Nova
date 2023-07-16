@@ -111,6 +111,9 @@ namespace nv::graphics
         loadMesh(ID("Mesh/torus.obj"));
         loadMesh(ID("Mesh/cone.obj"));
         loadMesh(ID("Mesh/male.fbx"));
+        loadMesh(ID("Mesh/anim_running.fbx"));
+        loadMesh(ID("Mesh/anim_idle.fbx"));
+        loadMesh(ID("Mesh/knight.fbx"));
         loadMaterials();
         gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/SunnyCubeMap.dds") });
         gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/Sky.hdr") });
@@ -147,6 +150,7 @@ namespace nv::graphics
 
         mRenderJobHandle = nv::jobs::Execute([this](void* ctx) 
         { 
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             log::Info("[Renderer] Start Render Job");
             RenderThreadJob(ctx); 
         });

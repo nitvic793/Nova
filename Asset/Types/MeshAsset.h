@@ -16,6 +16,12 @@ namespace nv::asset
         using MeshAnimNodeData = graphics::animation::MeshAnimNodeData;
 
     public:
+        MeshAsset(const std::string& filePath) :
+            mFilePath(filePath) {}
+
+        MeshAsset() :
+            mFilePath("") {}
+
         void Deserialize(const AssetData& data);
         void Export(const AssetData& data, std::ostream& ostream);
         void Export(const char* pFilename, std::ostream& ostream);
@@ -27,7 +33,8 @@ namespace nv::asset
 
     private:
         MeshDesc                mData = {};
-        AnimationStore          mAnimStore;
-        MeshAnimNodeData        mAnimNodeData;
+        AnimationStore          mAnimStore = {};
+        MeshAnimNodeData        mAnimNodeData = {};
+        const std::string&      mFilePath;
     };
 }

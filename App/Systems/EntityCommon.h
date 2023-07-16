@@ -22,4 +22,6 @@ namespace nv
     };
 
     Handle<ecs::Entity> CreateEntity(graphics::ResID mesh, graphics::ResID mat, const char* pDebugName = nullptr, const Transform& transform = Transform());
+
+    bool IsDebugUIEnabled();
 }

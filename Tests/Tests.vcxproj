@@ -117,7 +117,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(MSBuildThisFileDirectory)include;%(AdditionalIncludeDirectories);$(SolutionDir)Shared\External\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(MSBuildThisFileDirectory)include;%(AdditionalIncludeDirectories);$(SolutionDir)Asset\;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer\;$(SolutionDir)Data\Shaders</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>

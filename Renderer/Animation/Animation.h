@@ -96,8 +96,9 @@ namespace nv::graphics::animation
 		const std::string&			GetAnimationName(uint32_t index) const;
 		int32_t						GetChannelIndex(uint32_t animationIndex, const std::string& node) const;
 		const AnimationChannel*		GetChannel(uint32_t animIndex, const std::string& node) const;
-		std::vector<std::string>	GetAnimationNames() const;
+		std::vector<std::string_view>	GetAnimationNames() const;
 		uint32_t					GetAnimationCount() const;
+		uint32_t					GetAnimationIndex(const char* pName) const;
 		bool						IsAnimationIndexValid(uint32_t animationIndex) const;
 		void						Lock();
 		void						Unlock();

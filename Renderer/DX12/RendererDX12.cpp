@@ -21,7 +21,7 @@
 #include <Debug/Profiler.h>
 #include <Engine/Log.h>
 
-extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 606; }
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 610; }
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\"; }
 
 namespace nv::graphics
@@ -586,7 +586,7 @@ namespace nv::graphics
 
     void ReportLeaksDX12()
     {
-#ifdef _DEBUG
+#if defined(_DEBUG) || defined(NV_RENDERER_ENABLE_DEBUG_LAYER)
         Microsoft::WRL::ComPtr<IDXGIDebug1> pDebug = nullptr;
         if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDebug))))
         {

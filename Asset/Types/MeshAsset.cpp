@@ -179,6 +179,12 @@ namespace nv::asset
 			utility::LoadAnimations(pScene, animNodeData, animStore);
 		}
 
+		if (animStore.Animations.size() == 1)
+		{
+			animStore.Animations[0].AnimationName = animStore.Animations[0].AnimationName + "|" + mFilePath;
+			animStore.AnimationIndexMap[animStore.Animations[0].AnimationName] = 0;
+		}
+
 		cereal::BinaryOutputArchive archive(ostream);
 		archive(mData);
 		archive(animNodeData);
@@ -187,7 +193,9 @@ namespace nv::asset
 
 	void MeshAsset::Register(Handle<graphics::Mesh> handle)
 	{
-		gAnimManager.Register(handle, mAnimNodeData);
+		if(!handle.IsNull())
+			gAnimManager.Register(handle, mAnimNodeData);
+
 		gAnimManager.Register(mAnimStore);
 	}
 
