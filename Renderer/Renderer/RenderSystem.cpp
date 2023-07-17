@@ -245,6 +245,8 @@ namespace nv::graphics
 
     void RenderSystem::UploadDrawData()
     {
+        NV_EVENT("Renderer/UploadDrawData");
+
         auto camHandle = GetActiveCamera();
         if (camHandle.IsNull())
             return;
@@ -313,14 +315,24 @@ namespace nv::graphics
                 gRenderer->UploadToConstantBuffer(matCb, (uint8_t*)&matData, sizeof(MaterialData));
             }
 
-            if (bones)
+
+        }
+
+        {
+            NV_EVENT("Renderer/UploadBoneTransforms");
+            animation::gAnimManager.Lock();
+            for (size_t i = 0; i < objectCbs.Size(); ++i)
             {
-                animation::gAnimManager.Lock();
-                auto boneCb = boneCbs[boneIdx];
-                gRenderer->UploadToConstantBuffer(boneCb, (uint8_t*)&bones->Bones[0], sizeof(PerArmature));
-                boneIdx++;
-                animation::gAnimManager.Unlock();
+                auto& bones = mCurrentRenderData[i].mpBones;
+                if (bones)
+                {
+
+                    auto boneCb = boneCbs[boneIdx];
+                    gRenderer->UploadToConstantBuffer(boneCb, (uint8_t*)&bones->Bones[0], sizeof(PerArmature));
+                    boneIdx++;
+                }
             }
+            animation::gAnimManager.Unlock();
         }
     }
 

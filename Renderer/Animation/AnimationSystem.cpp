@@ -25,6 +25,8 @@ namespace nv::graphics::animation
 		if (!pComponentPool)
 			return;
 
+		nv::Vector<Handle<jobs::Job>> jobHandles;
+		nv::Vector<AnimationInstanceData> animInstances;
 		ecs::EntityComponents<AnimationComponent> components;
 		pComponentPool->GetEntityComponents(components);
 
@@ -46,22 +48,34 @@ namespace nv::graphics::animation
 			auto& nodeData = gAnimManager.GetMeshAnimNodeData(meshHandle);
 			auto& boneDesc = pMesh->GetBoneData();
 
-			jobs::Job::Fn animJob = [&](void*)
+			auto& copyInstance = animInstances.Emplace();
+			copyInstance = instance;
+
+			auto handle = jobs::Execute([&](void*)
 			{
-				gAnimManager.Lock();
-				BoneTransform(*pComp, instance, animation, nodeData, boneDesc);
-				gAnimManager.Unlock();
-			};
+				BoneTransform(*pComp, copyInstance, animation, nodeData, boneDesc);
+			});
 
-			animJob(nullptr);
-
-			//auto handle = jobs::Execute([&](void*) 
-			//	{
-
-			//	});
-
-			//jobs::Wait(handle);
+			jobHandles.Push(handle);
 		}
+
+		for (auto& handle : jobHandles)
+		{
+			jobs::Wait(handle);
+		}
+
+		{
+			NV_EVENT("AnimationSystem/CopyAnimInstanceData");
+			gAnimManager.Lock();
+			for (size_t i = 0; i < components.mEntities.size(); ++i)
+			{
+				auto& instance = gAnimManager.GetInstance(components.mEntities[i]);
+				instance = animInstances[i];
+			}
+
+			gAnimManager.Unlock();
+		}
+
 
 	}
 
