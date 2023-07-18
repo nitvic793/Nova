@@ -16,8 +16,10 @@ namespace nv::graphics
     private:
     };
 
+    void SetEnableDebugDraw(bool enable);
     void SetEnableDebugUI(bool enable);
     bool IsDebugUIEnabled();
+    bool IsDebugDrawEnabled();
 
 #else
     // Empty implementation

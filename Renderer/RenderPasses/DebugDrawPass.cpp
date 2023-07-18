@@ -11,6 +11,7 @@
 #include <DebugUI/DebugDraw.h>
 #include <DX12/Interop.h>
 #include <DX12/ContextDX12.h>
+#include <DebugUI/DebugUIPass.h>
 
 #include <EffectPipelineStateDescription.h>
 #include <CommonStates.h>
@@ -52,6 +53,9 @@ void DebugDrawPass::Init()
 
 void DebugDrawPass::Execute(const RenderPassData& renderPassData)
 {
+	if (!IsDebugDrawEnabled())
+		return;
+
 	auto renderer = (RendererDX12*)gRenderer;
 	auto ctx = (ContextDX12*)renderer->GetContext();
 	auto pool = ecs::gComponentManager.GetPool<math::BoundingBox>();
