@@ -11,8 +11,8 @@ namespace nv::graphics::animation
 {
 	using namespace components;
 
-	void ReadNodeHeirarchy(AnimationComponent& animComponent, const Animation& animation, const MeshAnimNodeData& nodeData, AnimationInstanceData& instanceData, const MeshBoneDesc& boneDesc, float animationTime);
-	void BoneTransform(AnimationComponent& animComponent, AnimationInstanceData& instanceData, const Animation& animation, const MeshAnimNodeData& nodeData, const MeshBoneDesc& boneDesc);
+	void ReadNodeHeirarchy(const AnimationComponent& animComponent, const Animation& animation, const MeshAnimNodeData& nodeData, AnimationInstanceData& instanceData, const MeshBoneDesc& boneDesc, float animationTime);
+	void BoneTransform(const AnimationComponent& animComponent, AnimationInstanceData& instanceData, const Animation& animation, const MeshAnimNodeData& nodeData, const MeshBoneDesc& boneDesc);
 
 	void AnimationSystem::Init()
 	{
@@ -20,15 +20,37 @@ namespace nv::graphics::animation
 
 	void AnimationSystem::Update(float deltaTime, float totalTime)
 	{
-		NV_EVENT("AnimationSystem/Update")
+		NV_EVENT("AnimationSystem/Update");
 		auto pComponentPool = ecs::gComponentManager.GetPool<AnimationComponent>();
 		if (!pComponentPool)
 			return;
 
+		auto pRenderablePool = ecs::gComponentManager.GetPool<Renderable>();
+        ecs::EntityComponents<Renderable> renderables;
+		pRenderablePool->GetEntityComponents(renderables);
+
+		for (uint32_t i=0;i<renderables.Size();++i)
+		{
+			auto data = renderables[i];
+			if (data.mpComponent->mMesh.IsNull())
+				continue;
+
+			auto mpMesh = gResourceManager->GetMesh(data.mpComponent->mMesh);
+			if (mpMesh->HasBones() && !data.mpEntity->Has<AnimationComponent>())
+			{
+				data.mpEntity->Add<AnimationComponent>();
+				gAnimManager.Register(renderables.mEntities[i], mpMesh);
+			}
+			else if (!mpMesh->HasBones() && data.mpEntity->Has<AnimationComponent>())
+			{
+				data.mpEntity->Remove<AnimationComponent>();
+			}
+		}
+
 		nv::Vector<Handle<jobs::Job>> jobHandles;
 		nv::Vector<AnimationInstanceData> animInstances;
-		ecs::EntityComponents<AnimationComponent> components;
-		pComponentPool->GetEntityComponents(components);
+        ecs::EntityComponents<AnimationComponent> components;
+        pComponentPool->GetEntityComponents(components);
 
 		for (size_t i = 0; i < components.mComponents.size(); ++i)
 		{
@@ -51,20 +73,26 @@ namespace nv::graphics::animation
 			auto& copyInstance = animInstances.Emplace();
 			copyInstance = instance;
 
-			auto handle = jobs::Execute([&](void*)
-			{
-				BoneTransform(*pComp, copyInstance, animation, nodeData, boneDesc);
-			});
+			BoneTransform(*pComp, copyInstance, animation, nodeData, boneDesc);
 
-			jobHandles.Push(handle);
+			//auto handle = jobs::Execute([&](void*)
+			//{
+			//	BoneTransform(*pComp, copyInstance, animation, nodeData, boneDesc);
+			//});
+
+			//jobHandles.Push(handle);
 		}
 
 		for (auto& handle : jobHandles)
 		{
-			jobs::Wait(handle);
+			//jobs::Wait(handle);
 		}
 
 		{
+			// Since the rendering thread can access the bone  
+			// transform data, we need to ensure synchronized
+			// access. Hence, above, we only work on copy of the
+			// data and then update it in one go below.
 			NV_EVENT("AnimationSystem/CopyAnimInstanceData");
 			gAnimManager.Lock();
 			for (size_t i = 0; i < components.mEntities.size(); ++i)
@@ -72,7 +100,6 @@ namespace nv::graphics::animation
 				auto& instance = gAnimManager.GetInstance(components.mEntities[i]);
 				instance = animInstances[i];
 			}
-
 			gAnimManager.Unlock();
 		}
 
@@ -83,9 +110,9 @@ namespace nv::graphics::animation
 	{
 	}
 
-	void BoneTransform(AnimationComponent& animComponent, AnimationInstanceData& instanceData, const Animation& animation, const MeshAnimNodeData& nodeData, const MeshBoneDesc& boneDesc)
+	void BoneTransform(const AnimationComponent& animComponent, AnimationInstanceData& instanceData, const Animation& animation, const MeshAnimNodeData& nodeData, const MeshBoneDesc& boneDesc)
 	{
-		NV_EVENT("AnimationSystem/BoneTransform")
+		NV_EVENT("AnimationSystem/BoneTransform");
 		float totalTime = animComponent.mTotalTime;
 		float TicksPerSecond = (float)(animation.TicksPerSecond != 0 ? animation.TicksPerSecond : 25.0f);
 		float TimeInTicks = totalTime * TicksPerSecond;
@@ -103,7 +130,7 @@ namespace nv::graphics::animation
 		}
 	}
 
-	void ReadNodeHeirarchy(AnimationComponent& animComponent, const Animation& animation, const MeshAnimNodeData& nodeData, AnimationInstanceData& instanceData, const MeshBoneDesc& boneDesc, float animationTime)
+	void ReadNodeHeirarchy(const AnimationComponent& animComponent, const Animation& animation, const MeshAnimNodeData& nodeData, AnimationInstanceData& instanceData, const MeshBoneDesc& boneDesc, float animationTime)
 	{
 		NV_EVENT("AnimationSystem/ReadNodeHeirarchy");
 

@@ -115,9 +115,10 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer;$(SolutionDir)Data\Shaders</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer;$(SolutionDir)Data\Shaders;$(SolutionDir)Shared\External\tracy</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
       <AdditionalOptions>/D _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS %(AdditionalOptions)</AdditionalOptions>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -135,7 +136,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer;$(SolutionDir)Data\Shaders</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer;$(SolutionDir)Data\Shaders;$(SolutionDir)Shared\External\tracy</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>

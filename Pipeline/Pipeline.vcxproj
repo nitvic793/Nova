@@ -138,6 +138,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Shared\External\tracy\TracyClient.cpp" />
     <ClCompile Include="Pipeline.cpp" />
   </ItemGroup>
   <ItemGroup>

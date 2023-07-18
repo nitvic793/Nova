@@ -26,6 +26,7 @@ namespace nv
         std::mutex              mMutex;
         std::condition_variable mConditionVar;
         std::queue<T>           mQueue;
+        std::atomic_bool        mbIsEmpty = true;
     };
 
     template<typename T>
@@ -37,6 +38,7 @@ namespace nv
             lock.unlock();
         }
 
+        mbIsEmpty.store(false);
         mConditionVar.notify_one();
     }
 
@@ -49,6 +51,7 @@ namespace nv
             lock.unlock();
         }
 
+        mbIsEmpty.store(false);
         mConditionVar.notify_one();
     }
 
@@ -61,6 +64,7 @@ namespace nv
             lock.unlock();
         }
 
+        mbIsEmpty.store(false);
         mConditionVar.notify_one();
     }
 
@@ -78,6 +82,7 @@ namespace nv
 
         auto val = mQueue.front();
         mQueue.pop();
+        mbIsEmpty.store(mQueue.empty());
         return val;
     }
 
@@ -95,6 +100,7 @@ namespace nv
 
         val = std::move(mQueue.front());
         mQueue.pop();
+        mbIsEmpty.store(mQueue.empty());
     }
 
     template<typename T>
@@ -106,6 +112,6 @@ namespace nv
     template<typename T>
     inline bool ConcurrentQueue<T>::IsEmpty() const
     {
-        return mQueue.empty();
+        return mbIsEmpty.load();
     }
 }

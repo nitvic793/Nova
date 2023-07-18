@@ -241,7 +241,7 @@ namespace nv::graphics
                     data.DirLights[i] = dirLights[i];
                 }
 
-                data.DirLightsCount = min((uint32_t)MAX_DIRECTIONAL_LIGHTS, (uint32_t)dirLights.Size());
+                data.DirLightsCount = std::min((uint32_t)MAX_DIRECTIONAL_LIGHTS, (uint32_t)dirLights.Size());
             }
 
             renderer->UploadToConstantBuffer(cameraCbv, (uint8_t*)&data, sizeof(FrameData));
@@ -353,7 +353,7 @@ namespace nv::graphics
             bottomLevelInputs.pGeometryDescs = &geomDesc;
             dxrDevice->GetRaytracingAccelerationStructurePrebuildInfo(&bottomLevelInputs, &bottomLevelPrebuildInfo);
 
-            auto scratchResource = createUavBuffer(max(topLevelPrebuildInfo.ScratchDataSizeInBytes, bottomLevelPrebuildInfo.ScratchDataSizeInBytes), STATE_UNORDERED_ACCESS, "RT/Scratch");
+            auto scratchResource = createUavBuffer(std::max(topLevelPrebuildInfo.ScratchDataSizeInBytes, bottomLevelPrebuildInfo.ScratchDataSizeInBytes), STATE_UNORDERED_ACCESS, "RT/Scratch");
             mRtObjects->mBlas = createUavBuffer(bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes, STATE_RAYTRACING_STRUCTURE, "RT/Blas");
             mRtObjects->mTlas = createUavBuffer(topLevelPrebuildInfo.ResultDataMaxSizeInBytes, STATE_RAYTRACING_STRUCTURE, "RT/Tlas");
 

@@ -100,8 +100,18 @@ namespace nv::ecs
     template<typename TComp>
     struct EntityComponents
     {
+        struct Instance
+        {
+            Entity* mpEntity;
+            TComp* mpComponent;
+        };
+
         nv::Vector<Handle<Entity>> mEntities;
         nv::Vector<TComp*> mComponents;
+
+        constexpr size_t Size() const { return mEntities.size(); }
+
+        Instance operator[](size_t idx) const;
     };
 
     class IComponentPool 
@@ -394,6 +404,19 @@ namespace nv::ecs
             return pool->GetComponent(handle)->As<TComp>();
         }
 
+        template<typename TComp>
+        void Remove()
+        {
+            auto compName = GetComponentName<TComp>();
+            constexpr StringID compId = GetComponentID<TComp>();
+            gComponentNames[std::string(compName)] = compId;
+            if (!gComponentManager.IsPoolAvailable(compId))
+                return;
+
+            ComponentPool<TComp>* pool = gComponentManager.GetPool<TComp>();
+            pool->RemoveEntity(mHandle);
+        }
+
         IComponent* Add(StringID compId);
 
         void AttachTransform(const Transform& transform = Transform());
@@ -466,6 +489,12 @@ namespace nv::ecs
 
     void SerializeScene(std::ostream& o);
     void DeserializeScene(std::istream& i);
+
+    template<typename TComp>
+    EntityComponents<TComp>::Instance EntityComponents<TComp>::operator[](size_t i) const
+    {
+        return {.mpEntity = gEntityManager.GetEntity(mEntities[i]), .mpComponent = mComponents[i] };
+    }
 }
 
 #endif // !NV_ENGINE_ENTITYCOMPONENT

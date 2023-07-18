@@ -113,9 +113,10 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include;$(SolutionDir)Data\Shaders;$(SolutionDir)Shared\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include;$(SolutionDir)Data\Shaders;$(SolutionDir)Shared\;$(SolutionDir)Shared\External\tracy</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -133,7 +134,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include;$(SolutionDir)Data\Shaders;$(SolutionDir)Shared\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include;$(SolutionDir)Data\Shaders;$(SolutionDir)Shared\;$(SolutionDir)Shared\External\tracy</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>

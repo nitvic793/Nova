@@ -154,6 +154,7 @@ namespace nv
         {
             mFreeIndices.clear();
             mGenerations.clear();
+            mGenerations.resize(mCapacity);
             mSize = 0;
         }
 

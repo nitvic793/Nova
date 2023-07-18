@@ -41,6 +41,7 @@ namespace nv
 
         while (UpdateSystemState())
         {
+            NV_FRAME_MARK();
             NV_FRAME("MainThread");
             gTimer.Tick();
             {

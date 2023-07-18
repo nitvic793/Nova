@@ -30,6 +30,12 @@ namespace nv::jobs
             mJobs.Init();
         }
 
+        void Poll()
+        {
+            mConditionVar.notify_one();
+            std::this_thread::yield();
+        }
+
         virtual Handle<Job> Enqueue(Job&& job) override
         {
             Handle<Job> handle = mJobs.Create();
@@ -46,18 +52,23 @@ namespace nv::jobs
             if (!mJobs.IsValid(handle)) 
                 return;
 
-            while (mJobs.IsValid(handle))
+            auto job = mJobs.GetAsDerived(handle);
+            while (!job->IsFinished())
             {
-                std::this_thread::yield();
+                Poll();
             }
+
+            Remove(handle);
         }
 
         virtual void Wait() override
         {
             while (!mQueue.IsEmpty())
             {
-                std::this_thread::yield();
+                Poll();
             }
+
+            mJobs.Destroy();
         }
 
         virtual bool IsFinished(Handle<Job> handle) override
@@ -83,8 +94,8 @@ namespace nv::jobs
 
             auto worker = [&]()
             {
-                const auto threadId = std::hash<std::thread::id>{}(std::this_thread::get_id());
-                const auto jobThreadName = nv::Format("NovaWorker-{}", threadId);
+                const auto threadId = std::hash<std::jthread::id>{}(std::this_thread::get_id());
+                const auto jobThreadName = nv::Format("NovaWorker-{:x}", threadId);
                 NV_THREAD(jobThreadName.c_str());
                 while (mIsRunning)
                 {
@@ -107,10 +118,6 @@ namespace nv::jobs
                         {
                             job->Invoke();
                             job->mIsFinished.store(true);
-                            {
-                                std::unique_lock<std::mutex> lock(mMutex);
-                                mJobs.Remove(jobHandle);
-                            }
                         }
                     }
                 }
@@ -118,7 +125,7 @@ namespace nv::jobs
 
             for (uint32_t i = 0; i < mThreadCount; ++i)
             {
-                mThreads[i] = std::thread(worker);
+                mThreads[i] = std::jthread(worker);
 
 #ifdef _WIN32 // Credits: https://wickedengine.net/2018/11/24/simple-job-system-using-standard-c/#comments
                 // Do Windows-specific thread setup:
@@ -144,12 +151,12 @@ namespace nv::jobs
 
     private:
         uint32_t                        mThreadCount;
-        bool                            mIsRunning;
+        std::atomic_bool                mIsRunning;
         Pool<Job>                       mJobs;
         ConcurrentQueue<Handle<Job>>    mQueue;
         std::condition_variable         mConditionVar;
         std::mutex                      mMutex;
-        std::vector<std::thread>        mThreads;
+        std::vector<std::jthread>       mThreads;
     };
 
     void InitJobSystem(uint32_t threads)
