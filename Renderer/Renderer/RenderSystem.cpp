@@ -241,7 +241,7 @@ namespace nv::graphics
             gRenderer->EndFrame();
             gRenderer->Present();
             gRenderer->ExecuteQueuedDestroy();
-            if (mRenderData.GetRenderDataQueueSize() > 1)
+            if (mRenderData.GetRenderDataQueueSize() > 2)
             {
                 gContext.mpInstance->Wait(); // Wait until main thread notifies us it's done
             }

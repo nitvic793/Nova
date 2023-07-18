@@ -43,7 +43,16 @@ namespace nv
         gTimer.Start();
         gSystemManager.InitSystems();
 
-        while (UpdateSystemState())
+        jobs::Execute([this](void* ctx) 
+        {
+            NV_FRAME("InputThread");
+            while (UpdateSystemState())
+            {
+                Wait();
+            }
+        });
+
+        while (gInstanceState.load() == INSTANCE_STATE_RUNNING)
         {
             NV_FRAME_MARK();
             NV_FRAME("MainThread");
@@ -54,7 +63,7 @@ namespace nv
                 gSystemManager.UpdateSystems(gTimer.DeltaTime, gTimer.TotalTime);
             }
 
-            Notify(); // Notify end of frame to other threads;
+            Notify(); // Notify end of frame to other threads
         }
         return true;
     }
