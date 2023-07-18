@@ -14,6 +14,7 @@
 #include <Interop/ShaderInteropTypes.h>
 #include <DebugUI/DebugUIPass.h>
 #include "EntityCommon.h"
+#include <Math/Collision.h>
 #include <sstream>
 #include <fstream>
 
@@ -76,6 +77,24 @@ namespace nv
     void DriverSystem::Update(float deltaTime, float totalTime)
     {
         using namespace input;
+
+        auto pPool = gComponentManager.GetPool<math::BoundingBox>();
+        EntityComponents<math::BoundingBox> comps;
+        pPool->GetEntityComponents(comps);
+        
+        for (uint32_t i = 0; i < comps.Size(); ++i)
+        {
+            auto pEntity = comps[i].mpEntity;
+            auto transform = pEntity->GetTransform();
+            auto meshHandle = pEntity->Get<graphics::components::Renderable>()->mMesh;
+            auto pMesh = graphics::gResourceManager->GetMesh(meshHandle);
+            if(!pMesh->HasBones())
+                pMesh->GetBoundingBox().mBounding.Transform(comps[i].mpComponent->mBounding, math::Load(transform.GetTransformMatrix()));
+            else
+            {
+                comps[i].mpComponent->mBounding.Center = transform.mPosition;
+            }
+        }
 
         if (mFrameRecordState != FRAME_RECORD_REWINDING)
         {

@@ -21,6 +21,11 @@
 #include <Debug/Profiler.h>
 #include <Engine/Log.h>
 
+#if NV_ENABLE_DEBUG_UI
+#include "GraphicsMemory.h"
+#include <RenderPasses/DebugDrawPass.h>
+#endif
+
 extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 610; }
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\"; }
 
@@ -90,6 +95,10 @@ namespace nv::graphics
         NV_EVENT("Renderer/Present");
         auto device = (DeviceDX12*)mDevice.Get();
         device->Present();
+
+#if NV_RENDERER_DX12 && NV_ENABLE_DEBUG_UI
+        GetGraphicsMemory()->Commit(mCommandQueue.Get());
+#endif
     }
 
     void RendererDX12::InitFrameBuffers(const Window& window, const format::SurfaceFormat format)

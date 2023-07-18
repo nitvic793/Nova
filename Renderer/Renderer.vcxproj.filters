@@ -207,6 +207,12 @@
     <ClInclude Include="Animation\AnimationSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DebugUI\DebugDraw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPasses\DebugDrawPass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer\Renderer.cpp">
@@ -327,6 +333,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Animation\AnimationSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugUI\DebugDraw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPasses\DebugDrawPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

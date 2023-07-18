@@ -12,6 +12,7 @@
 #include <Animation/Animation.h>
 #include <Engine/EntityComponent.h>
 #include <Engine/Camera.h>
+#include <Math/Collision.h>
 
 #include "Imgui/imgui.h"
 
@@ -231,6 +232,28 @@ namespace nv::graphics
                 case FIELD_UNDEFINED:
                     if (field.mType == "Camera")
                         offset += sizeof(Camera);
+                    if (field.mType == "DirectX::BoundingBox")
+                    {
+                        offset += sizeof(DirectX::BoundingBox);
+                        auto bbox = (DirectX::BoundingBox*)pCurrent;
+
+                        MetaField center = { .mName = "Center" };
+                        MetaField extents = { .mName = "Extents" };
+
+                        Visit((float3*)&bbox->Extents, extents, pName);
+                        Visit((float3*)&bbox->Center, center, pName);
+                    }
+                    if (field.mType == "DirectX::BoundingSphere")
+                    {
+                        offset += sizeof(DirectX::BoundingSphere);
+                        auto bsphere = (DirectX::BoundingSphere*)pCurrent;
+
+                        MetaField center = { .mName = "Center" };
+                        MetaField radius = { .mName = "Radius" };
+
+                        Visit((float3*)&bsphere->Radius, center, pName);
+                        Visit((float3*)&bsphere->Center, radius, pName);
+                    }
                     break;
                 default:
                     // Do Nothing

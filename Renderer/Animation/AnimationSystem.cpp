@@ -45,6 +45,9 @@ namespace nv::graphics::animation
 			{
 				data.mpEntity->Remove<AnimationComponent>();
 			}
+
+			math::BoundingBox* pBbox = data.mpEntity->Get<math::BoundingBox>();
+
 		}
 
 		nv::Vector<Handle<jobs::Job>> jobHandles;
@@ -102,8 +105,6 @@ namespace nv::graphics::animation
 			}
 			gAnimManager.Unlock();
 		}
-
-
 	}
 
 	void AnimationSystem::Destroy()

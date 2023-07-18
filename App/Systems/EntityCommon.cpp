@@ -5,6 +5,7 @@
 #include <Components/Renderable.h>
 #include <Animation/Animation.h>
 #include <DebugUI/DebugUIPass.h>
+#include <Math/Collision.h>
 
 namespace nv
 {
@@ -35,6 +36,9 @@ namespace nv
                 entity->Add<components::AnimationComponent>();
                 gAnimManager.Register(e.mHandle, pMesh);
             }
+
+            auto pBox = entity->Add<BoundingBox>();
+            *pBox = pMesh->GetBoundingBox();
         }
 
         return e;

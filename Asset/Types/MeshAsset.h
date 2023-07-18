@@ -35,6 +35,6 @@ namespace nv::asset
         MeshDesc                mData = {};
         AnimationStore          mAnimStore = {};
         MeshAnimNodeData        mAnimNodeData = {};
-        const std::string&      mFilePath;
+        const std::string       mFilePath;
     };
 }

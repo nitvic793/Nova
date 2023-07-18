@@ -12,7 +12,7 @@
 // Define TRACY_ENABLE to enable profiler.
 
 #include "pch.h"
-#define TRACY_ENABLE 1
+#define TRACY_ENABLE 0
 
 #include "common/TracySystem.cpp"
 

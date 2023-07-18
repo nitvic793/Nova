@@ -31,6 +31,7 @@
 #include <RenderPasses/ForwardPass.h>
 #include <RenderPasses/RaytracePass.h>
 #include <RenderPasses/Skybox.h>
+#include <RenderPasses/DebugDrawPass.h>
 
 #include <DebugUI/DebugUIPass.h>
 
@@ -138,6 +139,7 @@ namespace nv::graphics
         mRenderPasses.Emplace(Alloc<RTCompute>());
         mRenderPasses.Emplace(Alloc<ForwardPass>());
         mRenderPasses.Emplace(Alloc<Skybox>());
+        mRenderPasses.Emplace(Alloc<DebugDrawPass>());
         //mRenderPasses.Emplace(Alloc<RaytracePass>());
         mRenderPasses.Emplace(Alloc<DebugUIPass>());
 
@@ -164,6 +166,7 @@ namespace nv::graphics
 
     void RenderSystem::Destroy()
     {
+        gContext.mpInstance->Notify();
         nv::jobs::Wait(mRenderJobHandle);
         gRenderer->Wait();
         for (auto& pass : mRenderPasses)
@@ -241,7 +244,7 @@ namespace nv::graphics
             gRenderer->EndFrame();
             gRenderer->Present();
             gRenderer->ExecuteQueuedDestroy();
-            if (mRenderData.GetRenderDataQueueSize() > 2)
+            if (mRenderData.GetRenderDataQueueSize() > 2 && gContext.mpInstance->GetInstanceState() == INSTANCE_STATE_RUNNING)
             {
                 gContext.mpInstance->Wait(); // Wait until main thread notifies us it's done
             }
@@ -319,8 +322,6 @@ namespace nv::graphics
                 matData.MetalnessOffset = gResourceManager->GetTexture(mat->mTextures[Material::METALNESS])->GetHeapIndex();
                 gRenderer->UploadToConstantBuffer(matCb, (uint8_t*)&matData, sizeof(MaterialData));
             }
-
-
         }
 
         {

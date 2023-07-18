@@ -152,6 +152,7 @@
     <ClInclude Include="BVH\BVH.h" />
     <ClInclude Include="Components\Material.h" />
     <ClInclude Include="Components\Renderable.h" />
+    <ClInclude Include="DebugUI\DebugDraw.h" />
     <ClInclude Include="DebugUI\DebugUIPass.h" />
     <ClInclude Include="DebugUI\Imgui\imconfig.h" />
     <ClInclude Include="DebugUI\Imgui\imgui.h" />
@@ -206,6 +207,7 @@
     <ClInclude Include="Renderer\SwapChain.h" />
     <ClInclude Include="Renderer\Texture.h" />
     <ClInclude Include="Renderer\Window.h" />
+    <ClInclude Include="RenderPasses\DebugDrawPass.h" />
     <ClInclude Include="RenderPasses\ForwardPass.h" />
     <ClInclude Include="RenderPasses\GBuffer.h" />
     <ClInclude Include="RenderPasses\RaytracePass.h" />
@@ -216,6 +218,7 @@
     <ClCompile Include="Animation\Animation.cpp" />
     <ClCompile Include="Animation\AnimationSystem.cpp" />
     <ClCompile Include="BVH\BVH.cpp" />
+    <ClCompile Include="DebugUI\DebugDraw.cpp" />
     <ClCompile Include="DebugUI\DebugUIPass.cpp" />
     <ClCompile Include="DebugUI\Imgui\imgui.cpp" />
     <ClCompile Include="DebugUI\Imgui\imgui_demo.cpp" />
@@ -247,12 +250,14 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Renderer\GPUProfile.cpp" />
+    <ClCompile Include="Renderer\Mesh.cpp" />
     <ClCompile Include="Renderer\RenderDataArray.cpp" />
     <ClCompile Include="Renderer\Renderer.cpp" />
     <ClCompile Include="Renderer\RenderPass.cpp" />
     <ClCompile Include="Renderer\RenderSystem.cpp" />
     <ClCompile Include="Renderer\ResourceManager.cpp" />
     <ClCompile Include="Renderer\ResourceTracker.cpp" />
+    <ClCompile Include="RenderPasses\DebugDrawPass.cpp" />
     <ClCompile Include="RenderPasses\ForwardPass.cpp" />
     <ClCompile Include="RenderPasses\GBuffer.cpp" />
     <ClCompile Include="RenderPasses\RaytracePass.cpp" />

@@ -4,6 +4,7 @@
 #include <Engine/Component.h>
 #include <vector>
 #include <BVH/BVH.h>
+#include <Math/Collision.h>
 
 namespace nv::graphics
 {
@@ -73,13 +74,17 @@ namespace nv::graphics
         constexpr const MeshBoneDesc& GetBoneData() const { return mDesc.mBoneDesc; }
         inline bvh::BVHData& GetBVH() { return mBVH; }
 
+        void            CreateBoundingBox();
+        const math::BoundingBox& GetBoundingBox() const { return mBoundingBox; }
+
         template<class Archive>
         void serialize(Archive& archive)
         {
         }
 
     protected:
-        MeshDesc mDesc;
-        bvh::BVHData mBVH;
+        MeshDesc            mDesc;
+        bvh::BVHData        mBVH;
+        math::BoundingBox   mBoundingBox;
     };
 }

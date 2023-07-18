@@ -448,6 +448,7 @@ namespace nv::graphics
         }
 
         MeshDX12* mesh = mMeshes.CreateInstance(handle, desc, vertexBuffer, indexBuffer, boneBuffer);
+        mesh->CreateBoundingBox();
         return handle;
     }
 

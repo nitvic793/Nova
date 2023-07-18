@@ -42,6 +42,26 @@
                 ]
             },
             {
+                "key": "nv::math::BoundingBox",
+                "value": [
+                    {
+                        "Name": "mBounding",
+                        "Type": "DirectX::BoundingBox",
+                        "FieldTypeEnum": 0
+                    }
+                ]
+            },
+            {
+                "key": "nv::math::BoundingSphere",
+                "value": [
+                    {
+                        "Name": "mBounding",
+                        "Type": "DirectX::BoundingSphere",
+                        "FieldTypeEnum": 0
+                    }
+                ]
+            },
+            {
                 "key": "nv::graphics::DirectionalLight",
                 "value": [
                     {

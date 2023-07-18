@@ -43,16 +43,7 @@ namespace nv
         gTimer.Start();
         gSystemManager.InitSystems();
 
-        jobs::Execute([this](void* ctx) 
-        {
-            NV_FRAME("InputThread");
-            while (UpdateSystemState())
-            {
-                Wait();
-            }
-        });
-
-        while (gInstanceState.load() == INSTANCE_STATE_RUNNING)
+        while (UpdateSystemState() && gInstanceState.load() == INSTANCE_STATE_RUNNING)
         {
             NV_FRAME_MARK();
             NV_FRAME("MainThread");
