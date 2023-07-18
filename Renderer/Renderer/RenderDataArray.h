@@ -164,6 +164,7 @@ namespace nv::graphics
         constexpr Span<CBV>     GetMaterialDescriptors()    const { return mRenderDescriptors.mMaterialCBs.Span(); }
         constexpr Span<CBV>     GetBoneDescriptors()        const { return mRenderDescriptors.mBoneCBs.Span(); }
         constexpr RenderData&   GetRenderData()             const { return *mCurrentRenderData; }
+        size_t                  GetRenderDataQueueSize()    const { return mRenderDataQueue.Size(); }
     };
 
     extern ConstantBufferPool* gpConstantBufferPool;
