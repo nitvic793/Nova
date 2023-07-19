@@ -36,6 +36,7 @@ namespace nv::graphics
     using namespace animation;
 
     static bool sbEnableDebugUI = true;
+    static bool sbEnableDebugDraw = true;
 
     Handle<DescriptorHeap> mDescriptorHeapHandle;
 
@@ -113,6 +114,7 @@ namespace nv::graphics
         {
             ImGui::Begin("Nova");                                 
             ImGui::Checkbox("Texture Preview", &showTexturePreview);
+            ImGui::Checkbox("Debug Draw", &sbEnableDebugDraw);
             ImGui::Checkbox("Entity Manager", &showEntityList);
             ImGui::Checkbox("Animation", &showAnimPane);
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
@@ -367,6 +369,11 @@ namespace nv::graphics
     }
 
 
+    void SetEnableDebugDraw(bool enable)
+    {
+        sbEnableDebugDraw = enable;
+    }
+
     void SetEnableDebugUI(bool enable)
     {
         sbEnableDebugUI = enable;
@@ -375,6 +382,11 @@ namespace nv::graphics
     bool IsDebugUIEnabled()
     {
         return sbEnableDebugUI;
+    }
+
+    bool IsDebugDrawEnabled()
+    {
+        return sbEnableDebugDraw;
     }
 }
 
