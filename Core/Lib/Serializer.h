@@ -22,7 +22,7 @@ namespace nv
             using namespace cereal;
             cereal::BinaryOutputArchive archive(o);
             archive(pool.mCapacity);
-            archive(make_size_tag(static_cast<size_type>(pool.mSize)));
+            archive(pool.mSize);
             archive(binary_data(pool.mBuffer, static_cast<std::size_t>(pool.mSize) * sizeof(TDerived)));
             archive(pool.mFreeIndices);
             archive(pool.mGenerations);
@@ -46,7 +46,7 @@ namespace nv
             cereal::BinaryInputArchive archive(i);
             archive(pool.mCapacity);
             pool.GrowIfNeeded(pool.mCapacity);
-            archive(make_size_tag(static_cast<size_type>(pool.mSize)));
+            archive(pool.mSize);
             archive(binary_data(pool.mBuffer, static_cast<std::size_t>(pool.mSize) * sizeof(TDerived)));
             archive(pool.mFreeIndices);
             archive(pool.mGenerations);
