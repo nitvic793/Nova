@@ -16,10 +16,13 @@ namespace nv
 
         T           Pop(bool wait = false);
         void        Pop(T& val, bool wait = false);
+        void        PopUnsafe(T& val) { val = std::move(mQueue.front()); mQueue.pop(); }
         const T&    Peek();
         size_t      Size() const { return mQueue.size(); }
 
-        bool    IsEmpty() const;
+        bool        IsEmpty() const;
+        void        Lock() { mMutex.lock(); }
+        void        Unlock() { mMutex.unlock(); }   
     private:
         using UniqueLock = std::unique_lock<std::mutex>;
 

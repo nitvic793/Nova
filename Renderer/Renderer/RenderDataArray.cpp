@@ -30,12 +30,16 @@ namespace nv::graphics
     void RenderDataArray::QueueRenderData()
     {
         constexpr size_t MAX_QUEUED_RENDER_DATA = 3;
-        if (mRenderDataQueue.Size() > MAX_QUEUED_RENDER_DATA)
         {
-            // Ensure data in queue is fresh by dequeuing old data if we're at threshold.
-            // TODO: Test with more objects.
-            RenderData renderData;
-            mRenderDataQueue.Pop(renderData); 
+            mRenderDataQueue.Lock();
+            if (mRenderDataQueue.Size() > MAX_QUEUED_RENDER_DATA)
+            {
+                // Ensure data in queue is fresh by dequeuing old data if we're at threshold.
+                // TODO: Test with more objects.
+                RenderData renderData;
+                mRenderDataQueue.PopUnsafe(renderData);
+            }
+            mRenderDataQueue.Unlock();
         }
 
         nv::Vector<Handle<ecs::Entity>> entityList;
