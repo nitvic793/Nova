@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "RTCompute.h"
 
+#define NV_CUSTOM_RAYTRACING 0
+
 #include <Renderer/CommonDefines.h>
 #include <Renderer/PipelineState.h>
 #include <Renderer/Renderer.h>
@@ -17,6 +19,11 @@
 #include <Engine/EntityComponent.h>
 #include <Asset.h>
 
+#if !NV_CUSTOM_RAYTRACING
+#include <DX12/RayTracingHelpers.h>
+#include <DX12/ContextDX12.h>
+#endif
+
 namespace nv::graphics
 {
     using namespace components;
@@ -25,27 +32,6 @@ namespace nv::graphics
     using namespace buffer;
     using namespace bvh;
 
-    struct RTComputeObjects
-    {
-        Handle<GPUResource> mOutputBuffer;
-        Handle<Texture>     mOutputUAV;
-        ConstantBufferView  mTraceParamsCBV;
-    };
-
-    struct BVHObjects
-    {
-        nv::Vector<TriangulatedMesh>        mTriMeshes;
-        nv::Vector<BVHData*>                mBVHs;
-        nv::Vector<graphics::BVHInstance>   mBvhInstances;
-        nv::Vector<Handle<Entity>>          mEntities;
-        nv::Vector<graphics::AABB>          mBvhAabbs;
-        nv::Vector<uint32_t>                mBvhHeapIndices;
-        TLAS                                mTlas;
-    };
-
-    static BVHObjects       sBVHObjects;
-    static RTComputeObjects sRTComputeObjects;
-    constexpr uint32_t SCALE = 2;
 
     Handle<Texture> CreateStructuredBuffer(uint32_t stride, uint32_t elemCount, Handle<GPUResource>& buffer)
     {
@@ -58,7 +44,7 @@ namespace nv::graphics
             .mUsage = tex::USAGE_SHADER,
             .mBuffer = buffer,
             .mType = tex::Type::BUFFER,
-            .mBufferData = 
+            .mBufferData =
             {
                 .mNumElements = elemCount,
                 .mStructureByteStride = stride
@@ -83,52 +69,29 @@ namespace nv::graphics
         return texHandle;
     }
 
-    void RTCompute::Init()
+#if NV_CUSTOM_RAYTRACING
+
+    struct BVHObjects
     {
-        auto cs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/RayTraceCS.hlsl") };
-        auto rtcs = gResourceManager->CreateShader({ cs, shader::COMPUTE });
-        PipelineStateDesc psoDesc = { .mPipelineType = PIPELINE_COMPUTE, .mCS = rtcs };
-        mRTComputePSO = gResourceManager->CreatePipelineState(psoDesc);
+        nv::Vector<TriangulatedMesh>        mTriMeshes;
+        nv::Vector<BVHData*>                mBVHs;
+        nv::Vector<graphics::BVHInstance>   mBvhInstances;
+        nv::Vector<Handle<Entity>>          mEntities;
+        nv::Vector<graphics::AABB>          mBvhAabbs;
+        nv::Vector<uint32_t>                mBvhHeapIndices;
+        TLAS                                mTlas;
+    };
 
-        uint32_t height = gWindow->GetHeight() / SCALE;
-        uint32_t width = gWindow->GetWidth() / SCALE;
+    static BVHObjects       sBVHObjects;
 
-        GPUResourceDesc desc =
-        {
-            .mWidth = width,
-            .mHeight = height,
-            .mFormat = format::R8G8B8A8_UNORM,
-            .mType = buffer::TYPE_TEXTURE_2D,
-            .mFlags = FLAG_ALLOW_UNORDERED,
-            .mInitialState = STATE_COPY_SOURCE,
-            .mMipLevels = 1,
-            .mSampleCount = 1
-        };
-
-        auto outputBuffer = gResourceManager->CreateResource(desc, ID("RTPass/OutputBuffer"));
-        sRTComputeObjects.mOutputBuffer = outputBuffer;
-        TextureDesc texDesc =
-        {
-            .mUsage = tex::USAGE_UNORDERED,
-            .mBuffer = outputBuffer,
-            .mType = tex::TEXTURE_2D,
-            .mUseRayTracingHeap = false
-        };
-
-        auto outputBufferTexture = gResourceManager->CreateTexture(texDesc, ID("RTPass/OutputBufferTex"));
-        sRTComputeObjects.mOutputUAV = outputBufferTexture;
-        sRTComputeObjects.mTraceParamsCBV = gpConstantBufferPool->GetConstantBuffer<TraceParams>();
-    }
-
-    static Handle<Texture> testTex;
     static void BuildBVHs()
     {
-        nv::Vector<TriangulatedMesh>& triMeshes         = sBVHObjects.mTriMeshes;
+        nv::Vector<TriangulatedMesh>& triMeshes = sBVHObjects.mTriMeshes;
         nv::Vector<graphics::BVHInstance>& bvhInstances = sBVHObjects.mBvhInstances;
-        nv::Vector<Handle<Entity>>& entities            = sBVHObjects.mEntities;
-        nv::Vector<graphics::AABB>& bvhAabbs            = sBVHObjects.mBvhAabbs;
-        nv::Vector<BVHData*>& bvhs                      = sBVHObjects.mBVHs;
-        TLAS& tlas                                      = sBVHObjects.mTlas;
+        nv::Vector<Handle<Entity>>& entities = sBVHObjects.mEntities;
+        nv::Vector<graphics::AABB>& bvhAabbs = sBVHObjects.mBvhAabbs;
+        nv::Vector<BVHData*>& bvhs = sBVHObjects.mBVHs;
+        TLAS& tlas = sBVHObjects.mTlas;
 
         nv::Vector<uint32_t> meshHeapIndices;
         nv::Vector<uint32_t> bvhIndices;
@@ -181,7 +144,7 @@ namespace nv::graphics
                 graphics::BVHInstance& bvhInstance = bvhInstances.Emplace();
                 auto& aabb = bvhAabbs.Emplace();
                 aabb = getAabb(bvh.mBvhNodes[0].AABBMax, bvh.mBvhNodes[0].AABBMin, transform.GetTransformMatrix());
-                
+
                 bvhInstance.transform = mat;
                 bvhInstance.invTransform = transform.GetTransformMatrixInverseTransposed();
                 bvhInstance.idx = index;
@@ -189,12 +152,12 @@ namespace nv::graphics
             }
         }
 
-        if(bvhInstances.size() > 0)
+        if (bvhInstances.size() > 0)
             BuildTLAS(bvhInstances.Span(), bvhAabbs.Span(), tlas);
 
         uint32_t test[] = { 1, 2, 3, 4 };
         Handle<GPUResource> buffer;
-        testTex = CreateAndUpload(Span{ &test[0], 4}, buffer);
+        testTex = CreateAndUpload(Span{ &test[0], 4 }, buffer);
 
         for (auto& triMesh : triMeshes)
         {
@@ -216,18 +179,76 @@ namespace nv::graphics
         tex = CreateAndUpload(meshHeapIndices.Span(), buffer);
         tex = CreateAndUpload(bvhInstances.Span(), buffer);
     }
+#endif
+
+    constexpr uint32_t SCALE = 1;
+    struct RTComputeObjects
+    {
+        Handle<GPUResource> mOutputBuffer;
+        Handle<Texture>     mOutputUAV;
+        ConstantBufferView  mTraceParamsCBV;
+    };
+
+
+    static Handle<Texture> testTex;
+    static RTComputeObjects sRTComputeObjects;
+    static dx12::RayTracingRuntimeData sRTRuntimeData;
+
+    void RTCompute::Init()
+    {
+        auto cs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/RayTraceCS.hlsl") };
+        auto rtcs = gResourceManager->CreateShader({ cs, shader::COMPUTE });
+        PipelineStateDesc psoDesc = { .mPipelineType = PIPELINE_COMPUTE, .mCS = rtcs };
+        mRTComputePSO = gResourceManager->CreatePipelineState(psoDesc);
+
+        uint32_t height = gWindow->GetHeight() / SCALE;
+        uint32_t width = gWindow->GetWidth() / SCALE;
+
+        GPUResourceDesc desc = GPUResourceDesc::Texture2D(width, height, FLAG_ALLOW_UNORDERED, STATE_COPY_SOURCE);
+
+        auto outputBuffer = gResourceManager->CreateResource(desc, ID("RTPass/OutputBuffer"));
+        sRTComputeObjects.mOutputBuffer = outputBuffer;
+        TextureDesc texDesc =
+        {
+            .mUsage = tex::USAGE_UNORDERED,
+            .mBuffer = outputBuffer,
+            .mType = tex::TEXTURE_2D,
+            .mUseRayTracingHeap = false
+        };
+
+        auto outputBufferTexture = gResourceManager->CreateTexture(texDesc, ID("RTPass/OutputBufferTex"));
+        sRTComputeObjects.mOutputUAV = outputBufferTexture;
+        sRTComputeObjects.mTraceParamsCBV = gpConstantBufferPool->GetConstantBuffer<TraceParams>();
+    }
 
     void RTCompute::Execute(const RenderPassData& renderPassData)
     {
         static bool done = false;
+        auto ctx = gRenderer->GetContext();
         if (!done && renderPassData.mRenderData.mSize > 0)
         {
+#if NV_CUSTOM_RAYTRACING
             BuildBVHs();
+#else
+            std::vector<Mesh*> meshes;
+            for (uint32_t i = 0; i < renderPassData.mRenderData.mSize; ++i)
+            {
+                Mesh* pMesh = renderPassData.mRenderData.mppMeshes[i];
+                if (pMesh)
+                {
+                    ((MeshDX12*)pMesh)->GenerateBufferSRVs();
+                    meshes.push_back(pMesh);
+                    break;
+                }
+            }
+
+            dx12::BuildAccelerationStructure(((ContextDX12*)ctx)->GetDXRCommandList(), meshes, sRTRuntimeData);
+#endif
             done = true;
         }
 
         auto skyHandle = gResourceManager->GetTextureHandle(ID("Textures/Sky.hdr"));
-        auto ctx = gRenderer->GetContext();
+
         SetComputeDefault(ctx);
         
         auto structTestTex = gResourceManager->GetTexture(testTex);

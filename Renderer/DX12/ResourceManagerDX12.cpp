@@ -338,7 +338,7 @@ namespace nv::graphics
             srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
             srvDesc.RaytracingAccelerationStructure.Location = resource->GetResource()->GetGPUVirtualAddress();
 
-            heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mRayTracingHeap);
+            heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mTextureHeap);
             cpuHandle = heap->PushCPU();
             device->CreateShaderResourceView(nullptr, &srvDesc, cpuHandle);
             break;

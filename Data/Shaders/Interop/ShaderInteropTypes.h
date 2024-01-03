@@ -110,10 +110,10 @@ namespace nv::graphics
         float4x4            ProjectionInverse;
         float4x4            ViewProjectionInverse;
         float3              CameraPosition;
-        float               _Padding0;
+        float               NearZ;
         DirectionalLight    DirLights[MAX_DIRECTIONAL_LIGHTS];
         uint32_t            DirLightsCount;
-        float               _Padding1;
+        float               FarZ;
     };
 
     struct PerArmature

@@ -180,6 +180,7 @@
     <ClInclude Include="DX12\NvidiaDXR\ShaderBindingTableGenerator.h" />
     <ClInclude Include="DX12\NvidiaDXR\TopLevelASGenerator.h" />
     <ClInclude Include="DX12\PipelineStateDX12.h" />
+    <ClInclude Include="DX12\RayTracingHelpers.h" />
     <ClInclude Include="DX12\RendererDX12.h" />
     <ClInclude Include="DX12\ResourceManagerDX12.h" />
     <ClInclude Include="DX12\ShaderDX12.h" />
@@ -238,6 +239,7 @@
     <ClCompile Include="DX12\NvidiaDXR\ShaderBindingTableGenerator.cpp" />
     <ClCompile Include="DX12\NvidiaDXR\TopLevelASGenerator.cpp" />
     <ClCompile Include="DX12\PipelineStateDX12.cpp" />
+    <ClCompile Include="DX12\RayTracingHelpers.cpp" />
     <ClCompile Include="DX12\RendererDX12.cpp" />
     <ClCompile Include="DX12\ResourceManagerDX12.cpp" />
     <ClCompile Include="DX12\ShaderDX12.cpp" />

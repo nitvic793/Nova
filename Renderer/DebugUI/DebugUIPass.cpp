@@ -59,9 +59,14 @@ namespace nv::graphics
         if (gResourceTracker.ExistsTexture(texId))
         {
             auto tex = (TextureDX12*)gResourceManager->GetTexture(texId);
+            const auto resourceDesc = tex->GetResource()->GetDesc();
+
+            uint32_t height = resourceDesc.Height ? (uint32_t)resourceDesc.Height : 320;
+            uint32_t width = resourceDesc.Width ? (uint32_t)resourceDesc.Width : 480;
+
             auto heap = renderer->GetDescriptorHeap(mDescriptorHeapHandle);
             device->GetDevice()->CopyDescriptorsSimple(1, heap->HandleCPU(1), tex->GetCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            ImGui::Image((ImTextureID)heap->HandleGPU(1).ptr, ImVec2(480, 320));
+            ImGui::Image((ImTextureID)heap->HandleGPU(1).ptr, ImVec2((float)width, (float)height));
         }
         ImGui::End();
     }

@@ -55,6 +55,8 @@ namespace nv
         const float3&       GetDirection() const { return mDirection; }
         const float3&       GetRotation()  const { return mRotation; }
         const CameraDesc&   GetDesc()      const { return mDesc; }
+        constexpr float     GetNearZ()     const { return mDesc.mNearZ; }
+        constexpr float     GetFarZ()      const { return mDesc.mFarZ; }
 
     private:
         float3      mPosition;

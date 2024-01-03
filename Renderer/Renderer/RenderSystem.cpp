@@ -278,7 +278,10 @@ namespace nv::graphics
             .Projection             = proj, 
             .ViewInverse            = viewI, 
             .ProjectionInverse      = projI, 
-            .ViewProjectionInverse  = camera.GetViewProjInverseTransposed()
+            .ViewProjectionInverse  = camera.GetViewProjInverseTransposed(),
+            .CameraPosition         = camera.GetPosition(),
+            .NearZ                  = camera.GetNearZ(),
+            .FarZ                   = camera.GetFarZ()
         };
 
         if (dirLights.Size() > 0)
