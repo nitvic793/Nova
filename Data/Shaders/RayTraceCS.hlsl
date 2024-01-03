@@ -88,6 +88,16 @@ void GetRayDesc(uint2 px, out RayDesc ray)
     ray.Direction = normalize(world.xyz - ray.Origin);
 }
 
+float4 DoInlineRayTracing(RayDesc ray)
+{
+    // Attach TLAS SRV as Scene - Pass Heap Index via Struct? 
+    // Attach Vertex Buffer SRV - As above, pass idx via struct?
+    // Ray Query and Inline Trace call
+    // return Vertex Normal as output for now
+
+    return float4(0.xxxx);
+} 
+
 [numthreads(8, 8, 1)]
 void main(uint3 DTid: SV_DispatchThreadID)
 {
