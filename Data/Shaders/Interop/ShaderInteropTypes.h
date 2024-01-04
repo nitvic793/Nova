@@ -143,9 +143,13 @@ namespace nv::graphics
 
     struct TraceParams
     {
-        float2 Resolution;
-        float  ScaleFactor;
-        uint32_t  StructBufferIdx;
+        float2      Resolution;
+        float       ScaleFactor;
+        uint32_t    StructBufferIdx;
+        uint32_t    VertexBufferIdx;
+        uint32_t    IndexBufferIdx;
+        uint32_t    RTSceneIdx;
+        uint32_t    ObjectDataIdx;
     };
 
     //BVH Reference: https://jacco.ompf2.com/2022/06/03/how-to-build-a-bvh-part-9a-to-the-gpu/

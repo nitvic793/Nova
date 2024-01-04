@@ -34,6 +34,8 @@ namespace nv::graphics
         ID3D12Resource*                 GetIndexBuffer() const;
         Texture*                        GetIndexBufferSRV() const;
         Texture*                        GetVertexBufferSRV() const;
+        constexpr Handle<Texture>       GetVertexBufferSRVHandle() const { return mVertexBufferSRV; }
+        constexpr Handle<Texture>       GetIndexBufferSRVHandle() const { return mIndexBufferSRV; }
 
     private:
         Handle<GPUResource>         mVertexBuffer;

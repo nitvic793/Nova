@@ -155,10 +155,6 @@ namespace nv::graphics
         if (bvhInstances.size() > 0)
             BuildTLAS(bvhInstances.Span(), bvhAabbs.Span(), tlas);
 
-        uint32_t test[] = { 1, 2, 3, 4 };
-        Handle<GPUResource> buffer;
-        testTex = CreateAndUpload(Span{ &test[0], 4 }, buffer);
-
         for (auto& triMesh : triMeshes)
         {
             Handle<Texture> tex = CreateAndUpload(Span{ triMesh.Tris.data(), triMesh.Tris.size() }, buffer);
@@ -219,12 +215,20 @@ namespace nv::graphics
         auto outputBufferTexture = gResourceManager->CreateTexture(texDesc, ID("RTPass/OutputBufferTex"));
         sRTComputeObjects.mOutputUAV = outputBufferTexture;
         sRTComputeObjects.mTraceParamsCBV = gpConstantBufferPool->GetConstantBuffer<TraceParams>();
+
+        uint32_t test[] = { 1, 2, 3, 4 };
+        Handle<GPUResource> buffer;
+        testTex = CreateAndUpload(Span{ &test[0], 4 }, buffer);
     }
 
+    Handle<Texture> vbTex;
+    Handle<Texture> ibTex;
+    uint32_t meshIdx = 0;
     void RTCompute::Execute(const RenderPassData& renderPassData)
     {
         static bool done = false;
         auto ctx = gRenderer->GetContext();
+
         if (!done && renderPassData.mRenderData.mSize > 0)
         {
 #if NV_CUSTOM_RAYTRACING
@@ -236,7 +240,13 @@ namespace nv::graphics
                 Mesh* pMesh = renderPassData.mRenderData.mppMeshes[i];
                 if (pMesh)
                 {
-                    ((MeshDX12*)pMesh)->GenerateBufferSRVs();
+                    meshIdx = i;
+                    auto mesh = ((MeshDX12*)pMesh);
+                    mesh->GenerateBufferSRVs();
+
+                    vbTex = mesh->GetVertexBufferSRVHandle();
+                    ibTex = mesh->GetIndexBufferSRVHandle();
+
                     meshes.push_back(pMesh);
                     break;
                 }
@@ -251,14 +261,21 @@ namespace nv::graphics
 
         SetComputeDefault(ctx);
         
+        auto tlasHandle = gResourceManager->GetTextureHandle(ID("RT/TlasSRV"));
+
         auto structTestTex = gResourceManager->GetTexture(testTex);
+        auto objectCbv = renderPassData.mRenderDataArray.GetObjectDescriptors()[meshIdx];
         TraceParams params = 
         {
             .Resolution = float2((float)gWindow->GetWidth(), (float)gWindow->GetHeight()),
             .ScaleFactor = 1.f / SCALE,
-            .StructBufferIdx = structTestTex? structTestTex->GetHeapIndex() : 0
+            .StructBufferIdx = structTestTex? structTestTex->GetHeapIndex() : 0,
+            .VertexBufferIdx = vbTex ? gResourceManager->GetTexture(vbTex)->GetHeapIndex() : 0,
+            .IndexBufferIdx = ibTex ? gResourceManager->GetTexture(ibTex)->GetHeapIndex() : 0,
+            .RTSceneIdx = gResourceManager->GetTexture(tlasHandle)->GetHeapIndex(),
+            .ObjectDataIdx = (uint32_t)objectCbv.mHeapIndex
         };
-
+        
         gRenderer->UploadToConstantBuffer(sRTComputeObjects.mTraceParamsCBV, (uint8_t*)&params, (uint32_t)sizeof(params));
 
         TransitionBarrier initBarriers[] = { {.mTo = STATE_COPY_DEST, .mResource = sRTComputeObjects.mOutputBuffer } };

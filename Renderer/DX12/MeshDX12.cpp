@@ -47,6 +47,7 @@ namespace nv::graphics
         {
             TextureDesc desc =
             {
+                .mUsage = tex::USAGE_SHADER,
                 .mBuffer = buffer,
                 .mType = tex::BUFFER,
             };

@@ -48,6 +48,7 @@ namespace nv::graphics
         auto renderer = (RendererDX12*)gRenderer;
         auto device = (DeviceDX12*)renderer->GetDevice();
 
+        ImGui::SetNextWindowBgAlpha(1.0f);
         ImGui::Begin("Texture Preview", &open);
 
         static StringID texId = 0;
