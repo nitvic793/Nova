@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef NOMINMAX
+#define NOMINMAX 1
+#endif
 
 #include <Renderer/DescriptorHeap.h>
 #include <Lib/Assert.h>

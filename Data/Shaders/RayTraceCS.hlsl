@@ -87,7 +87,7 @@ void GetRayDesc(uint2 px, out RayDesc ray)
     world.xyz /= world.w;
 
     ray.Origin = Frame.CameraPosition;
-    ray.TMin = 0;
+    ray.TMin = 0.1f;
     ray.TMax = 10000.f;
     ray.Direction = normalize(world.xyz - ray.Origin);
 }
@@ -154,8 +154,17 @@ float4 DoInlineRayTracing(RayDesc ray)
 
         float3 triNormal = TriangleNormal(vertexNormals, baryUv);
 
+
         float2 uv = GetUV(baryUv, uv0, uv1, uv2);
-        float3 albedo = albedoTex.SampleLevel(LinearWrapSampler, uv, 0).xyz; 
+
+        const float minT = 0.1f;
+        const float tAtWhich1x1 = 200;  // Depends on the FOV of the "camera". A surface normal could also help here.
+        const float maxDim = 1024;//Get Dim from tex and (float)max(width, height);
+        const float grad = minT / (tAtWhich1x1 * maxDim);
+        // TODO: calculate gradients by method given here: 
+        // https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/Samples/Desktop/D3D12Raytracing/src/D3D12RaytracingMiniEngineSample/DiffuseHitShaderLib.hlsl#L233
+        float3 albedo = albedoTex.SampleGrad(LinearWrapSampler, uv, float2(grad, 0), float2(0, grad)).xyz; 
+
         float3 light = CalculateDirectionalLight(triNormal, Frame.DirLights[0]);
         result = float4(LinearToSRGB(light * albedo), 1.f);
 	}
