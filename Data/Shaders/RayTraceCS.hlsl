@@ -92,6 +92,7 @@ void GetRayDesc(uint2 px, out RayDesc ray)
     ray.Direction = normalize(world.xyz - ray.Origin);
 }
 
+// Credits: Microsoft - https://github.com/microsoft/DirectX-Graphics-Samples/blob/b5f92e2251ee83db4d4c795b3cba5d470c52eaf8/Samples/Desktop/D3D12Raytracing/src/D3D12RaytracingSimpleLighting/Raytracing.hlsl#L71
 // Retrieve attribute at a hit position interpolated from vertex attributes using the hit's barycentrics.
 float3 TriangleNormal(float3 vertexAttribute[3], float2 bary)
 {

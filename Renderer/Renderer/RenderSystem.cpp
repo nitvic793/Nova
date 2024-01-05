@@ -335,7 +335,6 @@ namespace nv::graphics
                 auto& bones = mCurrentRenderData[i].mpBones;
                 if (bones)
                 {
-
                     auto boneCb = boneCbs[boneIdx];
                     gRenderer->UploadToConstantBuffer(boneCb, (uint8_t*)&bones->Bones[0], sizeof(PerArmature));
                     boneIdx++;

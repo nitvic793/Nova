@@ -256,6 +256,10 @@ namespace nv::graphics
 #endif
             done = true;
         }
+        else
+        {
+            // Update acceleration structures
+        }
 
         auto skyHandle = gResourceManager->GetTextureHandle(ID("Textures/Sky.hdr"));
 
