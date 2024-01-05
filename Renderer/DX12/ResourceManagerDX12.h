@@ -40,6 +40,7 @@ namespace nv::graphics
 
         virtual Handle<PipelineState>   RecreatePipelineState(Handle<PipelineState> handle) override;
         virtual void                    DestroyResource(Handle<GPUResource> resource) override;
+        virtual void                    DestroyTexture(Handle<Texture> resource) override;
         ~ResourceManagerDX12();
 
     private:

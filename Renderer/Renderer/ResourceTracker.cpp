@@ -58,6 +58,18 @@ namespace nv::graphics
         mMeshResMap.erase(id);
     }
 
+    void ResourceTracker::Remove(Handle<GPUResource> handle)
+    {
+        for (auto& it : mGpuResourceResMap)
+        {
+            if (it.second == handle)
+            {
+                mGpuResourceResMap.erase(it.first);
+                break;
+            }
+        }
+    }
+
     bool ResourceTracker::ExistsTexture(ResID id) const
     {
         return mTextureResMap.find(id) != mTextureResMap.end();

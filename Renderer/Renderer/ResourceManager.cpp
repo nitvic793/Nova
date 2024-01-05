@@ -47,7 +47,7 @@ namespace nv::graphics
 
     Handle<GPUResource> ResourceManager::CreateResource(const GPUResourceDesc& desc, ResID id)
     {
-        assert(!gResourceTracker.ExistsResource(id));
+       // assert(!gResourceTracker.ExistsResource(id));
         auto handle = CreateResource(desc);
         gResourceTracker.Track(id, handle);
         return handle;
@@ -146,4 +146,12 @@ namespace nv::graphics
     {
         mMaterialPool.Destroy();
     }
+
+    void ResourceManager::DestroyTexture(ResID id)
+    {
+        auto handle = gResourceTracker.GetTextureHandle(id);
+        gResourceManager->DestroyTexture(handle);
+        gResourceTracker.Remove(id, handle);
+    }
+
 }

@@ -88,6 +88,7 @@ namespace nv::graphics
 
     void IRenderer::QueueDestroy(Handle<GPUResource> resource)
     {
+        gResourceTracker.Remove(resource);
         mDeleteQueue.Push(resource);
     }
 

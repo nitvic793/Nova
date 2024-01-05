@@ -74,6 +74,7 @@ namespace nv::graphics
         DescriptorHeapDX12*         CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptorCount, Handle<DescriptorHeap>& handle, bool shaderVisible = false);
         DescriptorHeapDX12*         GetDescriptorHeap(Handle<DescriptorHeap> handle) const;
         ID3D12RootSignature*        GetComputeRootSignature() const { return mComputeRootSignature.Get(); }
+
     private:
         void                    CreateRootSignature();
         void                    CopyDescriptorsToGPU();

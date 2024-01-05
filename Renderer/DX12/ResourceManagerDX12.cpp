@@ -503,7 +503,17 @@ namespace nv::graphics
 
     void ResourceManagerDX12::DestroyResource(Handle<GPUResource> resource)
     {
+        gResourceTracker.Remove(resource);
         mGpuResources.Remove(resource);
+    }
+
+    void ResourceManagerDX12::DestroyTexture(Handle<Texture> resource)
+    {
+        auto pRenderer = (RendererDX12*)gRenderer;
+        DescriptorHeapDX12* pTextureHeap = pRenderer->mDescriptorHeapPool.GetAsDerived(pRenderer->mTextureHeap);
+        TextureDX12* pTex = mTextures.GetAsDerived(resource);
+        pTextureHeap->Remove(pTex->GetHeapOffset());
+        mTextures.Remove(resource);
     }
 
     ResourceManagerDX12::~ResourceManagerDX12()

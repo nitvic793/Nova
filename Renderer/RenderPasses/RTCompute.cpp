@@ -235,6 +235,7 @@ namespace nv::graphics
             BuildBVHs();
 #else
             std::vector<Mesh*> meshes;
+            std::vector<float4x4> transforms;
             for (uint32_t i = 0; i < renderPassData.mRenderData.mSize; ++i)
             {
                 Mesh* pMesh = renderPassData.mRenderData.mppMeshes[i];
@@ -248,17 +249,25 @@ namespace nv::graphics
                     ibTex = mesh->GetIndexBufferSRVHandle();
 
                     meshes.push_back(pMesh);
+                    transforms.push_back(renderPassData.mRenderData.mpObjectData[i].World);
                     break;
                 }
             }
 
-            dx12::BuildAccelerationStructure(((ContextDX12*)ctx)->GetDXRCommandList(), meshes, sRTRuntimeData);
+            dx12::BuildAccelerationStructure(((ContextDX12*)ctx)->GetDXRCommandList(), meshes, transforms, sRTRuntimeData);
 #endif
             done = true;
         }
         else
         {
+#if !NV_CUSTOM_RAYTRACING
             // Update acceleration structures
+            constexpr bool ALLOW_UPDATE = true;
+            auto mat = renderPassData.mRenderData.mpObjectData[meshIdx].World;
+            std::vector<Mesh*> meshes = { renderPassData.mRenderData.mppMeshes[meshIdx] };
+            std::vector<float4x4> transforms = { mat };
+            dx12::BuildAccelerationStructure(((ContextDX12*)ctx)->GetDXRCommandList(), meshes, transforms, sRTRuntimeData, ALLOW_UPDATE);
+#endif
         }
 
         auto skyHandle = gResourceManager->GetTextureHandle(ID("Textures/Sky.hdr"));

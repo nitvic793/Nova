@@ -49,7 +49,7 @@ namespace nv::graphics
         Handle<GPUResource>             GetGPUResourceHandle(ResID id);
         Material*                       GetMaterial(Handle<Material> handle);
         Material*                       GetMaterial(ResID id);
-
+        void                            DestroyTexture(ResID id);
 
         virtual Texture*                GetTexture(Handle<Texture>) = 0;
         virtual Texture*                GetTexture(ResID id);
@@ -62,6 +62,7 @@ namespace nv::graphics
         virtual Handle<PipelineState>   RecreatePipelineState(Handle<PipelineState> handle) = 0;
 
         virtual void                    DestroyResource(Handle<GPUResource> resource) = 0;
+        virtual void                    DestroyTexture(Handle<Texture> texture) = 0;
 
         virtual ~ResourceManager();
 

@@ -126,7 +126,7 @@ namespace nv
             DeserializeScene(file);
         }
 
-        static bool bEnableFrameRecord = false;
+        static bool bEnableFrameRecord = true;
 
         if (bEnableFrameRecord)
         {

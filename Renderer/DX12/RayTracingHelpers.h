@@ -19,8 +19,13 @@ namespace nv::graphics::dx12
 	{
 		ID3D12Resource* mTLAS			= nullptr;
 		ID3D12Resource* mBLAS			= nullptr;
-		ID3D12Resource* mInstanceDescs	= nullptr;
+        ID3D12Resource* mInstanceDescs	= nullptr;
+        ID3D12Resource* mScratch		= nullptr;
 	};
 
-	void BuildAccelerationStructure(ID3D12GraphicsCommandList4* pCommandList, const std::vector<Mesh*>& meshes, RayTracingRuntimeData& outRtData);
+	void BuildAccelerationStructure(ID3D12GraphicsCommandList4* pCommandList, 
+		const std::vector<Mesh*>& meshes, 
+		const std::vector<float4x4>& transforms, 
+		RayTracingRuntimeData& outRtData, 
+		bool bUpdateOnly = false);
 }
