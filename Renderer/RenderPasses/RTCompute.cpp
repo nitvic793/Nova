@@ -263,10 +263,10 @@ namespace nv::graphics
 #if !NV_CUSTOM_RAYTRACING
             // Update acceleration structures
             constexpr bool ALLOW_UPDATE = true;
-            auto mat = renderPassData.mRenderData.mpObjectData[meshIdx].World;
-            std::vector<Mesh*> meshes = { renderPassData.mRenderData.mppMeshes[meshIdx] };
-            std::vector<float4x4> transforms = { mat };
-            dx12::BuildAccelerationStructure(((ContextDX12*)ctx)->GetDXRCommandList(), meshes, transforms, sRTRuntimeData, ALLOW_UPDATE);
+            //auto mat = renderPassData.mRenderData.mpObjectData[meshIdx].World;
+            //std::vector<Mesh*> meshes = { renderPassData.mRenderData.mppMeshes[meshIdx] };
+            //std::vector<float4x4> transforms = { mat };
+            //dx12::BuildAccelerationStructure(((ContextDX12*)ctx)->GetDXRCommandList(), meshes, transforms, sRTRuntimeData, ALLOW_UPDATE);
 #endif
         }
 
@@ -300,7 +300,8 @@ namespace nv::graphics
         ctx->ComputeBindTexture(2, sRTComputeObjects.mOutputUAV);
         ctx->ComputeBindTexture(3, skyHandle);
 
-        ctx->Dispatch(gWindow->GetWidth() / SCALE, gWindow->GetHeight() / SCALE, 1);
+        const uint32_t DISPATCH_SCALE = 8;
+        ctx->Dispatch(gWindow->GetWidth() / DISPATCH_SCALE, gWindow->GetHeight() / DISPATCH_SCALE, 1);
 
         TransitionBarrier endBarriers[] = { {.mTo = STATE_COMMON, .mResource = sRTComputeObjects.mOutputBuffer } };
         ctx->ResourceBarrier({ &endBarriers[0] , ArrayCountOf(endBarriers) });

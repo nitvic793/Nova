@@ -166,7 +166,7 @@ float4 DoInlineRayTracing(RayDesc ray)
         float3 albedo = albedoTex.SampleGrad(LinearWrapSampler, uv, float2(grad, 0), float2(0, grad)).xyz; 
 
         float3 light = CalculateDirectionalLight(triNormal, Frame.DirLights[0]);
-        result = float4(LinearToSRGB(light * albedo), 1.f);
+        result = float4(light * albedo, 1.f);
 	}
 	else
 		result = MISS_COLOR;
