@@ -300,7 +300,7 @@ namespace nv::graphics
         ctx->ComputeBindTexture(2, sRTComputeObjects.mOutputUAV);
         ctx->ComputeBindTexture(3, skyHandle);
 
-        const uint32_t DISPATCH_SCALE = 8;
+        constexpr uint32_t DISPATCH_SCALE = 8;
         ctx->Dispatch(gWindow->GetWidth() / DISPATCH_SCALE, gWindow->GetHeight() / DISPATCH_SCALE, 1);
 
         TransitionBarrier endBarriers[] = { {.mTo = STATE_COMMON, .mResource = sRTComputeObjects.mOutputBuffer } };
