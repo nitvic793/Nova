@@ -116,8 +116,6 @@ float4 DoInlineRayTracing(RayDesc ray)
 
 
     RaytracingAccelerationStructure Scene = ResourceDescriptorHeap[Params.RTSceneIdx];
-    StructuredBuffer<Vertex> Mesh = ResourceDescriptorHeap[Params.VertexBufferIdx];
-    StructuredBuffer<uint> IndexBuffer = ResourceDescriptorHeap[Params.IndexBufferIdx];
 
     RayQuery<RAY_FLAG_CULL_NON_OPAQUE |
 	RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES |
@@ -134,7 +132,15 @@ float4 DoInlineRayTracing(RayDesc ray)
 
 	if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
 	{
+        // Todo: Load these Index data from a separate array of structs {VB Idx, IB Idx, Object Idx} 
+        // For each mesh, do below - get mesh Instance ID and index into struct above
+
+        uint instanceId = rayQuery.CommittedInstanceID(); // Use this to index into array of structs to get data needed to calculate light
+
+        StructuredBuffer<Vertex> Mesh = ResourceDescriptorHeap[Params.VertexBufferIdx];
+        StructuredBuffer<uint> IndexBuffer = ResourceDescriptorHeap[Params.IndexBufferIdx];
         ConstantBuffer<ObjectData> object = ResourceDescriptorHeap[Params.ObjectDataIdx];
+
         ConstantBuffer<MaterialData> Material = ResourceDescriptorHeap[object.MaterialIndex];
         Texture2D<float4> albedoTex = ResourceDescriptorHeap[Material.AlbedoOffset]; 
 

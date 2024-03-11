@@ -224,6 +224,12 @@ namespace nv::graphics
     Handle<Texture> vbTex;
     Handle<Texture> ibTex;
     uint32_t meshIdx = 0;
+
+    // TODO:
+    // Create structured buffer of { VB Idx, IB Idx, Object Idx } for each mesh
+    // Make sure order matches the transforms vector. The order Index will be == InstanceID in shader
+    // Bind structured buffer of mesh data.
+
     void RTCompute::Execute(const RenderPassData& renderPassData)
     {
         static bool done = false;
@@ -241,6 +247,8 @@ namespace nv::graphics
                 Mesh* pMesh = renderPassData.mRenderData.mppMeshes[i];
                 if (pMesh)
                 {
+                    if (pMesh->HasBones()) continue; // Animated Mesh not supported yet.
+
                     meshIdx = i;
                     auto mesh = ((MeshDX12*)pMesh);
                     mesh->GenerateBufferSRVs();
@@ -278,6 +286,7 @@ namespace nv::graphics
 
         auto structTestTex = gResourceManager->GetTexture(testTex);
         auto objectCbv = renderPassData.mRenderDataArray.GetObjectDescriptors()[meshIdx];
+       
         TraceParams params = 
         {
             .Resolution = float2((float)gWindow->GetWidth(), (float)gWindow->GetHeight()),
