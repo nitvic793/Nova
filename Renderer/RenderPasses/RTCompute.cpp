@@ -178,6 +178,7 @@ namespace nv::graphics
 #endif
 
     constexpr uint32_t SCALE = 1;
+    constexpr uint32_t MAX_OBJECTS = 32;
     struct RTComputeObjects
     {
         Handle<GPUResource> mOutputBuffer;
@@ -185,8 +186,8 @@ namespace nv::graphics
         ConstantBufferView  mTraceParamsCBV;
     };
 
-
-    static Handle<Texture> testTex;
+    static Handle<GPUResource> meshInstanceBuffer;
+    static Handle<Texture> meshInstanceData;
     static RTComputeObjects sRTComputeObjects;
     static dx12::RayTracingRuntimeData sRTRuntimeData;
 
@@ -216,14 +217,10 @@ namespace nv::graphics
         sRTComputeObjects.mOutputUAV = outputBufferTexture;
         sRTComputeObjects.mTraceParamsCBV = gpConstantBufferPool->GetConstantBuffer<TraceParams>();
 
-        uint32_t test[] = { 1, 2, 3, 4 };
-        Handle<GPUResource> buffer;
-        testTex = CreateAndUpload(Span{ &test[0], 4 }, buffer);
+        meshInstanceData = CreateStructuredBuffer(sizeof(MeshInstanceData), MAX_OBJECTS, meshInstanceBuffer);
+        auto pResource = gResourceManager->GetGPUResource(meshInstanceBuffer);
+        pResource->MapMemory(); // Keep memory mapped
     }
-
-    Handle<Texture> vbTex;
-    Handle<Texture> ibTex;
-    uint32_t meshIdx = 0;
 
     // TODO:
     // Create structured buffer of { VB Idx, IB Idx, Object Idx } for each mesh
@@ -232,6 +229,9 @@ namespace nv::graphics
 
     void RTCompute::Execute(const RenderPassData& renderPassData)
     {
+        static std::vector<uint32_t> meshIds = {};
+        static std::vector<MeshInstanceData> rtMeshData = {};
+
         static bool done = false;
         auto ctx = gRenderer->GetContext();
 
@@ -248,17 +248,11 @@ namespace nv::graphics
                 if (pMesh)
                 {
                     if (pMesh->HasBones()) continue; // Animated Mesh not supported yet.
-
-                    meshIdx = i;
+                    meshIds.push_back(i);
                     auto mesh = ((MeshDX12*)pMesh);
                     mesh->GenerateBufferSRVs();
-
-                    vbTex = mesh->GetVertexBufferSRVHandle();
-                    ibTex = mesh->GetIndexBufferSRVHandle();
-
                     meshes.push_back(pMesh);
                     transforms.push_back(renderPassData.mRenderData.mpObjectData[i].World);
-                    break;
                 }
             }
 
@@ -271,11 +265,40 @@ namespace nv::graphics
 #if !NV_CUSTOM_RAYTRACING
             // Update acceleration structures
             constexpr bool ALLOW_UPDATE = true;
-            //auto mat = renderPassData.mRenderData.mpObjectData[meshIdx].World;
-            //std::vector<Mesh*> meshes = { renderPassData.mRenderData.mppMeshes[meshIdx] };
-            //std::vector<float4x4> transforms = { mat };
-            //dx12::BuildAccelerationStructure(((ContextDX12*)ctx)->GetDXRCommandList(), meshes, transforms, sRTRuntimeData, ALLOW_UPDATE);
+
+            std::vector<Mesh*> meshes; 
+            std::vector<float4x4> transforms;
+            for (const auto meshId : meshIds)
+            {
+                auto pMesh = (MeshDX12*)renderPassData.mRenderData.mppMeshes[meshId];
+                meshes.push_back(pMesh);
+                transforms.push_back(renderPassData.mRenderData.mpObjectData[meshId].World);
+            }
+
+            dx12::BuildAccelerationStructure(((ContextDX12*)ctx)->GetDXRCommandList(), meshes, transforms, sRTRuntimeData, ALLOW_UPDATE);
 #endif
+        }
+
+        if (!meshIds.empty())
+        {
+            rtMeshData.clear();
+            for (const uint32_t meshId : meshIds)
+            {
+                const auto* pMesh = (MeshDX12*)renderPassData.mRenderData.mppMeshes[meshId];
+                const auto vbTex = pMesh->GetVertexBufferSRVHandle();
+                const auto ibTex = pMesh->GetIndexBufferSRVHandle();
+
+                const auto objectCBV = renderPassData.mRenderDataArray.GetObjectDescriptors()[meshId];
+                rtMeshData.push_back(
+                {
+                    .ObjectDataIdx = (uint32_t)objectCBV.mHeapIndex,
+                    .VertexBufferIdx = vbTex ? gResourceManager->GetTexture(vbTex)->GetHeapIndex() : 0,
+                    .IndexBufferIdx = ibTex ? gResourceManager->GetTexture(ibTex)->GetHeapIndex() : 0,
+                });
+            }
+
+            auto pResource = gResourceManager->GetGPUResource(meshInstanceBuffer);
+            pResource->UploadMapped((uint8_t*)rtMeshData.data(), rtMeshData.size() * sizeof(MeshInstanceData));
         }
 
         auto skyHandle = gResourceManager->GetTextureHandle(ID("Textures/Sky.hdr"));
@@ -284,18 +307,17 @@ namespace nv::graphics
         
         auto tlasHandle = gResourceManager->GetTextureHandle(ID("RT/TlasSRV"));
 
-        auto structTestTex = gResourceManager->GetTexture(testTex);
-        auto objectCbv = renderPassData.mRenderDataArray.GetObjectDescriptors()[meshIdx];
+        auto structTestTex = gResourceManager->GetTexture(meshInstanceData);
        
         TraceParams params = 
         {
             .Resolution = float2((float)gWindow->GetWidth(), (float)gWindow->GetHeight()),
             .ScaleFactor = 1.f / SCALE,
             .StructBufferIdx = structTestTex? structTestTex->GetHeapIndex() : 0,
-            .VertexBufferIdx = vbTex ? gResourceManager->GetTexture(vbTex)->GetHeapIndex() : 0,
-            .IndexBufferIdx = ibTex ? gResourceManager->GetTexture(ibTex)->GetHeapIndex() : 0,
+            .VertexBufferIdx = 0,
+            .IndexBufferIdx = 0,
             .RTSceneIdx = gResourceManager->GetTexture(tlasHandle)->GetHeapIndex(),
-            .ObjectDataIdx = (uint32_t)objectCbv.mHeapIndex
+            .ObjectDataIdx = 0
         };
         
         gRenderer->UploadToConstantBuffer(sRTComputeObjects.mTraceParamsCBV, (uint8_t*)&params, (uint32_t)sizeof(params));
@@ -307,7 +329,7 @@ namespace nv::graphics
         ctx->ComputeBindConstantBuffer(0, (uint32_t)sRTComputeObjects.mTraceParamsCBV.mHeapIndex);
         ctx->ComputeBindConstantBuffer(1, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
         ctx->ComputeBindTexture(2, sRTComputeObjects.mOutputUAV);
-        ctx->ComputeBindTexture(3, skyHandle);
+        ctx->ComputeBindTexture(3, meshInstanceData);
 
         constexpr uint32_t DISPATCH_SCALE = 8;
         ctx->Dispatch(gWindow->GetWidth() / DISPATCH_SCALE, gWindow->GetHeight() / DISPATCH_SCALE, 1);

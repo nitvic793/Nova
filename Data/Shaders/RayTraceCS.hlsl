@@ -4,7 +4,7 @@
 ConstantBuffer<TraceParams> Params          : register(b0);
 ConstantBuffer<FrameData>   Frame           : register(b1);
 RWTexture2D<float3>         OutputTexture   : register(u0);
-StructuredBuffer<Vertex>    SkyTexture      : register(t0);
+StructuredBuffer<MeshInstanceData>    MeshInstances   : register(t0);
 
 SamplerState            LinearWrapSampler	: register(s0);
 
@@ -136,10 +136,10 @@ float4 DoInlineRayTracing(RayDesc ray)
         // For each mesh, do below - get mesh Instance ID and index into struct above
 
         uint instanceId = rayQuery.CommittedInstanceID(); // Use this to index into array of structs to get data needed to calculate light
-
-        StructuredBuffer<Vertex> Mesh = ResourceDescriptorHeap[Params.VertexBufferIdx];
-        StructuredBuffer<uint> IndexBuffer = ResourceDescriptorHeap[Params.IndexBufferIdx];
-        ConstantBuffer<ObjectData> object = ResourceDescriptorHeap[Params.ObjectDataIdx];
+        MeshInstanceData instanceData = MeshInstances[instanceId];
+        StructuredBuffer<Vertex> Mesh = ResourceDescriptorHeap[instanceData.VertexBufferIdx];
+        StructuredBuffer<uint> IndexBuffer = ResourceDescriptorHeap[instanceData.IndexBufferIdx];
+        ConstantBuffer<ObjectData> object = ResourceDescriptorHeap[instanceData.ObjectDataIdx];
 
         ConstantBuffer<MaterialData> Material = ResourceDescriptorHeap[object.MaterialIndex];
         Texture2D<float4> albedoTex = ResourceDescriptorHeap[Material.AlbedoOffset]; 

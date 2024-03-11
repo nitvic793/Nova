@@ -152,6 +152,13 @@ namespace nv::graphics
         uint32_t    ObjectDataIdx;
     };
 
+    struct MeshInstanceData
+    {
+        uint32_t    ObjectDataIdx;
+        uint32_t    VertexBufferIdx;
+        uint32_t    IndexBufferIdx;
+    };
+
     //BVH Reference: https://jacco.ompf2.com/2022/06/03/how-to-build-a-bvh-part-9a-to-the-gpu/
     struct Intersection
     {
