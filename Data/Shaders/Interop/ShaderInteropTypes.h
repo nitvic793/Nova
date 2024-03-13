@@ -146,10 +146,8 @@ namespace nv::graphics
         float2      Resolution;
         float       ScaleFactor;
         uint32_t    StructBufferIdx;
-        uint32_t    VertexBufferIdx;
-        uint32_t    IndexBufferIdx;
         uint32_t    RTSceneIdx;
-        uint32_t    ObjectDataIdx;
+        uint32_t    SkyBoxHandle;
     };
 
     struct MeshInstanceData

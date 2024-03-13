@@ -301,7 +301,7 @@ namespace nv::graphics
             pResource->UploadMapped((uint8_t*)rtMeshData.data(), rtMeshData.size() * sizeof(MeshInstanceData));
         }
 
-        auto skyHandle = gResourceManager->GetTextureHandle(ID("Textures/Sky.hdr"));
+        auto skyHandle = gComponentManager.GetComponents<SkyboxComponent>()[0].mSkybox; // gResourceManager->GetTextureHandle(ID("Textures/Sky.hdr"));
 
         SetComputeDefault(ctx);
         
@@ -314,10 +314,8 @@ namespace nv::graphics
             .Resolution = float2((float)gWindow->GetWidth(), (float)gWindow->GetHeight()),
             .ScaleFactor = 1.f / SCALE,
             .StructBufferIdx = structTestTex? structTestTex->GetHeapIndex() : 0,
-            .VertexBufferIdx = 0,
-            .IndexBufferIdx = 0,
             .RTSceneIdx = gResourceManager->GetTexture(tlasHandle)->GetHeapIndex(),
-            .ObjectDataIdx = 0
+            .SkyBoxHandle = gResourceManager->GetTexture(skyHandle)->GetHeapIndex()
         };
         
         gRenderer->UploadToConstantBuffer(sRTComputeObjects.mTraceParamsCBV, (uint8_t*)&params, (uint32_t)sizeof(params));

@@ -111,7 +111,7 @@ float2 GetUV(float2 barycentrics, float2 uv0, float2 uv1, float2 uv2)
 float4 DoInlineRayTracing(RayDesc ray)
 {
     const float4 HIT_COLOR = float4(1,0,0,1);
-    const float4 MISS_COLOR = float4(0,0,0,1);
+    const float4 MISS_COLOR = float4(1,0,0,1);
     float4 result = 0.xxxx;
 
 
@@ -132,9 +132,6 @@ float4 DoInlineRayTracing(RayDesc ray)
 
 	if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
 	{
-        // Todo: Load these Index data from a separate array of structs {VB Idx, IB Idx, Object Idx} 
-        // For each mesh, do below - get mesh Instance ID and index into struct above
-
         uint instanceId = rayQuery.CommittedInstanceID(); // Use this to index into array of structs to get data needed to calculate light
         MeshInstanceData instanceData = MeshInstances[instanceId];
         StructuredBuffer<Vertex> Mesh = ResourceDescriptorHeap[instanceData.VertexBufferIdx];
@@ -175,7 +172,18 @@ float4 DoInlineRayTracing(RayDesc ray)
         result = float4(light * albedo, 1.f);
 	}
 	else
-		result = MISS_COLOR;
+    {
+
+        TextureCube skybox = ResourceDescriptorHeap[Params.SkyBoxHandle];
+
+        const float minT = 0.1f;
+        const float tAtWhich1x1 = 200;  // Depends on the FOV of the "camera". A surface normal could also help here.
+        const float maxDim = 1024;//Get Dim from tex and (float)max(width, height);
+        const float grad = minT / (tAtWhich1x1 * maxDim);
+
+        float3 color = skybox.Sample(LinearWrapSampler, ray.Direction).xyz;
+        result = float4(color, 1.0f);
+    }
 
     return result;
 } 

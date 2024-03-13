@@ -111,6 +111,7 @@ namespace nv::graphics
         loadMesh(ID("Mesh/cube.obj"));
         loadMesh(ID("Mesh/torus.obj"));
         loadMesh(ID("Mesh/cone.obj"));
+        loadMesh(ID("Mesh/plane.obj"));
         loadMesh(ID("Mesh/male.fbx"));
         loadMesh(ID("Mesh/anim_running.fbx"));
         loadMesh(ID("Mesh/anim_idle.fbx"));

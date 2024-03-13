@@ -61,6 +61,7 @@ namespace nv
 
         auto entity1 = CreateEntity(ID("Mesh/torus.obj"), ID("Floor"), "Torus");
         auto playerEntity = CreateEntity(ID("Mesh/cube.obj"), ID("Bronze"), "Box");
+        auto floor = CreateEntity(ID("Mesh/plane.obj"), ID("Floor"), "Floor");
 
         setupSky();
 
@@ -72,6 +73,10 @@ namespace nv
         auto transform = entity->GetTransform();
         gEntityManager.GetEntity(entity1)->GetTransform().mPosition.x -= 1;
         gEntityManager.GetEntity(entity1)->GetTransform().mPosition.z += 1;
+        gEntityManager.GetEntity(floor)->GetTransform().mPosition.y = -1;
+
+        constexpr float floorScale = 10.f;
+        gEntityManager.GetEntity(floor)->GetTransform().mScale = nv::float3(floorScale, floorScale, floorScale);
     }
 
     void DriverSystem::Update(float deltaTime, float totalTime)
