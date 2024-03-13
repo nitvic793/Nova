@@ -154,4 +154,9 @@ namespace nv::graphics
         gResourceTracker.Remove(id, handle);
     }
 
+    void ResourceManager::QueueDestroy(Handle<GPUResource> handle, uint32_t frameDelay)
+    {
+        gRenderer->QueueDestroy(handle, frameDelay);
+    }
+
 }

@@ -70,6 +70,18 @@ namespace nv::graphics
         }
     }
 
+    void ResourceTracker::Remove(Handle<Texture> handle)
+    {
+        for (auto& it : mTextureResMap)
+        {
+            if (it.second == handle)
+            {
+                mTextureResMap.erase(it.first);
+                break;
+            }
+        }
+    }
+
     bool ResourceTracker::ExistsTexture(ResID id) const
     {
         return mTextureResMap.find(id) != mTextureResMap.end();

@@ -108,12 +108,63 @@ float2 GetUV(float2 barycentrics, float2 uv0, float2 uv1, float2 uv2)
     return uv;
 }
 
+typedef RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> DefaultRayQueryT;
+
+float3 OnHit(uint instanceId, DefaultRayQueryT rayQuery)
+{
+    MeshInstanceData instanceData       = MeshInstances[instanceId];
+    StructuredBuffer<Vertex> Mesh       = ResourceDescriptorHeap[instanceData.VertexBufferIdx];
+    StructuredBuffer<uint> IndexBuffer  = ResourceDescriptorHeap[instanceData.IndexBufferIdx];
+
+    ConstantBuffer<ObjectData> object       = ResourceDescriptorHeap[instanceData.ObjectDataIdx];
+    ConstantBuffer<MaterialData> Material   = ResourceDescriptorHeap[object.MaterialIndex];
+    Texture2D<float4> albedoTex             = ResourceDescriptorHeap[Material.AlbedoOffset]; 
+
+    uint index0 = IndexBuffer[rayQuery.CandidatePrimitiveIndex() * 3];
+    uint index1 = IndexBuffer[rayQuery.CandidatePrimitiveIndex() * 3 + 1];
+    uint index2 = IndexBuffer[rayQuery.CandidatePrimitiveIndex() * 3 + 2];
+
+    float2 uv0 = Mesh[index0].mUV;
+    float2 uv1 = Mesh[index1].mUV;
+    float2 uv2 = Mesh[index2].mUV;
+
+    float3 vertexNormals[3] = 
+    { 
+        Mesh[index0].mNormal , 
+        Mesh[index1].mNormal , 
+        Mesh[index2].mNormal  
+    };
+
+    float2 baryUv = rayQuery.CandidateTriangleBarycentrics();
+    float3 triNormal = TriangleNormal(vertexNormals, baryUv);
+    float2 uv = GetUV(baryUv, uv0, uv1, uv2);
+
+    const float minT = 0.1f;
+    const float tAtWhich1x1 = 200;  // Depends on the FOV of the "camera". A surface normal could also help here.
+    const float maxDim = 1024;//Get Dim from tex and (float)max(width, height);
+    const float grad = minT / (tAtWhich1x1 * maxDim);
+    
+    // TODO: calculate gradients by method given here: 
+    // https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/Samples/Desktop/D3D12Raytracing/src/D3D12RaytracingMiniEngineSample/DiffuseHitShaderLib.hlsl#L233
+
+    float3 albedo = albedoTex.SampleGrad(LinearWrapSampler, uv, float2(grad, 0), float2(0, grad)).xyz; 
+    float3 light = CalculateDirectionalLight(triNormal, Frame.DirLights[0]);
+
+    return light * albedo;
+}
+
+float3 OnMiss(RayDesc ray, DefaultRayQueryT rayQuery)
+{
+    TextureCube skybox = ResourceDescriptorHeap[Params.SkyBoxHandle];
+    float3 color = skybox.Sample(LinearWrapSampler, ray.Direction).xyz;
+    return color;
+}
+
 float4 DoInlineRayTracing(RayDesc ray)
 {
     const float4 HIT_COLOR = float4(1,0,0,1);
     const float4 MISS_COLOR = float4(1,0,0,1);
     float4 result = 0.xxxx;
-
 
     RaytracingAccelerationStructure Scene = ResourceDescriptorHeap[Params.RTSceneIdx];
 
@@ -130,61 +181,18 @@ float4 DoInlineRayTracing(RayDesc ray)
 
 	rayQuery.Proceed();
 
+    float3 resultColor = MISS_COLOR;
 	if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
 	{
-        uint instanceId = rayQuery.CommittedInstanceID(); // Use this to index into array of structs to get data needed to calculate light
-        MeshInstanceData instanceData = MeshInstances[instanceId];
-        StructuredBuffer<Vertex> Mesh = ResourceDescriptorHeap[instanceData.VertexBufferIdx];
-        StructuredBuffer<uint> IndexBuffer = ResourceDescriptorHeap[instanceData.IndexBufferIdx];
-        ConstantBuffer<ObjectData> object = ResourceDescriptorHeap[instanceData.ObjectDataIdx];
-
-        ConstantBuffer<MaterialData> Material = ResourceDescriptorHeap[object.MaterialIndex];
-        Texture2D<float4> albedoTex = ResourceDescriptorHeap[Material.AlbedoOffset]; 
-
-        float2 baryUv = rayQuery.CandidateTriangleBarycentrics();
-        uint index0 = IndexBuffer[rayQuery.CandidatePrimitiveIndex() * 3];
-        uint index1 = IndexBuffer[rayQuery.CandidatePrimitiveIndex() * 3 + 1];
-        uint index2 = IndexBuffer[rayQuery.CandidatePrimitiveIndex() * 3 + 2];
-        float2 uv0 = Mesh[index0].mUV;
-        float2 uv1 = Mesh[index1].mUV;
-        float2 uv2 = Mesh[index2].mUV;
-
-        float3 vertexNormals[3] = { 
-            Mesh[index0].mNormal , 
-            Mesh[index1].mNormal , 
-            Mesh[index2].mNormal  
-        };
-
-        float3 triNormal = TriangleNormal(vertexNormals, baryUv);
-
-
-        float2 uv = GetUV(baryUv, uv0, uv1, uv2);
-
-        const float minT = 0.1f;
-        const float tAtWhich1x1 = 200;  // Depends on the FOV of the "camera". A surface normal could also help here.
-        const float maxDim = 1024;//Get Dim from tex and (float)max(width, height);
-        const float grad = minT / (tAtWhich1x1 * maxDim);
-        // TODO: calculate gradients by method given here: 
-        // https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/Samples/Desktop/D3D12Raytracing/src/D3D12RaytracingMiniEngineSample/DiffuseHitShaderLib.hlsl#L233
-        float3 albedo = albedoTex.SampleGrad(LinearWrapSampler, uv, float2(grad, 0), float2(0, grad)).xyz; 
-
-        float3 light = CalculateDirectionalLight(triNormal, Frame.DirLights[0]);
-        result = float4(light * albedo, 1.f);
+        uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
+        resultColor = OnHit(instanceId, rayQuery);
 	}
 	else
     {
-
-        TextureCube skybox = ResourceDescriptorHeap[Params.SkyBoxHandle];
-
-        const float minT = 0.1f;
-        const float tAtWhich1x1 = 200;  // Depends on the FOV of the "camera". A surface normal could also help here.
-        const float maxDim = 1024;//Get Dim from tex and (float)max(width, height);
-        const float grad = minT / (tAtWhich1x1 * maxDim);
-
-        float3 color = skybox.Sample(LinearWrapSampler, ray.Direction).xyz;
-        result = float4(color, 1.0f);
+        resultColor = OnMiss(ray, rayQuery);
     }
 
+    result = float4(resultColor, 1.f);
     return result;
 } 
 

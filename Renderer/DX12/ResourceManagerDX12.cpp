@@ -514,6 +514,7 @@ namespace nv::graphics
         TextureDX12* pTex = mTextures.GetAsDerived(resource);
         pTextureHeap->Remove(pTex->GetHeapOffset());
         mTextures.Remove(resource);
+        gResourceTracker.Remove(resource);
     }
 
     ResourceManagerDX12::~ResourceManagerDX12()

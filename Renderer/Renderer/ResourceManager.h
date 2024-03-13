@@ -50,6 +50,7 @@ namespace nv::graphics
         Material*                       GetMaterial(Handle<Material> handle);
         Material*                       GetMaterial(ResID id);
         void                            DestroyTexture(ResID id);
+        void                            QueueDestroy(Handle<GPUResource> handle, uint32_t frameDelay = 0);
 
         virtual Texture*                GetTexture(Handle<Texture>) = 0;
         virtual Texture*                GetTexture(ResID id);

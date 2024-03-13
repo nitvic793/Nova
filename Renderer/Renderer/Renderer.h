@@ -43,6 +43,13 @@ namespace nv::graphics
         bool        mUseRayTracingHeap = false;
     };
 
+
+    struct DeleteEntry
+    {
+        Handle<GPUResource> mResource;
+        uint32_t            mFrameDelay;
+    };
+
     class IRenderer
     {
     public:
@@ -77,7 +84,7 @@ namespace nv::graphics
         virtual void                    SetComputeContextDefaults(Context* context) const = 0;
 
         Device*     GetDevice() const;
-        void        QueueDestroy(Handle<GPUResource> resource);
+        void        QueueDestroy(Handle<GPUResource> resource, uint32_t frameDelay = 0);
         void        ExecuteQueuedDestroy();
         Viewport    GetDefaultViewport() const;
         Rect        GetDefaultScissorRect() const;
@@ -87,7 +94,7 @@ namespace nv::graphics
         Handle<GPUResource>             mpBackBuffers[FRAMEBUFFER_COUNT];
         Handle<Texture>                 mRenderTargets[FRAMEBUFFER_COUNT];
         Handle<Texture>                 mDepthStencil;
-        nv::Vector<Handle<GPUResource>> mDeleteQueue;
+        std::vector<DeleteEntry>        mDeleteQueue;
     };
 
     extern IRenderer* gRenderer;

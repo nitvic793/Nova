@@ -87,6 +87,7 @@ namespace nv::graphics
 				return HandleCPU(mFreeIndices.Pop());
 		}
 
+#pragma optimize ("", off)
 		D3D12_GPU_DESCRIPTOR_HANDLE PushGPU()
 		{
 			if (mFreeIndices.IsEmpty())
@@ -94,6 +95,7 @@ namespace nv::graphics
 			else
 				return HandleGPU(mFreeIndices.Pop());
 		}
+#pragma optimize ("", on)
 
 		void Remove(uint32_t index)
 		{

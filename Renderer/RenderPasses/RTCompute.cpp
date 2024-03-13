@@ -222,24 +222,29 @@ namespace nv::graphics
         pResource->MapMemory(); // Keep memory mapped
     }
 
-    // TODO:
-    // Create structured buffer of { VB Idx, IB Idx, Object Idx } for each mesh
-    // Make sure order matches the transforms vector. The order Index will be == InstanceID in shader
-    // Bind structured buffer of mesh data.
-
     void RTCompute::Execute(const RenderPassData& renderPassData)
     {
         static std::vector<uint32_t> meshIds = {};
         static std::vector<MeshInstanceData> rtMeshData = {};
+        static uint32_t sFrameCounter = 0;
+        static bool sbBuildAccelerationStructure = true;
 
-        static bool done = false;
+        constexpr uint32_t BVH_REBUILD_THRESHOLD_FRAMES = 512;
+
+        if (sFrameCounter > BVH_REBUILD_THRESHOLD_FRAMES)
+            sbBuildAccelerationStructure = false; // DISABLED
+
+        sFrameCounter++;
         auto ctx = gRenderer->GetContext();
 
-        if (!done && renderPassData.mRenderData.mSize > 0)
+        if (sbBuildAccelerationStructure && renderPassData.mRenderData.mSize > 0)
         {
 #if NV_CUSTOM_RAYTRACING
             BuildBVHs();
 #else
+            meshIds.clear();
+            rtMeshData.clear();
+
             std::vector<Mesh*> meshes;
             std::vector<float4x4> transforms;
             for (uint32_t i = 0; i < renderPassData.mRenderData.mSize; ++i)
@@ -258,13 +263,14 @@ namespace nv::graphics
 
             dx12::BuildAccelerationStructure(((ContextDX12*)ctx)->GetDXRCommandList(), meshes, transforms, sRTRuntimeData);
 #endif
-            done = true;
+            sbBuildAccelerationStructure = false;
+            sFrameCounter = 0;
         }
         else
         {
 #if !NV_CUSTOM_RAYTRACING
             // Update acceleration structures
-            constexpr bool ALLOW_UPDATE = true;
+            constexpr bool UPDATE = true;
 
             std::vector<Mesh*> meshes; 
             std::vector<float4x4> transforms;
@@ -275,7 +281,7 @@ namespace nv::graphics
                 transforms.push_back(renderPassData.mRenderData.mpObjectData[meshId].World);
             }
 
-            dx12::BuildAccelerationStructure(((ContextDX12*)ctx)->GetDXRCommandList(), meshes, transforms, sRTRuntimeData, ALLOW_UPDATE);
+            dx12::BuildAccelerationStructure(((ContextDX12*)ctx)->GetDXRCommandList(), meshes, transforms, sRTRuntimeData, UPDATE);
 #endif
         }
 

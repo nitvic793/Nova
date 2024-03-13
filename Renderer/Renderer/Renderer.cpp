@@ -86,20 +86,36 @@ namespace nv::graphics
         return mDevice.Get();
     }
 
-    void IRenderer::QueueDestroy(Handle<GPUResource> resource)
+    void IRenderer::QueueDestroy(Handle<GPUResource> resource, uint32_t frameDelay)
     {
         gResourceTracker.Remove(resource);
-        mDeleteQueue.Push(resource);
+        mDeleteQueue.push_back({ resource, frameDelay });
     }
 
     void IRenderer::ExecuteQueuedDestroy()
     {
-        for (auto res : mDeleteQueue)
+        const auto size = mDeleteQueue.size();
+        uint32_t idxCounter = 0;
+        while (!mDeleteQueue.empty())
         {
-            gResourceManager->DestroyResource(res);
-        }
+            if (idxCounter >= size)
+                break;
 
-        mDeleteQueue.Clear();
+            auto entry = *mDeleteQueue.begin();
+            if (entry.mFrameDelay > 0)
+            {
+                entry.mFrameDelay--;
+                mDeleteQueue.erase(mDeleteQueue.begin());
+                mDeleteQueue.push_back(entry);
+            }
+            else
+            {
+                gResourceManager->DestroyResource(entry.mResource);
+                mDeleteQueue.erase(mDeleteQueue.begin());
+            }
+
+            idxCounter++;
+        }
     }
 
     Viewport IRenderer::GetDefaultViewport() const

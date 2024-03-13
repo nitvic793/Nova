@@ -32,7 +32,8 @@ namespace nv::graphics
         void Remove(ResID id, Handle<Texture>        handle);
         void Remove(ResID id, Handle<Mesh>           handle);
 
-        void Remove(Handle<GPUResource>    handle);
+        void Remove(Handle<GPUResource> handle);
+        void Remove(Handle<Texture>     handle);
 
         bool ExistsTexture(ResID id) const;
         bool ExistsMaterial(ResID id) const;

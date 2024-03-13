@@ -22,7 +22,9 @@ namespace nv::graphics::dx12
         ID3D12Resource* mInstanceDescs	= nullptr;
         ID3D12Resource* mScratch		= nullptr;
 
-		std::vector<ID3D12Resource*> mBLASs;
+		std::vector<ID3D12Resource*>		mBLASs;
+		std::vector<Handle<GPUResource>>	mResourceList;
+		std::vector<Handle<Texture>>		mTextureList;;
 	};
 
 	void BuildAccelerationStructure(ID3D12GraphicsCommandList4* pCommandList, 
