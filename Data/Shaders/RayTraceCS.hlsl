@@ -12,6 +12,8 @@ SamplerState            LinearWrapSampler	: register(s0);
 #define INV_PI      0.318309886183790671538
 #define INV2PI		0.15915494309189533576888f
 #define PI			3.14159265358979323846264f
+#define MAX_DIST    10000.f
+#define MIN_DIST    0.1f
 
 // 
 float3 LinearToSRGB(float3 linearCol)
@@ -108,6 +110,35 @@ float2 GetUV(float2 barycentrics, float2 uv0, float2 uv1, float2 uv2)
     return uv;
 }
 
+// From: https://github.com/NVIDIAGameWorks/GettingStartedWithRTXRayTracing/blob/f1946147ea50987efd4e897d8bb996e2f8bc99df/13-SimpleToneMapping/Data/Tutorial13/standardShadowRay.hlsli#L31
+float ShadowRayVisibility(float3 origin, float3 direction, float minT, float maxT)
+{
+	// Setup our shadow ray
+	RayDesc ray;
+	ray.Origin = origin;
+	ray.Direction = direction;
+	ray.TMin = minT;
+	ray.TMax = maxT;
+
+    RaytracingAccelerationStructure Scene = ResourceDescriptorHeap[Params.RTSceneIdx];
+    RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> rayQuery;
+
+    rayQuery.TraceRayInline(
+		Scene,
+		0,
+		255,
+		ray
+	);
+
+    rayQuery.Proceed();
+
+    float hitDist = MAX_DIST;
+    if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
+        hitDist = rayQuery.CommittedRayT();
+	// Check if anyone was closer than our maxT distance (in which case we're occluded)
+	return (hitDist > maxT) ? 1.0f : 0.0f;
+}
+
 typedef RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> DefaultRayQueryT;
 
 float3 OnHit(uint instanceId, DefaultRayQueryT rayQuery)
@@ -147,8 +178,14 @@ float3 OnHit(uint instanceId, DefaultRayQueryT rayQuery)
     // TODO: calculate gradients by method given here: 
     // https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/Samples/Desktop/D3D12Raytracing/src/D3D12RaytracingMiniEngineSample/DiffuseHitShaderLib.hlsl#L233
 
+    DirectionalLight dirLight = Frame.DirLights[0];
+    float3 toLight = normalize(-dirLight.Direction);
+    float3 worldPos = rayQuery.WorldRayOrigin() + rayQuery.WorldRayDirection() * rayQuery.CommittedRayT();
+    float shadowVisibility = ShadowRayVisibility(worldPos, toLight, MIN_DIST, MAX_DIST - 100.f);
+
     float3 albedo = albedoTex.SampleGrad(LinearWrapSampler, uv, float2(grad, 0), float2(0, grad)).xyz; 
-    float3 light = CalculateDirectionalLight(triNormal, Frame.DirLights[0]);
+
+    float3 light = CalculateDirectionalLight(triNormal, dirLight) * shadowVisibility;
 
     return light * albedo;
 }
