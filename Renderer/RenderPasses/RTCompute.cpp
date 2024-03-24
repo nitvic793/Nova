@@ -327,7 +327,7 @@ namespace nv::graphics
             .SkyBoxHandle = gResourceManager->GetTexture(skyHandle)->GetHeapIndex(),
             .EnableShadows = gRenderSettings.mbEnableRTShadows,
             .EnableIndirectGI = gRenderSettings.mbEnableRTDiffuseGI
-        };
+        }; 
         
         gRenderer->UploadToConstantBuffer(sRTComputeObjects.mTraceParamsCBV, (uint8_t*)&params, (uint32_t)sizeof(params));
 
