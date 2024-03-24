@@ -15,7 +15,90 @@ SamplerState            LinearWrapSampler	: register(s0);
 #define MAX_DIST    10000.f
 #define MIN_DIST    0.1f
 
-// 
+typedef RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> DefaultRayQueryT;
+
+struct ShadeContext
+{
+    float3 Color;
+    float3 Normal;
+    float3 WorldPos;
+    float2 BaryUV;
+    float2 UV;
+};
+
+struct HitContext
+{
+    float3 Color;
+    float3 WorldNormal;
+    float3 WorldPos;
+};
+
+float3 getPerpendicularVector(float3 u)
+{
+	float3 a = abs(u);
+	uint xm = ((a.x - a.y)<0 && (a.x - a.z)<0) ? 1 : 0;
+	uint ym = (a.y - a.z)<0 ? (1 ^ xm) : 0;
+	uint zm = 1 ^ (xm | ym);
+	return cross(u, float3(xm, ym, zm));
+}
+
+// From: https://github.com/NVIDIAGameWorks/GettingStartedWithRTXRayTracing/blob/f1946147ea50987efd4e897d8bb996e2f8bc99df/CommonPasses/Data/CommonPasses/thinLensUtils.hlsli#L21
+uint InitRand(uint val0, uint val1, uint backoff = 16)
+{
+	uint v0 = val0, v1 = val1, s0 = 0;
+
+	[unroll]
+	for (uint n = 0; n < backoff; n++)
+	{
+		s0 += 0x9e3779b9;
+		v0 += ((v1 << 4) + 0xa341316c) ^ (v1 + s0) ^ ((v1 >> 5) + 0xc8013ea4);
+		v1 += ((v0 << 4) + 0xad90777d) ^ (v0 + s0) ^ ((v0 >> 5) + 0x7e95761e);
+	}
+	return v0;
+}
+
+// Takes our seed, updates it, and returns a pseudorandom float in [0..1]
+float NextRand(inout uint s)
+{
+	s = (1664525u * s + 1013904223u);
+	return float(s & 0x00FFFFFF) / float(0x01000000);
+}
+
+// From: https://github.com/NVIDIAGameWorks/GettingStartedWithRTXRayTracing/blob/f1946147ea50987efd4e897d8bb996e2f8bc99df/DXR-Sphereflake/Data/Sphereflake/randomUtils.hlsli#L43
+// Get a cosine-weighted random vector centered around a specified normal direction.
+float3 GetCosHemisphereSample(inout uint randSeed, float3 hitNorm)
+{
+	// Get 2 random numbers to select our sample with
+	float2 randVal = float2(NextRand(randSeed), NextRand(randSeed));
+
+	// Cosine weighted hemisphere sample from RNG
+	float3 bitangent = getPerpendicularVector(hitNorm);
+	float3 tangent = cross(bitangent, hitNorm);
+	float r = sqrt(randVal.x);
+	float phi = 2.0f * 3.14159265f * randVal.y;
+
+	// Get our cosine-weighted hemisphere lobe sample direction
+	return tangent * (r * cos(phi).x) + bitangent * (r * sin(phi)) + hitNorm.xyz * sqrt(max(0.0, 1.0f - randVal.x));
+}
+
+// From: https://github.com/NVIDIAGameWorks/GettingStartedWithRTXRayTracing/blob/f1946147ea50987efd4e897d8bb996e2f8bc99df/CommonPasses/Data/CommonPasses/simpleDiffuseGIUtils.hlsli#L131
+// Get a uniform weighted random vector centered around a specified normal direction.
+float3 GetUniformHemisphereSample(inout uint randSeed, float3 hitNorm)
+{
+	// Get 2 random numbers to select our sample with
+	float2 randVal = float2(NextRand(randSeed), NextRand(randSeed));
+
+	// Cosine weighted hemisphere sample from RNG
+	float3 bitangent = getPerpendicularVector(hitNorm);
+	float3 tangent = cross(bitangent, hitNorm);
+	float r = sqrt(max(0.0f,1.0f - randVal.x*randVal.x));
+	float phi = 2.0f * 3.14159265f * randVal.y;
+
+	// Get our cosine-weighted hemisphere lobe sample direction
+	return tangent * (r * cos(phi).x) + bitangent * (r * sin(phi)) + hitNorm.xyz * randVal.x;
+}
+
+// Credits: Alan Wolfe
 float3 LinearToSRGB(float3 linearCol)
 {
 	float3 sRGBLo = linearCol * 12.92;
@@ -25,6 +108,18 @@ float3 LinearToSRGB(float3 linearCol)
 	sRGB.g = linearCol.g <= 0.0031308 ? sRGBLo.g : sRGBHi.g;
 	sRGB.b = linearCol.b <= 0.0031308 ? sRGBLo.b : sRGBHi.b;
 	return sRGB;
+}
+
+// Credits: Alan Wolfe
+float3 SRGBToLinear(in float3 sRGBCol)
+{
+	float3 linearRGBLo = sRGBCol / 12.92;
+	float3 linearRGBHi = pow((sRGBCol + 0.055) / 1.055, float3(2.4, 2.4, 2.4));
+	float3 linearRGB;
+	linearRGB.r = sRGBCol.r <= 0.04045 ? linearRGBLo.r : linearRGBHi.r;
+	linearRGB.g = sRGBCol.g <= 0.04045 ? linearRGBLo.g : linearRGBHi.g;
+	linearRGB.b = sRGBCol.b <= 0.04045 ? linearRGBLo.b : linearRGBHi.b;
+	return linearRGB;
 }
 
 // Ref: http://cwyman.org/code/dxrTutors/tutors/Tutor10/tutorial10.md.html
@@ -110,38 +205,7 @@ float2 GetUV(float2 barycentrics, float2 uv0, float2 uv1, float2 uv2)
     return uv;
 }
 
-// From: https://github.com/NVIDIAGameWorks/GettingStartedWithRTXRayTracing/blob/f1946147ea50987efd4e897d8bb996e2f8bc99df/13-SimpleToneMapping/Data/Tutorial13/standardShadowRay.hlsli#L31
-float ShadowRayVisibility(float3 origin, float3 direction, float minT, float maxT)
-{
-	// Setup our shadow ray
-	RayDesc ray;
-	ray.Origin = origin;
-	ray.Direction = direction;
-	ray.TMin = minT;
-	ray.TMax = maxT;
-
-    RaytracingAccelerationStructure Scene = ResourceDescriptorHeap[Params.RTSceneIdx];
-    RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> rayQuery;
-
-    rayQuery.TraceRayInline(
-		Scene,
-		0,
-		255,
-		ray
-	);
-
-    rayQuery.Proceed();
-
-    float hitDist = MAX_DIST;
-    if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
-        hitDist = rayQuery.CommittedRayT();
-	// Check if anyone was closer than our maxT distance (in which case we're occluded)
-	return (hitDist > maxT) ? 1.0f : 0.0f;
-}
-
-typedef RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> DefaultRayQueryT;
-
-float3 OnHit(uint instanceId, DefaultRayQueryT rayQuery)
+ShadeContext GetShadeContext(uint instanceId, DefaultRayQueryT rayQuery)
 {
     MeshInstanceData instanceData       = MeshInstances[instanceId];
     StructuredBuffer<Vertex> Mesh       = ResourceDescriptorHeap[instanceData.VertexBufferIdx];
@@ -174,59 +238,134 @@ float3 OnHit(uint instanceId, DefaultRayQueryT rayQuery)
     const float tAtWhich1x1 = 200;  // Depends on the FOV of the "camera". A surface normal could also help here.
     const float maxDim = 1024;//Get Dim from tex and (float)max(width, height);
     const float grad = minT / (tAtWhich1x1 * maxDim);
-    
+
     // TODO: calculate gradients by method given here: 
     // https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/Samples/Desktop/D3D12Raytracing/src/D3D12RaytracingMiniEngineSample/DiffuseHitShaderLib.hlsl#L233
-
-    DirectionalLight dirLight = Frame.DirLights[0];
-    float3 toLight = normalize(-dirLight.Direction);
     float3 worldPos = rayQuery.WorldRayOrigin() + rayQuery.WorldRayDirection() * rayQuery.CommittedRayT();
-    float shadowVisibility = ShadowRayVisibility(worldPos, toLight, MIN_DIST, MAX_DIST - 100.f);
-
     float3 albedo = albedoTex.SampleGrad(LinearWrapSampler, uv, float2(grad, 0), float2(0, grad)).xyz; 
 
-    float3 light = CalculateDirectionalLight(triNormal, dirLight) * shadowVisibility;
+    ShadeContext ctx;
 
-    return light * albedo;
+    ctx.Normal = triNormal;
+    ctx.WorldPos = worldPos;
+    ctx.UV = uv;
+    ctx.BaryUV = baryUv;
+    ctx.Color = albedo;
+
+    return ctx;
 }
 
-float3 OnMiss(RayDesc ray, DefaultRayQueryT rayQuery)
+DefaultRayQueryT ShootRay(RayDesc ray)
 {
-    TextureCube skybox = ResourceDescriptorHeap[Params.SkyBoxHandle];
-    float3 color = skybox.Sample(LinearWrapSampler, ray.Direction).xyz;
-    return color;
-}
-
-float4 DoInlineRayTracing(RayDesc ray)
-{
-    const float4 HIT_COLOR = float4(1,0,0,1);
-    const float4 MISS_COLOR = float4(1,0,0,1);
-    float4 result = 0.xxxx;
-
     RaytracingAccelerationStructure Scene = ResourceDescriptorHeap[Params.RTSceneIdx];
+    DefaultRayQueryT rayQuery;
 
-    RayQuery<RAY_FLAG_CULL_NON_OPAQUE |
-	RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES |
-	RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> rayQuery;
-
-	rayQuery.TraceRayInline(
+    rayQuery.TraceRayInline(
 		Scene,
 		0,
 		255,
 		ray
 	);
 
-	rayQuery.Proceed();
+    rayQuery.Proceed();
+    return rayQuery;
+}
 
-    float3 resultColor = MISS_COLOR;
+DefaultRayQueryT ShootRay(float3 origin, float3 direction, float minT, float maxT)
+{
+    RayDesc ray;
+	ray.Origin = origin;
+	ray.Direction = direction;
+	ray.TMin = minT;
+	ray.TMax = maxT;
+
+    return ShootRay(ray);
+}
+
+// From: https://github.com/NVIDIAGameWorks/GettingStartedWithRTXRayTracing/blob/f1946147ea50987efd4e897d8bb996e2f8bc99df/13-SimpleToneMapping/Data/Tutorial13/standardShadowRay.hlsli#L31
+float ShadowRayVisibility(float3 origin, float3 direction, float minT, float maxT)
+{
+	// Setup our shadow ray
+	DefaultRayQueryT rayQuery = ShootRay(origin, direction, minT, maxT);
+
+    float hitDist = MAX_DIST;
+    if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
+        hitDist = rayQuery.CommittedRayT();
+	// Check if anyone was closer than our maxT distance (in which case we're occluded)
+	return (hitDist > maxT) ? 1.0f : 0.0f;
+}
+
+float3 OnHit(uint instanceId, DefaultRayQueryT rayQuery, out HitContext hitContext)
+{
+    ShadeContext ctx = GetShadeContext(instanceId, rayQuery);
+
+    DirectionalLight dirLight = Frame.DirLights[0];
+    float3 toLight = normalize(-dirLight.Direction);
+    float shadowVisibility = ShadowRayVisibility(ctx.WorldPos, toLight, MIN_DIST, MAX_DIST - 100.f);
+    float3 light = CalculateDirectionalLight(ctx.Normal, dirLight) * shadowVisibility;
+
+    float3 color = light * ctx.Color;
+
+    hitContext.WorldPos = ctx.WorldPos;
+    hitContext.WorldNormal = ctx.Normal;
+    hitContext.Color = ctx.Color;
+    return color;
+}
+
+float3 OnMiss(float3 rayDir, DefaultRayQueryT rayQuery)
+{
+    TextureCube skybox = ResourceDescriptorHeap[Params.SkyBoxHandle];
+    float3 color = skybox.Sample(LinearWrapSampler, rayDir).xyz;
+    return color;
+}
+
+float3 ShootIndirectRay(float3 worldPos, float3 dir, float minT, uint seed)
+{
+    DefaultRayQueryT rayQuery = ShootRay(worldPos, dir, minT, MAX_DIST);
+    if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
+    {
+        HitContext ctx;
+        uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
+        return OnHit(instanceId, rayQuery, ctx);
+    }
+        
+    return OnMiss(dir, rayQuery);
+}
+
+float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
+{
+    const float4 HIT_COLOR = float4(1,0,0,1);
+    const float4 MISS_COLOR = float4(1,0,0,1);
+    float4 result = 0.xxxx;
+
+    uint randSeed = InitRand(DTid.x + DTid.y * DTid.z, Params.FrameCount, 16);
+    DefaultRayQueryT rayQuery = ShootRay(ray);
+
+    float3 resultColor = MISS_COLOR.xyz;
 	if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
 	{
+        HitContext ctx;
         uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
-        resultColor = OnHit(instanceId, rayQuery);
+        resultColor = OnHit(instanceId, rayQuery, ctx);
+        const bool bEnableIndirectGI = true;
+        const bool bCosSampling = false;
+        if(bEnableIndirectGI)
+        {
+            float3 bounceDir;
+            if(bCosSampling)
+                bounceDir = GetCosHemisphereSample(randSeed, ctx.WorldNormal.xyz); 
+            else
+                bounceDir = GetUniformHemisphereSample(randSeed, ctx.WorldNormal.xyz); 
+            float NdotL = saturate(dot(ctx.WorldNormal.xyz, bounceDir));
+            float3 bounceColor = ShootIndirectRay(ctx.WorldPos, bounceDir, MIN_DIST, randSeed);
+            float sampleProb = bCosSampling ? NdotL / PI : 1.0f / (2.0f * PI);
+
+            resultColor += (NdotL * bounceColor * ctx.Color / PI) / sampleProb;
+        }
 	}
 	else
     {
-        resultColor = OnMiss(ray, rayQuery);
+        resultColor = OnMiss(ray.Direction, rayQuery);
     }
 
     result = float4(resultColor, 1.f);
@@ -252,5 +391,5 @@ void main(uint3 DTid: SV_DispatchThreadID)
 
     RayDesc rayDesc;
     GetRayDesc(DTid.xy, rayDesc);
-    OutputTexture[DTid.xy] = DoInlineRayTracing(rayDesc).xyz;//SkyTexture[uv].xyz;//Trace(ray, DTid);
+    OutputTexture[DTid.xy] = DoInlineRayTracing(rayDesc, DTid).xyz;//SkyTexture[uv].xyz;//Trace(ray, DTid);
 }

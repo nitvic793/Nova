@@ -315,11 +315,13 @@ namespace nv::graphics
 
         auto structTestTex = gResourceManager->GetTexture(meshInstanceData);
        
+        static uint32_t frameCount = 0;
+        frameCount++;
         TraceParams params = 
         {
             .Resolution = float2((float)gWindow->GetWidth(), (float)gWindow->GetHeight()),
             .ScaleFactor = 1.f / SCALE,
-            .StructBufferIdx = structTestTex? structTestTex->GetHeapIndex() : 0,
+            .FrameCount = frameCount,
             .RTSceneIdx = gResourceManager->GetTexture(tlasHandle)->GetHeapIndex(),
             .SkyBoxHandle = gResourceManager->GetTexture(skyHandle)->GetHeapIndex()
         };

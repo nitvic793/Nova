@@ -145,7 +145,7 @@ namespace nv::graphics
     {
         float2      Resolution;
         float       ScaleFactor;
-        uint32_t    StructBufferIdx;
+        uint32_t    FrameCount;
         uint32_t    RTSceneIdx;
         uint32_t    SkyBoxHandle;
     };
