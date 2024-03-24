@@ -22,6 +22,7 @@
 #include <Renderer/PipelineState.h>
 #include <Renderer/Mesh.h>
 #include <Renderer/Window.h>
+#include <Renderer/GlobalRenderSettings.h>
 #include <Renderer/GPUProfile.h>
 #include <Renderer/ConstantBufferPool.h>
 #include <Components/Material.h>

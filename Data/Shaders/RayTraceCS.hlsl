@@ -301,7 +301,7 @@ float3 OnHit(uint instanceId, DefaultRayQueryT rayQuery, out HitContext hitConte
 
     DirectionalLight dirLight = Frame.DirLights[0];
     float3 toLight = normalize(-dirLight.Direction);
-    float shadowVisibility = ShadowRayVisibility(ctx.WorldPos, toLight, MIN_DIST, MAX_DIST - 100.f);
+    float shadowVisibility = Params.EnableShadows ? ShadowRayVisibility(ctx.WorldPos, toLight, MIN_DIST, MAX_DIST - 100.f) : 1.0f;
     float3 light = CalculateDirectionalLight(ctx.Normal, dirLight) * shadowVisibility;
 
     float3 color = light * ctx.Color;
@@ -329,7 +329,7 @@ float3 ShootIndirectRay(float3 worldPos, float3 dir, float minT, uint seed)
         return OnHit(instanceId, rayQuery, ctx);
     }
         
-    return OnMiss(dir, rayQuery);
+    return float3(0,0,0);//OnMiss(dir, rayQuery);
 }
 
 float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
@@ -347,7 +347,7 @@ float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
         HitContext ctx;
         uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
         resultColor = OnHit(instanceId, rayQuery, ctx);
-        const bool bEnableIndirectGI = true;
+        const bool bEnableIndirectGI = Params.EnableIndirectGI;
         const bool bCosSampling = false;
         if(bEnableIndirectGI)
         {

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "DeviceDX12.h"
 #include <Engine/Log.h>
+#include <Renderer/GlobalRenderSettings.h>
 #include <Renderer/Window.h>
 #include <DX12/WindowDX12.h>
 #include <DX12/DirectXIncludes.h>
@@ -108,7 +109,7 @@ namespace nv::graphics
 
 	void DeviceDX12::Present()
 	{
-		constexpr bool vsyncEnabled = true;
+		const bool vsyncEnabled = graphics::gRenderSettings.mbEnableVSync;
 		NV_GPU_FLIP(mSwapChain.Get());
 		auto hr = mSwapChain->Present(vsyncEnabled ? 1 : 0, 0);
 		if (hr == DXGI_ERROR_DEVICE_RESET || hr == DXGI_ERROR_DEVICE_REMOVED)

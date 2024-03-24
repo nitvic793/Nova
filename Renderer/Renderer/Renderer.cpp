@@ -5,6 +5,7 @@
 #include <Engine/System.h>
 #include <Renderer/ResourceManager.h>
 #include <Renderer/Format.h>
+#include <Renderer/GlobalRenderSettings.h>
 #include <Types/MeshAsset.h>
 #include <AssetManager.h>
 #include <Animation/AnimationSystem.h>
@@ -28,6 +29,12 @@ namespace nv::graphics
     Window*             gWindow             = nullptr;
     ResourceManager*    gResourceManager    = nullptr;
     Handle<ecs::Entity> gActiveCamHandle    = Null<ecs::Entity>();
+    Settings            gRenderSettings     = {};
+
+    void InitRenderSettings()
+    {
+        gRenderSettings.mbEnableVSync = true;
+    }
 
     void InitGraphics(void* context)
     {
@@ -48,6 +55,7 @@ namespace nv::graphics
         gSystemManager.CreateSystem<RenderSystem>(width, height);
 #endif
         gSystemManager.CreateSystem<animation::AnimationSystem>();
+        InitRenderSettings();
     }
 
     void DestroyGraphics()

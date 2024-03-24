@@ -148,6 +148,8 @@ namespace nv::graphics
         uint32_t    FrameCount;
         uint32_t    RTSceneIdx;
         uint32_t    SkyBoxHandle;
+        int32_t	    EnableShadows;
+        int32_t	    EnableIndirectGI;
     };
 
     struct MeshInstanceData

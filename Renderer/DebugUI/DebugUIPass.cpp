@@ -8,6 +8,7 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/Mesh.h>
 #include <Renderer/Device.h>
+#include <Renderer/GlobalRenderSettings.h>
 #include <Components/Renderable.h>
 #include <Animation/Animation.h>
 #include <Engine/EntityComponent.h>
@@ -72,6 +73,16 @@ namespace nv::graphics
         ImGui::End();
     }
 
+    static void ShowRenderSettings()
+    {
+        if (ImGui::CollapsingHeader("Render Settings", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::Checkbox("VSync", &gRenderSettings.mbEnableVSync);
+            ImGui::Checkbox("Enable RT Shadows", &gRenderSettings.mbEnableRTShadows);
+            ImGui::Checkbox("Enable RT DiffuseGI", &gRenderSettings.mbEnableRTDiffuseGI);
+        }
+	}
+
     void DebugUIPass::Init()
     {
         auto window = (WindowDX12*)gWindow;
@@ -124,6 +135,7 @@ namespace nv::graphics
             ImGui::Checkbox("Entity Manager", &showEntityList);
             ImGui::Checkbox("Animation", &showAnimPane);
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+            ShowRenderSettings();
             ImGui::End();
         }
 
@@ -279,7 +291,7 @@ namespace nv::graphics
         std::unordered_map<StringID, IComponent*> components;
         e->GetComponents(components);
 
-        const auto drawComponent = [&](StringID compId, IComponent* component)
+        const auto drawComponent = [](StringID compId, IComponent* component)
         {
             std::string name;
             const auto& fields = gComponentManager.GetMetadata(compId, name);

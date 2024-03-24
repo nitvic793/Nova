@@ -194,6 +194,7 @@
     <ClInclude Include="Renderer\DescriptorHeap.h" />
     <ClInclude Include="Renderer\Device.h" />
     <ClInclude Include="Renderer\Format.h" />
+    <ClInclude Include="Renderer\GlobalRenderSettings.h" />
     <ClInclude Include="Renderer\GPUProfile.h" />
     <ClInclude Include="Renderer\GPUResource.h" />
     <ClInclude Include="Renderer\Mesh.h" />

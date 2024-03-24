@@ -13,6 +13,7 @@
 #include <Renderer/GPUResource.h>
 #include <Renderer/RenderDataArray.h>
 #include <Renderer/ConstantBufferPool.h>
+#include <Renderer/GlobalRenderSettings.h>
 #include <BVH/BVH.h>
 
 #include <Components/Renderable.h>
@@ -323,7 +324,9 @@ namespace nv::graphics
             .ScaleFactor = 1.f / SCALE,
             .FrameCount = frameCount,
             .RTSceneIdx = gResourceManager->GetTexture(tlasHandle)->GetHeapIndex(),
-            .SkyBoxHandle = gResourceManager->GetTexture(skyHandle)->GetHeapIndex()
+            .SkyBoxHandle = gResourceManager->GetTexture(skyHandle)->GetHeapIndex(),
+            .EnableShadows = gRenderSettings.mbEnableRTShadows,
+            .EnableIndirectGI = gRenderSettings.mbEnableRTDiffuseGI
         };
         
         gRenderer->UploadToConstantBuffer(sRTComputeObjects.mTraceParamsCBV, (uint8_t*)&params, (uint32_t)sizeof(params));
