@@ -338,7 +338,7 @@ float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
     const float4 MISS_COLOR = float4(1,0,0,1);
     float4 result = 0.xxxx;
 
-    uint randSeed = InitRand(DTid.x + DTid.y * DTid.z, Params.FrameCount, 16);
+    uint randSeed = InitRand(DTid.x * Params.FrameCount, DTid.y * Params.FrameCount, 16);
     DefaultRayQueryT rayQuery = ShootRay(ray);
 
     float3 resultColor = MISS_COLOR.xyz;
@@ -348,7 +348,7 @@ float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
         uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
         resultColor = OnHit(instanceId, rayQuery, ctx);
         const bool bEnableIndirectGI = Params.EnableIndirectGI; // Diffuse GI
-        const bool bCosSampling = false;
+        const bool bCosSampling = true;
         if(bEnableIndirectGI)
         {
             float3 bounceDir;
