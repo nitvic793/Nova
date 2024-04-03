@@ -286,6 +286,8 @@ namespace nv::graphics
 #endif
         }
 
+        assert(meshIds.size() <= MAX_OBJECTS);
+
         if (!meshIds.empty())
         {
             rtMeshData.clear();
