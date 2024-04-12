@@ -20,6 +20,8 @@ namespace nv::graphics
     class Window;
     class DescriptorHeap;
     class Context;
+    class PipelineState;
+    struct PipelineStateDesc;
 
     struct GpuHeapState
     {
@@ -48,6 +50,12 @@ namespace nv::graphics
     {
         Handle<GPUResource> mResource;
         uint32_t            mFrameDelay;
+    };
+
+    class IRenderReloadManager
+    {
+    public:
+        virtual void RegisterPSO(const PipelineStateDesc& desc, Handle<PipelineState> pso) = 0;
     };
 
     class IRenderer
@@ -108,4 +116,7 @@ namespace nv::graphics
 
     void SetActiveCamera(Handle<ecs::Entity> camHandle);
     Handle<ecs::Entity> GetActiveCamera();
+
+    IRenderReloadManager* GetRenderReloadManager();
+    void SetRenderReloadManager(IRenderReloadManager* pManager);
 }

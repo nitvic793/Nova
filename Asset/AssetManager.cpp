@@ -347,6 +347,7 @@ namespace nv::asset
 
         virtual void Reload(const char* file) override
         {
+            log::Info("[Asset] Reloading {}", file);
             if constexpr (!HOT_RELOAD_ENABLED)
                 return;
 

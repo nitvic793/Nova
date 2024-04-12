@@ -39,6 +39,8 @@ namespace nv::graphics
         virtual Handle<Mesh>            CreateMesh(const MeshDesc& desc, ResID id);
         virtual Handle<Context>         CreateContext(const ContextDesc& desc) = 0;
 
+        virtual void                    CreatePipelineState(const PipelineStateDesc& desc, PipelineState* pPSO) = 0;
+
         virtual GPUResource*            Emplace(Handle<GPUResource>& handle) = 0;
 
         Handle<GPUResource>             CreateResource(const GPUResourceDesc& desc, ResID id);

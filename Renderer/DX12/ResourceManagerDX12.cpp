@@ -184,67 +184,11 @@ namespace nv::graphics
 
     Handle<PipelineState> ResourceManagerDX12::CreatePipelineState(const PipelineStateDesc& desc)
     {
-        auto pDevice = mDevice->GetDevice();
-        auto renderer = (RendererDX12*)gRenderer;
-
-        const auto setShaderByteCode = [&](const Handle<Shader> shader, D3D12_SHADER_BYTECODE& outByteCode)
-        {
-            if (!shader.IsNull())
-            {
-                auto shaderInstance = mShaders.GetAsDerived(shader);
-                outByteCode = shaderInstance->GetByteCode();
-            }
-        };
-
         Handle<PipelineState> handle;
-
-        // Creating compute pipeline state
-        if (desc.mPipelineType == PIPELINE_COMPUTE)
-        {
-            D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
-            setShaderByteCode(desc.mCS, psoDesc.CS);
-            psoDesc.pRootSignature = renderer->mComputeRootSignature.Get();
-            auto pso = mPipelineStates.CreateInstance(handle, desc);
-            pDevice->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(pso->GetPipelineCom().ReleaseAndGetAddressOf()));
-            return handle;
-        }
-
-        DXGI_SAMPLE_DESC sampleDesc = {};
-        sampleDesc.Count = 1;
-
-        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-        if (desc.mbUseAnimLayout)
-        {
-            psoDesc.InputLayout.pInputElementDescs = dx12::AnimationLayout;
-            psoDesc.InputLayout.NumElements = _countof(dx12::AnimationLayout);
-        }
-        else
-        {
-
-            psoDesc.InputLayout.pInputElementDescs = dx12::DefaultLayout;
-            psoDesc.InputLayout.NumElements = _countof(dx12::DefaultLayout);
-        }
-
-        psoDesc.pRootSignature = renderer->mRootSignature.Get();
-
-        setShaderByteCode(desc.mPS, psoDesc.PS);
-        setShaderByteCode(desc.mVS, psoDesc.VS);
-
-        psoDesc.DepthStencilState = GetDepthStencilDesc(desc.mDepthStencilState);
-        psoDesc.RasterizerState = GetRasterizerDesc(desc.mRasterizerState);
-        psoDesc.BlendState = GetBlendState(desc.mBlendState);
-
-        psoDesc.NumRenderTargets = desc.mNumRenderTargets;
-        psoDesc.DSVFormat = GetFormat(desc.mDepthFormat);
-        psoDesc.PrimitiveTopologyType = GetPrimitiveTopologyType(desc.mPrimitiveTopology);
-        for (uint32_t i = 0; i < MAX_RENDER_TARGET_COUNT; ++i)
-            psoDesc.RTVFormats[i] = GetFormat(desc.mRenderTargetFormats[i]);
-        psoDesc.SampleDesc = sampleDesc;
-        psoDesc.SampleMask = 0xffffffff;
-
         auto pso = mPipelineStates.CreateInstance(handle, desc);
-        pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pso->GetPipelineCom().ReleaseAndGetAddressOf()));
-
+        CreatePipelineState(desc, pso);
+        auto pRReloadMgr = GetRenderReloadManager();
+        pRReloadMgr->RegisterPSO(desc, handle);
         return handle;
     }
 
@@ -459,6 +403,69 @@ namespace nv::graphics
         return handle;
     }
 
+    void ResourceManagerDX12::CreatePipelineState(const PipelineStateDesc& desc, PipelineState* pPSO)
+    {
+        auto pDevice = mDevice->GetDevice();
+        auto renderer = (RendererDX12*)gRenderer;
+        auto pso = (PipelineStateDX12*)pPSO;
+
+        const auto setShaderByteCode = [&](const Handle<Shader> shader, D3D12_SHADER_BYTECODE& outByteCode)
+            {
+                if (!shader.IsNull())
+                {
+                    auto shaderInstance = mShaders.GetAsDerived(shader);
+                    outByteCode = shaderInstance->GetByteCode();
+                }
+            };
+
+        Handle<PipelineState> handle;
+
+        // Creating compute pipeline state
+        if (desc.mPipelineType == PIPELINE_COMPUTE)
+        {
+            D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
+            setShaderByteCode(desc.mCS, psoDesc.CS);
+            psoDesc.pRootSignature = renderer->mComputeRootSignature.Get();
+            pDevice->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(pso->GetPipelineCom().ReleaseAndGetAddressOf()));
+            return;
+        }
+
+        DXGI_SAMPLE_DESC sampleDesc = {};
+        sampleDesc.Count = 1;
+
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+        if (desc.mbUseAnimLayout)
+        {
+            psoDesc.InputLayout.pInputElementDescs = dx12::AnimationLayout;
+            psoDesc.InputLayout.NumElements = _countof(dx12::AnimationLayout);
+        }
+        else
+        {
+
+            psoDesc.InputLayout.pInputElementDescs = dx12::DefaultLayout;
+            psoDesc.InputLayout.NumElements = _countof(dx12::DefaultLayout);
+        }
+
+        psoDesc.pRootSignature = renderer->mRootSignature.Get();
+
+        setShaderByteCode(desc.mPS, psoDesc.PS);
+        setShaderByteCode(desc.mVS, psoDesc.VS);
+
+        psoDesc.DepthStencilState = GetDepthStencilDesc(desc.mDepthStencilState);
+        psoDesc.RasterizerState = GetRasterizerDesc(desc.mRasterizerState);
+        psoDesc.BlendState = GetBlendState(desc.mBlendState);
+
+        psoDesc.NumRenderTargets = desc.mNumRenderTargets;
+        psoDesc.DSVFormat = GetFormat(desc.mDepthFormat);
+        psoDesc.PrimitiveTopologyType = GetPrimitiveTopologyType(desc.mPrimitiveTopology);
+        for (uint32_t i = 0; i < MAX_RENDER_TARGET_COUNT; ++i)
+            psoDesc.RTVFormats[i] = GetFormat(desc.mRenderTargetFormats[i]);
+        psoDesc.SampleDesc = sampleDesc;
+        psoDesc.SampleMask = 0xffffffff;
+
+        pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pso->GetPipelineCom().ReleaseAndGetAddressOf()));
+    }
+
     GPUResource* ResourceManagerDX12::Emplace(Handle<GPUResource>& handle)
     {
         return mGpuResources.CreateInstance(handle);
@@ -496,9 +503,24 @@ namespace nv::graphics
 
     Handle<PipelineState> ResourceManagerDX12::RecreatePipelineState(Handle<PipelineState> handle)
     {
-        PipelineStateDesc desc = mPipelineStates.Get(handle)->GetDesc();
-        mPipelineStates.Remove(handle);
-        return CreatePipelineState(desc); 
+        auto pso = mPipelineStates.Get(handle);
+        PipelineStateDesc desc = pso->GetDesc();
+
+        const auto reloadShader = [&](Handle<Shader>& shader)
+        {
+            if (!shader.IsNull())
+            {
+                auto pShader = mShaders.GetAsDerived(shader);
+                pShader->Load();
+            }
+        };
+
+        reloadShader(desc.mVS);
+        reloadShader(desc.mPS);
+        reloadShader(desc.mCS);
+
+        CreatePipelineState(desc, pso);
+        return handle;
     }
 
     void ResourceManagerDX12::DestroyResource(Handle<GPUResource> resource)

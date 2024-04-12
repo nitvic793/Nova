@@ -31,6 +31,8 @@ namespace nv::graphics
     Handle<ecs::Entity> gActiveCamHandle    = Null<ecs::Entity>();
     Settings            gRenderSettings     = {};
 
+    IRenderReloadManager* gRenderReloadManager = nullptr;
+
     void InitRenderSettings()
     {
         gRenderSettings.mbEnableVSync = true;
@@ -87,6 +89,16 @@ namespace nv::graphics
     Handle<ecs::Entity> GetActiveCamera()
     {
         return gActiveCamHandle;
+    }
+
+    IRenderReloadManager* GetRenderReloadManager()
+    {
+        return gRenderReloadManager;
+    }
+
+    void SetRenderReloadManager(IRenderReloadManager* pManager)
+    {
+        gRenderReloadManager = pManager;
     }
 
     Device* IRenderer::GetDevice() const

@@ -41,33 +41,39 @@
 
 namespace nv::graphics
 {
-    class RenderReloadManager
+    class RenderReloadManager : public IRenderReloadManager
     {
     public:
         RenderReloadManager(RenderSystem* renderSystem) :
             mRenderSystem(renderSystem)
         {}
 
-        void RegisterPSO(const PipelineStateDesc& desc, Handle<PipelineState>* pso)
+        void RegisterPSO(const PipelineStateDesc& desc, Handle<PipelineState> pso) override
         {
-            auto psId = gResourceManager->GetShader(desc.mPS)->GetDesc().mShader;
-            auto vsId = gResourceManager->GetShader(desc.mVS)->GetDesc().mShader;
+            auto psId = !desc.mPS.IsNull() ? gResourceManager->GetShader(desc.mPS)->GetDesc().mShader : asset::AssetID{ .mId = RES_ID_NULL };
+            auto vsId = !desc.mVS.IsNull() ? gResourceManager->GetShader(desc.mVS)->GetDesc().mShader : asset::AssetID{ .mId = RES_ID_NULL };
+            auto csId = !desc.mCS.IsNull() ? gResourceManager->GetShader(desc.mCS)->GetDesc().mShader : asset::AssetID{ .mId = RES_ID_NULL };
 
-            mPsoShaderMap[psId.mId] = pso;
-            mPsoShaderMap[vsId.mId] = pso;
+            if (psId.mId != RES_ID_NULL)
+                mPsoShaderMap[psId.mId].push_back(pso);
+            if (vsId.mId != RES_ID_NULL)
+                mPsoShaderMap[vsId.mId].push_back(pso);
+            if (csId.mId != RES_ID_NULL)
+                mPsoShaderMap[csId.mId].push_back(pso);
         }
 
         void OnReload(asset::AssetReloadEvent* event)
         {
             if (event->mAssetId.mType == asset::ASSET_SHADER)
             {
-                auto pso = mPsoShaderMap.at(event->mAssetId.mId);
-                mRenderSystem->QueueReload(pso);
+                auto PSOs = mPsoShaderMap.at(event->mAssetId.mId);
+                for(const auto& pso : PSOs)
+                    mRenderSystem->QueueReload(pso);
             }
         }
 
     private:
-        HashMap<uint64_t, Handle<PipelineState>*> mPsoShaderMap;
+        HashMap<uint64_t, std::vector<Handle<PipelineState>>> mPsoShaderMap;
         RenderSystem* mRenderSystem;
     };
 
@@ -78,6 +84,7 @@ namespace nv::graphics
         mpConstantBufferPool(nullptr)
     {
         mReloadManager = Alloc<RenderReloadManager>(SystemAllocator::gPtr, this);
+        SetRenderReloadManager(mReloadManager);
         gEventBus.Subscribe(mReloadManager, &RenderReloadManager::OnReload);
     }
 
@@ -184,18 +191,18 @@ namespace nv::graphics
     {
     }
 
-    void RenderSystem::QueueReload(Handle<PipelineState>* pso)
+    void RenderSystem::QueueReload(Handle<PipelineState> pso)
     {
         mPsoReloadQueue.Push(pso);
     }
 
-    void RenderSystem::Reload(Handle<PipelineState>* pso)
+    void RenderSystem::Reload(Handle<PipelineState> pso)
     {
         // Since the shaders referred by the pso description have the same asset ID, 
         // recreating with the same description would ensure the updated asset data is 
         // used by the shader. This is possible because the shader bytecode directly 
         // points to the asset data. 
-        *pso = gResourceManager->RecreatePipelineState(*pso); 
+        gResourceManager->RecreatePipelineState(pso); 
     }
 
     void RenderSystem::RenderThreadJob(void* ctx)
