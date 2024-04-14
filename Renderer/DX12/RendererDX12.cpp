@@ -389,6 +389,75 @@ namespace nv::graphics
         return mDescriptorHeapPool.GetAsDerived(handle);
     }
 
+    void RendererDX12::OnResize(const Window& window)
+    {
+        auto dxDevice = mDevice.As<DeviceDX12>();
+        auto pSwapChain = dxDevice->mSwapChain.Get();
+        auto pDevice = dxDevice->GetDevice();
+
+        // Wait for all frames to finish
+        WaitForAllFrames();
+
+        if (pSwapChain)
+        {
+            for (int32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
+            {
+                auto backBuffer = gResourceManager->GetGPUResource(mpBackBuffers[i])->As<GPUResourceDX12>();
+                backBuffer->GetResource()->Release();   
+            }
+
+            auto hr = pSwapChain->ResizeBuffers(FRAMEBUFFER_COUNT, window.GetWidth(), window.GetHeight(), GetFormat(mBackbufferFormat), 0);
+            if (FAILED(hr))
+            {
+                debug::ReportError("Unable to resize swap chain buffers");
+            }
+
+            for (int32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
+            {
+                auto backBuffer = gResourceManager->GetGPUResource(mpBackBuffers[i])->As<GPUResourceDX12>();
+                auto hr = pSwapChain->GetBuffer(
+                    i,
+                    IID_PPV_ARGS(backBuffer->GetResource().GetAddressOf())
+                );
+
+                if (!SUCCEEDED(hr))
+                {
+                    debug::ReportError("Unable to retrieve Swap Chain buffers");
+                }
+
+                backBuffer->GetResource()->SetName(L"Backbuffer Resource");
+            }
+
+            // Recreate render targets
+            for (int32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
+            {
+                TextureDesc rtvDesc = { .mUsage = tex::USAGE_RENDER_TARGET, .mFormat = mBackbufferFormat,.mBuffer = mpBackBuffers[i] };
+                gResourceManager->DestroyTexture(mRenderTargets[i]);
+                mRenderTargets[i] = gResourceManager->CreateTexture(rtvDesc, ID(fmt::format("SwapChainRenderTarget-{}", i).c_str()));
+            }
+
+            // Recreate depth stencil
+            auto depthTex = (TextureDX12*)gResourceManager->GetTexture(mDepthStencil);
+            QueueDestroy(depthTex->GetDesc().mBuffer);
+            gResourceManager->DestroyTexture(mDepthStencil);
+
+            auto depthResource = gResourceManager->CreateResource(
+                {
+                    .mWidth = window.GetWidth(),
+                    .mHeight = window.GetHeight(),
+                    .mFormat = mDsvFormat,
+                    .mType = buffer::TYPE_TEXTURE_2D,
+                    .mFlags = buffer::FLAG_ALLOW_DEPTH,
+                    .mInitialState = buffer::STATE_DEPTH_WRITE,
+                    .mClearValue = {.mFormat = mDsvFormat,.mColor = {1.f,0,0,0} , .mStencil = 0, .mIsDepth = true}
+                }
+            );
+
+            mDepthStencil = gResourceManager->CreateTexture({ .mUsage = tex::USAGE_DEPTH_STENCIL, .mFormat = mDsvFormat, .mBuffer = depthResource, .mType = tex::TEXTURE_2D });
+        }
+
+    }
+
     ConstantBufferView RendererDX12::CreateConstantBuffer(ConstBufferDesc desc)
     {
         auto heapHandle = desc.mUseRayTracingHeap ? mRayTracingHeap : mConstantBufferHeap;

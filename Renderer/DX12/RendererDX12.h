@@ -47,6 +47,7 @@ namespace nv::graphics
         virtual void TransitionToPresent() override;
         virtual void StartFrame() override;
         virtual void EndFrame() override;
+        virtual void OnResize(const Window& window) override;
 
         virtual Handle<Texture>         GetDefaultDepthTarget() const override;
         virtual Handle<Texture>         GetDefaultRenderTarget() const override;

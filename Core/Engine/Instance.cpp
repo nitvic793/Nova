@@ -29,7 +29,7 @@ namespace nv
 
     bool Instance::Init()
     {
-        NV_APP(mAppName);
+        //NV_APP(mAppName);
         NV_EVENT("App/Init");
         log::Info("Init Nova App: {}", mAppName);
         nv::InitContext(this);

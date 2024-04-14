@@ -31,7 +31,7 @@ namespace nv::graphics
         virtual ExecResult ProcessMessages() override;
 
         LRESULT CALLBACK WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-        void OnResize() {}
+        void OnResize();
 
         void SetInputWindow(void* pKeyboard, void* pMouse);
 

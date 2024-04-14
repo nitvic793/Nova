@@ -76,6 +76,7 @@ namespace nv::graphics
         virtual void TransitionToPresent() = 0;
         virtual void StartFrame() = 0;
         virtual void EndFrame() = 0;
+        virtual void OnResize(const Window& window) {}
         virtual ~IRenderer() {}
 
         virtual Handle<Texture>         GetDefaultRenderTarget() const = 0; // Return current final default render target
