@@ -40,7 +40,7 @@ namespace nv::jobs
         {
             Handle<Job> handle = mJobs.Create();
             auto mInstance = mJobs.Get(handle);
-            *mInstance = job;
+            *mInstance = std::move(job);
 
             mQueue.Push(handle);
             mConditionVar.notify_one();
@@ -178,8 +178,17 @@ namespace nv::jobs
         return gJobSystem->Enqueue(job);
     }
 
+    Handle<Job> Execute(Job::Fn&& job, void* context)
+    {
+        Job j(std::move(job), context);
+        return gJobSystem->Enqueue(std::move(j));
+    }
+
     void Wait(Handle<Job> handle)
     {
+        if(handle.IsNull())
+            return;
+
         gJobSystem->Wait(handle);
     }
 

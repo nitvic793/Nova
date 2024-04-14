@@ -86,6 +86,7 @@ namespace nv::asset
         {
             mAssets.Init();
             fs::path path = fs::current_path().string() + assetPath;
+            nv::log::Info("[Asset] Loading assets from {}", path.string());
             for (const auto& entry : fs::recursive_directory_iterator(path))
             {
                 if (!fs::is_regular_file(entry.path()))
@@ -151,17 +152,23 @@ namespace nv::asset
                     if (asset->GetType() == ASSET_CONFIG)
                     {
                         const auto hash = asset->GetHash();
-                        if (hash == ID("Configs/ShaderConfig.json"))
+                        switch (hash)
+                        {
+                        case ID("Configs/ShaderConfig.json"):
                         {
                             auto data = asset->GetAssetData();
                             nv::io::MemoryStream stream((const char*)data.mData, data.mSize);
                             LoadShaderConfigDataBinary(stream);
+                            break;
                         }
-                        else if (hash == ID("Configs/Materials.json"))
+                        case ID("Configs/Materials.json"):
                         {
                             auto data = asset->GetAssetData();
                             nv::io::MemoryStream stream((const char*)data.mData, data.mSize);
                             Load<MaterialDatabase, SERIAL_BINARY>(stream, "Materials");
+                            break;
+                        }
+                        default:break;
                         }
                     }
                 }
@@ -265,18 +272,118 @@ namespace nv::asset
             UnloadAsset(handle);
         }
 
-        virtual Handle<jobs::Job> ExportAssets(const char* exportPath) override
+        virtual Handle<jobs::Job> ExportAssets(const char* exportPath, bool& result) override
         {
+            constexpr std::string_view exportPipelineCache = "exportcache.novacache";
+
+            struct CacheHeader
+            {
+                uint32_t mAssetCount;
+            };
+
+            struct CacheEntry
+            {
+                std::string mPath;
+                // Last modified timestamp
+                uint64_t mTimestamp;
+            };
+
+            std::vector<CacheEntry> inCacheEntries;
+
+            const auto writeCacheFile = [&](std::vector<CacheEntry>& entries)
+            {
+                std::ofstream cacheFile(exportPipelineCache.data(), std::ios::binary | std::ios::trunc);
+                if (!cacheFile.is_open() || cacheFile.bad())
+                {
+                    log::Error("[Asset] Unable to open file to export cache.");
+                    return;
+                }
+
+                CacheHeader header = { (uint32_t)entries.size() };
+                cacheFile.write((const char*)&header, sizeof(CacheHeader));
+                for (const auto& entry : entries)
+                {
+                    uint32_t size = (uint32_t)entry.mPath.size();
+                    cacheFile.write((const char*)&size, sizeof(uint32_t));
+                    cacheFile.write(entry.mPath.c_str(), size);
+                    cacheFile.write((const char*)&entry.mTimestamp, sizeof(uint64_t));
+                }
+            };
+
+            const auto readCacheFile = [&](std::vector<CacheEntry>& entries)
+            {
+                std::ifstream cacheFile(exportPipelineCache.data(), std::ios::binary);
+                if (!cacheFile.is_open() || cacheFile.bad())
+                {
+                    log::Error("[Asset] Unable to open file to read cache.");
+                    return;
+                }
+
+                CacheHeader header = {};
+                cacheFile.read((char*)&header, sizeof(CacheHeader));
+                for (uint32_t i = 0; i < header.mAssetCount; i++)
+                {
+                    CacheEntry entry = {};
+                    uint32_t size = 0;
+                    cacheFile.read((char*)&size, sizeof(uint32_t));
+                    entry.mPath.resize(size);
+                    cacheFile.read(entry.mPath.data(), size);
+                    cacheFile.read((char*)&entry.mTimestamp, sizeof(uint64_t));
+                    entries.push_back(entry);
+                }
+            };
+
+            const auto getTimestamp = [](const std::string& path)
+            {
+                return fs::last_write_time(path).time_since_epoch().count();
+            };
+
+            const auto addCacheEntry = [&](const std::string& path, std::vector<CacheEntry>& entries)
+            {
+                CacheEntry entry = { path, getTimestamp(path) };
+                entries.push_back(entry);
+            };
+
+            const auto isRebuildNeeded = [&]()
+            {
+                if (!fs::exists(exportPipelineCache))
+                    return true;
+
+                readCacheFile(inCacheEntries);
+                if(inCacheEntries.size() != mAssetMap.size())
+                    return true;
+
+                for (const auto& entry : inCacheEntries)
+                {
+                    if (getTimestamp(entry.mPath) != entry.mTimestamp)
+                        return true;
+                }
+
+                return false;
+            };
+            
             auto folder = fs::path(exportPath).parent_path();
             if (!fs::is_directory(folder))
                 fs::create_directory(folder);
 
+            if (!isRebuildNeeded())
+            {
+                log::Info("[Asset] Package is up-to-date. Skipping export.");
+                result = true;
+                return Null<jobs::Job>();
+            }
+
             auto handle = jobs::Execute([&](void* ctx) 
             {
+                std::vector<CacheEntry> cacheEntries;
+                bool& result = *(bool*)ctx;
+                result = true;
+
                 std::ofstream file(exportPath, std::ios::binary | std::ios::trunc);
                 if (!file.is_open() || file.bad())
                 {
                     log::Error("[Asset] Unable to open file to export assets.");
+                    result = false;
                     return;
                 }
 
@@ -294,11 +401,16 @@ namespace nv::asset
                     {
                         if (asset)
                         {
-                            LoadAssetFromFile(asset);
+                            const auto& filePath = mAssetPathMap[asset->GetID()];
+                            addCacheEntry(filePath, cacheEntries);
+                            result = LoadAssetFromFile(asset);
                             ExportAsset(asset, file); // TODO: Export to file. 
                             UnloadAsset(item.second);
                         }
                     }
+
+                    if(!result)
+                        return;
                 }
 
                 for (auto item : mAssetMap)
@@ -309,12 +421,19 @@ namespace nv::asset
 
                     if (asset)
                     {
-                        LoadAssetFromFile(asset);
+                        const auto& filePath = mAssetPathMap[asset->GetID()];
+                        addCacheEntry(filePath, cacheEntries);
+                        result = LoadAssetFromFile(asset);
                         ExportAsset(asset, file); // TODO: Export to file. 
                         UnloadAsset(item.second);
                     }
+
+                    if (!result)
+                        return;
                 }
-            });
+
+                writeCacheFile(cacheEntries);
+            }, &result);
 
             return handle;
         }

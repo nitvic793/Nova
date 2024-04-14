@@ -60,13 +60,22 @@ int main()
         nv::log::Error("[Asset] CoInitialize Failure. Aborting asset export.");
         return PIPELINE_ERROR;
     }
-
+    
+    nv::log::Info("[Asset] Initializing Asset Manager");
     nv::InitContext(nullptr, "\\Data");
     auto assetManager = nv::asset::GetAssetManager();
-    assetManager->ExportAssets(".\\Build\\Assets.novapkg");
+    bool result = false;
+    auto jobHandle = assetManager->ExportAssets(".\\Build\\Assets.novapkg", result);
+    nv::jobs::Wait(jobHandle);
     nv::DestroyContext();
-
     CoUninitialize();
 
+    if (!result)
+    {
+        nv::log::Error("[Asset] Failed to export assets");
+        return PIPELINE_ERROR;
+    }
+
+    nv::log::Info("[Asset] Successfully exported assets");
     return PIPELINE_SUCCESS;
 }
