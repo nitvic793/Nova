@@ -207,7 +207,14 @@ namespace nv::graphics
         auto device = mDevice->GetDevice();
         const auto resourceDesc = resource->GetDesc();
 
+        const auto isDepthFormat = [](const format::SurfaceFormat format)
+        {
+			return format == format::D32_FLOAT || format == format::D24_UNORM_S8_UINT || format == format::D16_UNORM || format == format::D32_FLOAT_S8X24_UINT;
+		};
+
         DXGI_FORMAT dxgiFormat = GetFormat(resourceDesc.mFormat == format::UNKNOWN ? desc.mFormat : resourceDesc.mFormat);
+        if(isDepthFormat(resourceDesc.mFormat))
+			dxgiFormat = GetFormat(desc.mFormat); // Override the format if it's a depth format
 
         switch (desc.mUsage)
         {
@@ -217,8 +224,22 @@ namespace nv::graphics
             auto heapHandle = desc.mUseRayTracingHeap ? renderer->mRayTracingHeap : renderer->mTextureHeap;
             heap = renderer->mDescriptorHeapPool.GetAsDerived(heapHandle);
             cpuHandle = heap->PushCPU();
-            if(desc.mType != tex::BUFFER)
-                DirectX::CreateShaderResourceView(device, resource->GetResource().Get(), cpuHandle, tex::TEXTURE_CUBE == desc.mType);
+
+            if (isDepthFormat(resourceDesc.mFormat))
+            {
+                D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+                
+				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+				srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				srvDesc.Format = dxgiFormat;
+				srvDesc.Texture2D.MipLevels = 1;
+                srvDesc.Texture2D.MostDetailedMip = 0;
+				device->CreateShaderResourceView(resource->GetResource().Get(), &srvDesc, cpuHandle);
+            }
+            else if (desc.mType != tex::BUFFER)
+            {
+               DirectX::CreateShaderResourceView(device, resource->GetResource().Get(), cpuHandle, tex::TEXTURE_CUBE == desc.mType);
+            }
             else
             {
                 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};

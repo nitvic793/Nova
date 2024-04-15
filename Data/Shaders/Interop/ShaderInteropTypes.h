@@ -155,6 +155,14 @@ namespace nv::graphics
         int32_t	    EnableIndirectGI;
     };
 
+    struct TraceAccumParams
+    {
+        float       AccumulationAlpha;
+        uint32_t    PrevFrameTexIdx;
+        uint32_t    AccumulationTexIdx;
+        uint32_t    FrameIndex;
+    };
+
     struct MeshInstanceData
     {
         uint32_t    ObjectDataIdx;

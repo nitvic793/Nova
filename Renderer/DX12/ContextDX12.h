@@ -44,6 +44,8 @@ namespace nv::graphics
         virtual void Bind(uint32_t slot, BindResourceType type, uint32_t offset) override;
         virtual void BindConstantBuffer(uint32_t slot, uint32_t offset) override;
         virtual void BindTexture(uint32_t slot, Handle<Texture> texture) override;
+        virtual void CopyResource(Handle<GPUResource> dest, Handle<GPUResource> src) override;
+
         // Compute
         virtual void Dispatch(uint32_t x, uint32_t y, uint32_t z) override;
         virtual void ComputeBind(uint32_t slot, BindResourceType type, uint32_t offset) override;

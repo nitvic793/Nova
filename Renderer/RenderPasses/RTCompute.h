@@ -17,5 +17,6 @@ namespace nv::graphics
 
     private:
         Handle<PipelineState> mRTComputePSO;
+        Handle<PipelineState> mAccumulatePSO;
     };
 }

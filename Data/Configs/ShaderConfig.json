@@ -48,6 +48,13 @@
                 "Type": "ComputeShader",
                 "ShaderModel": "6_6"
             }
+        },
+        {
+            "key": "Shaders/AccumulateRTCS.hlsl",
+            "value": {
+                "Type": "ComputeShader",
+                "ShaderModel": "6_6"
+            }
         }
     ]
 }

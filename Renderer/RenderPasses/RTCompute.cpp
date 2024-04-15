@@ -183,8 +183,14 @@ namespace nv::graphics
     struct RTComputeObjects
     {
         Handle<GPUResource> mOutputBuffer;
+        Handle<GPUResource> mAccumBuffer;
+        Handle<GPUResource> mPrevAccumBuffer;
         Handle<Texture>     mOutputUAV;
+        Handle<Texture>	    mAccumUAV;
+        Handle<Texture>     mPrevAccumUAV;
+        Handle<Texture>     mDepthTexture;
         ConstantBufferView  mTraceParamsCBV;
+        ConstantBufferView  mTraceAccumCBV;
     };
 
     static Handle<GPUResource> meshInstanceBuffer;
@@ -199,10 +205,15 @@ namespace nv::graphics
         PipelineStateDesc psoDesc = { .mPipelineType = PIPELINE_COMPUTE, .mCS = rtcs };
         mRTComputePSO = gResourceManager->CreatePipelineState(psoDesc);
 
+        auto accumCs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/AccumulateRTCS.hlsl") };
+        auto accumCsHandle = gResourceManager->CreateShader({ accumCs, shader::COMPUTE });
+        PipelineStateDesc accumPsoDesc = { .mPipelineType = PIPELINE_COMPUTE, .mCS = accumCsHandle };
+        mAccumulatePSO = gResourceManager->CreatePipelineState(accumPsoDesc);
+
         uint32_t height = gWindow->GetHeight() / SCALE;
         uint32_t width = gWindow->GetWidth() / SCALE;
 
-        GPUResourceDesc desc = GPUResourceDesc::Texture2D(width, height, FLAG_ALLOW_UNORDERED, STATE_COPY_SOURCE);
+        GPUResourceDesc desc = GPUResourceDesc::Texture2D(width, height, FLAG_ALLOW_UNORDERED, STATE_COMMON);
 
         auto outputBuffer = gResourceManager->CreateResource(desc, ID("RTPass/OutputBuffer"));
         sRTComputeObjects.mOutputBuffer = outputBuffer;
@@ -217,6 +228,28 @@ namespace nv::graphics
         auto outputBufferTexture = gResourceManager->CreateTexture(texDesc, ID("RTPass/OutputBufferTex"));
         sRTComputeObjects.mOutputUAV = outputBufferTexture;
         sRTComputeObjects.mTraceParamsCBV = gpConstantBufferPool->GetConstantBuffer<TraceParams>();
+        sRTComputeObjects.mTraceAccumCBV = gpConstantBufferPool->GetConstantBuffer<TraceAccumParams>();
+
+        sRTComputeObjects.mAccumBuffer = gResourceManager->CreateResource(desc, ID("RTPass/AccumBuffer"));
+        texDesc.mBuffer = sRTComputeObjects.mAccumBuffer;
+        sRTComputeObjects.mAccumUAV = gResourceManager->CreateTexture(texDesc, ID("RTPass/AccumBufferTex"));
+
+        sRTComputeObjects.mPrevAccumBuffer = gResourceManager->CreateResource(desc, ID("RTPass/PrevAccumBuffer"));
+        texDesc.mBuffer = sRTComputeObjects.mPrevAccumBuffer;
+        sRTComputeObjects.mPrevAccumUAV = gResourceManager->CreateTexture(texDesc, ID("RTPass/PrevAccumBufferTex"));
+
+        // Get Depth Texture and transition buffer to pixel shader resource
+        auto depthTex = gRenderer->GetDefaultDepthTarget();
+        auto depthResource = gResourceManager->GetTexture(depthTex)->GetBuffer();
+        TextureDesc depthDesc =
+        {
+            .mUsage = tex::USAGE_SHADER,
+            .mFormat = format::R32_FLOAT,
+			.mBuffer = depthResource,
+			.mType = tex::Type::TEXTURE_2D,
+        };
+
+        sRTComputeObjects.mDepthTexture = gResourceManager->CreateTexture(depthDesc, ID("RTPass/DepthTexture"));
 
         meshInstanceData = CreateStructuredBuffer(sizeof(MeshInstanceData), MAX_OBJECTS, meshInstanceBuffer);
         auto pResource = gResourceManager->GetGPUResource(meshInstanceBuffer);
@@ -333,9 +366,36 @@ namespace nv::graphics
         
         gRenderer->UploadToConstantBuffer(sRTComputeObjects.mTraceParamsCBV, (uint8_t*)&params, (uint32_t)sizeof(params));
 
-        TransitionBarrier initBarriers[] = { {.mTo = STATE_COPY_DEST, .mResource = sRTComputeObjects.mOutputBuffer } };
+        TraceAccumParams accumParams =
+        {
+            .AccumulationAlpha = 0.1f,
+            .PrevFrameTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mPrevAccumUAV)->GetHeapIndex(),
+            .AccumulationTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mAccumUAV)->GetHeapIndex(),
+            .FrameIndex = frameCount
+        };
+
+        gRenderer->UploadToConstantBuffer(sRTComputeObjects.mTraceAccumCBV, (uint8_t*)&accumParams, (uint32_t)sizeof(accumParams));
+
+        auto depthResource = gResourceManager->GetTexture(sRTComputeObjects.mDepthTexture)->GetBuffer();
+
+        TransitionBarrier initBarriers[] = { 
+            {.mTo = STATE_COPY_DEST, .mResource = sRTComputeObjects.mOutputBuffer },
+			{.mTo = STATE_COPY_SOURCE, .mResource = sRTComputeObjects.mAccumBuffer },
+			{.mTo = STATE_COPY_DEST, .mResource = sRTComputeObjects.mPrevAccumBuffer },
+            {.mTo = STATE_PIXEL_SHADER_RESOURCE, .mResource = depthResource }
+        };
+
         ctx->ResourceBarrier({ &initBarriers[0] , ArrayCountOf(initBarriers) });
+        ctx->CopyResource(sRTComputeObjects.mPrevAccumBuffer, sRTComputeObjects.mAccumBuffer);
         
+        // Resource Barriers for RT Compute
+        TransitionBarrier rtInitBarriers[] = {
+            {.mTo = STATE_UNORDERED_ACCESS, .mResource = sRTComputeObjects.mAccumBuffer },
+            {.mTo = STATE_UNORDERED_ACCESS, .mResource = sRTComputeObjects.mPrevAccumBuffer }
+        };
+
+        ctx->ResourceBarrier({ &rtInitBarriers[0] , ArrayCountOf(rtInitBarriers) });
+
         ctx->SetPipeline(mRTComputePSO);
         ctx->ComputeBindConstantBuffer(0, (uint32_t)sRTComputeObjects.mTraceParamsCBV.mHeapIndex);
         ctx->ComputeBindConstantBuffer(1, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
@@ -345,8 +405,24 @@ namespace nv::graphics
         constexpr uint32_t DISPATCH_SCALE = 8;
         ctx->Dispatch(gWindow->GetWidth() / DISPATCH_SCALE, gWindow->GetHeight() / DISPATCH_SCALE, 1);
 
-        TransitionBarrier endBarriers[] = { {.mTo = STATE_COMMON, .mResource = sRTComputeObjects.mOutputBuffer } };
+        // Accumulate Results
+        ctx->SetPipeline(mAccumulatePSO);
+        ctx->ComputeBindConstantBuffer(0, (uint32_t)sRTComputeObjects.mTraceAccumCBV.mHeapIndex);
+        ctx->ComputeBindConstantBuffer(1, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
+        ctx->ComputeBindTexture(2, sRTComputeObjects.mOutputUAV);
+        ctx->ComputeBindTexture(3, sRTComputeObjects.mDepthTexture);
+        ctx->Dispatch(gWindow->GetWidth() / DISPATCH_SCALE, gWindow->GetHeight() / DISPATCH_SCALE, 1);
+
+        TransitionBarrier endBarriers[] = { 
+            {.mTo = STATE_UNORDERED_ACCESS, .mResource = sRTComputeObjects.mOutputBuffer } ,
+            {.mTo = STATE_DEPTH_WRITE, .mResource = depthResource }
+        };
+
         ctx->ResourceBarrier({ &endBarriers[0] , ArrayCountOf(endBarriers) });
+
+
+
+        // Copy Output UAV to Last Frame UAV
 
         //SetContextDefault(ctx);
     }

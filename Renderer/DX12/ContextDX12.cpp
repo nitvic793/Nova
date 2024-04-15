@@ -227,6 +227,14 @@ namespace nv::graphics
         Bind(slot, BIND_TEXTURE, tex->GetHeapOffset());
     }
 
+    void ContextDX12::CopyResource(Handle<GPUResource> dest, Handle<GPUResource> src)
+    {
+        auto dxDest = util::GetResource(dest);
+		auto dxSrc = util::GetResource(src);
+
+		mCommandList->CopyResource(dxDest->GetResource().Get(), dxSrc->GetResource().Get());
+    }
+
     void ContextDX12::SetRootSignature(ID3D12RootSignature* pRootSig)
     {
         mCommandList->SetGraphicsRootSignature(pRootSig);
