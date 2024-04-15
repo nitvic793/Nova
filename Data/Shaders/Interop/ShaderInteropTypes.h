@@ -40,6 +40,7 @@ namespace nv::graphics
     struct ObjectData
     {
         float4x4 World;
+        float4x4 PrevWorld;
         uint32_t MaterialIndex;
         float    _Padding;
     };
@@ -106,6 +107,8 @@ namespace nv::graphics
     {
         float4x4            View;
         float4x4            Projection;
+        float4x4            PrevView;
+        float4x4            PrevProjection;
         float4x4            ViewInverse;
         float4x4            ProjectionInverse;
         float4x4            ViewProjectionInverse;

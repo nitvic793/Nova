@@ -6,6 +6,7 @@
 #include <Engine/EntityComponent.h>
 
 #include <Engine/EventSystem.h>
+#include <Engine/System.h>
 
 namespace nv
 {
@@ -24,4 +25,13 @@ namespace nv
     Handle<ecs::Entity> CreateEntity(graphics::ResID mesh, graphics::ResID mat, const char* pDebugName = nullptr, const Transform& transform = Transform());
 
     bool IsDebugUIEnabled();
+
+    class FramePreSystem : public ISystem
+    {
+    public:
+        void Init() override;
+        void Update(float deltaTime, float totalTime) override;
+        void Destroy() override;
+    private:
+    };
 }

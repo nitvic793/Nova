@@ -42,6 +42,7 @@ namespace nv
         void SetParams(const CameraDesc& desc);
         void SetPosition(const float3& position);
         void SetRotation(const float3& rotation);
+        void SetPreviousViewProjection();
 
         float4x4 GetView() const;
         float4x4 GetProjection() const;
@@ -50,6 +51,10 @@ namespace nv
         float4x4 GetProjTransposed() const;
         float4x4 GetProjInverseTransposed() const;
         float4x4 GetViewProjInverseTransposed() const;
+        float4x4 GetPreviousView() const;
+        float4x4 GetPreviousProjection() const;
+        float4x4 GetPreviousViewTransposed() const;
+        float4x4 GetPreviousProjectionTransposed() const;
 
         const float3&       GetPosition()  const { return mPosition; }
         const float3&       GetDirection() const { return mDirection; }
@@ -59,13 +64,15 @@ namespace nv
         constexpr float     GetFarZ()      const { return mDesc.mFarZ; }
 
     private:
-        float3      mPosition;
-        float3      mDirection;
-        float3      mRotation;
-        float4x4    mProjection;
-        float4x4    mView;
+        float3      mPosition           = {};
+        float3      mDirection          = {};
+        float3      mRotation           = {};
+        float4x4    mProjection         = {};
+        float4x4    mView               = {};
+        float4x4    mPreviousView       = {};
+        float4x4    mPreviousProjection = {};
 
-        CameraDesc  mDesc;
+        CameraDesc  mDesc               = {};
 
         friend struct CameraComponent;
     };

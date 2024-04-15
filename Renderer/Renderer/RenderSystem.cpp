@@ -253,7 +253,7 @@ namespace nv::graphics
             gRenderer->EndFrame();
             gRenderer->Present();
             gRenderer->ExecuteQueuedDestroy();
-            if (mRenderData.GetRenderDataQueueSize() > 2 && gContext.mpInstance->GetInstanceState() == INSTANCE_STATE_RUNNING)
+            if (mRenderData.GetRenderDataQueueSize() > 1 && gContext.mpInstance->GetInstanceState() == INSTANCE_STATE_RUNNING)
             {
                 gContext.mpInstance->Wait(); // Wait until main thread notifies us it's done
             }
@@ -285,6 +285,8 @@ namespace nv::graphics
         { 
             .View                   = view, 
             .Projection             = proj, 
+            .PrevView               = camera.GetPreviousViewTransposed(),
+            .PrevProjection         = camera.GetPreviousProjectionTransposed(),
             .ViewInverse            = viewI, 
             .ProjectionInverse      = projI, 
             .ViewProjectionInverse  = camera.GetViewProjInverseTransposed(),

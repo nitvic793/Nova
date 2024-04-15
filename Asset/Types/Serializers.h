@@ -200,4 +200,20 @@ namespace cereal
     {
         archive(s.mRotation);
     }
+
+    template<class Archive>
+    void serialize(Archive& archive, nv::Transform& t)
+    {
+        archive(t.mPosition);
+        archive(t.mRotation);
+        archive(t.mScale);
+    }
+
+    template<class Archive>
+    void serialize(Archive& archive, nv::PrevTransform& t)
+    {
+        archive(t.mPosition);
+        archive(t.mRotation);
+        archive(t.mScale);
+    }
 }

@@ -52,6 +52,7 @@ namespace nv
 
         auto transform = gEntityManager.GetEntity(cameraEntity)->GetTransform();
         Camera& camera = component->mCamera;
+        camera.SetPreviousViewProjection();
 
         auto up = VectorSet(0, 1, 0, 0);
         auto dir = Load(camera.GetDirection());
@@ -120,7 +121,7 @@ namespace nv
         Entity* camera = gEntityManager.GetEntity(camHandle);
         auto camTransform = camera->GetTransform();
         auto& camComponent = camera->Get<CameraComponent>()->mCamera;
-
+        camComponent.SetPreviousViewProjection();
         camTransform.mPosition.x = transform.mPosition.x + 5;
         camTransform.mPosition.y = transform.mPosition.z;
         camTransform.mPosition.z = transform.mPosition.z - 15;

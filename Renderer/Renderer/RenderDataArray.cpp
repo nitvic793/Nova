@@ -57,12 +57,14 @@ namespace nv::graphics
             auto positions = ecs::gComponentManager.GetComponents<Position>();
             auto scales = ecs::gComponentManager.GetComponents<Scale>();
             auto rotations = ecs::gComponentManager.GetComponents<Rotation>();
+            auto prevTransforms = ecs::gComponentManager.GetComponents<PrevTransform>();
 
             for (size_t i = 0; i < renderables.Size(); ++i)
             {
                 auto& renderable = renderables[i];
                 auto mesh = gResourceManager->GetMesh(renderable.mMesh);
                 auto mat = gResourceManager->GetMaterial(renderable.mMaterial);
+                auto& prevTransform = prevTransforms[i];
 
                 auto pos = &positions[i];
                 auto scale = &scales[i];
@@ -71,6 +73,7 @@ namespace nv::graphics
 
                 auto rd = renderData[i];
                 rd.mObjectData.World = transform.GetTransformMatrixTransposed();
+                rd.mObjectData.PrevWorld = prevTransform.GetTransformMatrixTransposed();
                 rd.mpMesh = mesh;
                 rd.mpMaterial = mat;
                 if (renderable.HasFlag(components::RENDERABLE_FLAG_ANIMATED))

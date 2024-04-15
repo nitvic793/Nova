@@ -22,6 +22,10 @@ namespace nv
         float4x4 GetTransformMatrixInverseTransposed() const;
     };
 
+    struct PrevTransform : public Transform, ecs::IComponent
+    {
+    };
+
     struct TransformRef
     {
         float3& mPosition;

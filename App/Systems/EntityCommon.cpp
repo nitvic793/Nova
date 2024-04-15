@@ -6,6 +6,7 @@
 #include <Animation/Animation.h>
 #include <DebugUI/DebugUIPass.h>
 #include <Math/Collision.h>
+#include <Engine/Transform.h>
 
 namespace nv
 {
@@ -24,6 +25,8 @@ namespace nv
         Entity* entity = gEntityManager.GetEntity(e);
 
         entity->AttachTransform(transform);
+        auto pTransform = entity->Add<PrevTransform>();
+        *pTransform = *(PrevTransform*)&transform;
         auto renderable = entity->Add<components::Renderable>();
         renderable->mMaterial = matHandle;
         renderable->mMesh = meshHandle;
@@ -47,6 +50,32 @@ namespace nv
     bool IsDebugUIEnabled()
     {
         return graphics::IsDebugUIEnabled();
+    }
+
+    void FramePreSystem::Init()
+    {
+    }
+
+    void FramePreSystem::Update(float deltaTime, float totalTime)
+    {
+        auto positions = ecs::gComponentManager.GetComponents<Position>();
+        auto scales = ecs::gComponentManager.GetComponents<Scale>();
+        auto rotations = ecs::gComponentManager.GetComponents<Rotation>();
+        auto prevTransforms = ecs::gComponentManager.GetComponents<PrevTransform>();
+
+        for (size_t i = 0; i < positions.Size(); ++i)
+        {
+            auto pos = &positions[i];
+            auto scale = &scales[i];
+            auto rotation = &rotations[i];
+
+            PrevTransform prevTransform = { pos->mPosition, rotation->mRotation, scale->mScale };
+            prevTransforms[i] = prevTransform;
+        }
+    }
+
+    void FramePreSystem::Destroy()
+    {
     }
 
 }

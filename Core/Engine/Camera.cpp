@@ -65,6 +65,12 @@ namespace nv
         mRotation = rotation;
     }
 
+    void Camera::SetPreviousViewProjection()
+    {
+        mPreviousView = mView;
+        mPreviousProjection = mProjection;
+    }
+
     float4x4 Camera::GetView() const
     {
         return mView;
@@ -118,5 +124,35 @@ namespace nv
         auto viewProjInv = MatrixTranspose(MatrixInverse(viewProj));
         Store(viewProjInv, viewProjT);
         return viewProjT;
+    }
+
+    float4x4 Camera::GetPreviousView() const
+    {
+        return mPreviousView;
+    }
+
+    float4x4 Camera::GetPreviousProjection() const
+    {
+        return mPreviousProjection;
+    }
+
+    float4x4 Camera::GetPreviousViewTransposed() const
+    {
+        float4x4 viewT;
+
+        auto view = MatrixTranspose(Load(mPreviousView));
+        Store(view, viewT);
+
+        return viewT;
+    }
+
+    float4x4 Camera::GetPreviousProjectionTransposed() const
+    {
+        float4x4 projT;
+
+        auto proj = MatrixTranspose(Load(mPreviousProjection));
+        Store(proj, projT);
+
+        return projT;
     }
 }
