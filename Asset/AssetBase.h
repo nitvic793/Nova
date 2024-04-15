@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <Lib/StringHash.h>
 
+#define NV_SERIALIZE(...) template<class Archive> void serialize(Archive& archive) { archive(##__VA_ARGS__); }
+
 namespace nv::asset
 {
     enum AssetType : uint32_t

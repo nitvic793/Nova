@@ -14,6 +14,8 @@
 #include <Debug/Profiler.h>
 
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 
 namespace nv
 { 
@@ -22,10 +24,12 @@ namespace nv
     Timer gTimer;
 
     static std::atomic<InstanceState> gInstanceState = INSTANCE_STATE_STOPPED;
+    static std::mutex gInstanceMutex;
+    static std::condition_variable gInstanceCondVar;
 
     bool Instance::Init()
     {
-        NV_APP(mAppName);
+        //NV_APP(mAppName);
         NV_EVENT("App/Init");
         log::Info("Init Nova App: {}", mAppName);
         nv::InitContext(this);
@@ -39,8 +43,9 @@ namespace nv
         gTimer.Start();
         gSystemManager.InitSystems();
 
-        while (UpdateSystemState())
+        while (UpdateSystemState() && gInstanceState.load() == INSTANCE_STATE_RUNNING)
         {
+            NV_FRAME_MARK();
             NV_FRAME("MainThread");
             gTimer.Tick();
             {
@@ -48,6 +53,8 @@ namespace nv
                 //std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 gSystemManager.UpdateSystems(gTimer.DeltaTime, gTimer.TotalTime);
             }
+
+            Notify(); // Notify end of frame to other threads
         }
         return true;
     }
@@ -63,6 +70,17 @@ namespace nv
 
     void Instance::Reload()
     {
+    }
+
+    void Instance::Notify()
+    {
+        gInstanceCondVar.notify_all();
+    }
+
+    void Instance::Wait()
+    {
+        std::unique_lock<std::mutex> lock(gInstanceMutex);
+        gInstanceCondVar.wait(lock);
     }
 
     InstanceState Instance::GetInstanceState()

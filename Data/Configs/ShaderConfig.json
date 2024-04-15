@@ -15,6 +15,13 @@
             }
         },
         {
+            "key": "Shaders/DefaultAnimationVS.hlsl",
+            "value": {
+                "Type": "VertexShader",
+                "ShaderModel": "6_6"
+            }
+        },
+        {
             "key": "Shaders/SkyboxPS.hlsl",
             "value": {
                 "Type": "PixelShader",

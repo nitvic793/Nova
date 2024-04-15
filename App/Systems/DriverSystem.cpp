@@ -5,14 +5,40 @@
 #include <Components/Material.h>
 #include <Components/Renderable.h>
 #include <Engine/EntityComponent.h>
+#include <Engine/Component.h>
+#include <Engine/EventSystem.h>
+
 #include <Input/Input.h>
 #include <Engine/Log.h>
 #include <Engine/Instance.h>
 #include <Interop/ShaderInteropTypes.h>
+#include <DebugUI/DebugUIPass.h>
+#include "EntityCommon.h"
+#include <Math/Collision.h>
+#include <sstream>
+#include <fstream>
 
 namespace nv
 {
+    using namespace ecs;
+
+    constexpr float INPUT_DELAY_DEBUG_PRESS = 1.f;
+    static bool sbEnableDebugUI = false;
+
+    static float sDelayTimer = 0.f;
+
+    FrameRecordState mFrameRecordState = FRAME_RECORD_STOPPED;
     ecs::Entity* entity;
+
+    struct FrameData
+    {
+        std::stringstream mStream;
+    };
+
+    std::vector<FrameData> gFrameStack;
+
+    void PushFrame();
+    bool PopFrame();
 
     void DriverSystem::Init()
     {
@@ -20,34 +46,26 @@ namespace nv
         using namespace graphics;
         using namespace components;
 
-        const auto createEntity = [&](ResID mesh, ResID mat, const Transform& transform = Transform())
+        gComponentManager.LoadMetadata();
+
+        const auto setupSky = [&]()
         {
-            Handle<Material> matHandle = gResourceManager->GetMaterialHandle(mat);
-            Handle<Mesh> meshHandle = gResourceManager->GetMeshHandle(mesh);
-
-            Handle<Entity> e = ecs::gEntityManager.Create();
-            Entity* entity = gEntityManager.GetEntity(e);
-
-            entity->AttachTransform(transform);
-            auto renderable = entity->Add<components::Renderable>();
-            renderable->mMaterial = matHandle;
-            renderable->mMesh = meshHandle;
-            return e;
+            auto e3 = CreateEntity(RES_ID_NULL, RES_ID_NULL, "Sky");
+            auto directionalLight = gEntityManager.GetEntity(e3)->Add<DirectionalLight>();
+            directionalLight->Color = float3(0.9f, 0.9f, 0.9f);
+            directionalLight->Intensity = 1.f;
+            auto skybox = gEntityManager.GetEntity(e3)->Add<SkyboxComponent>();
+            skybox->mSkybox = gResourceManager->GetTextureHandle(ID("Textures/SunnyCubeMap.dds"));
+            Store(Vector3Normalize(VectorSet(1, -1, 1, 0)), directionalLight->Direction);
         };
 
-        auto entity1 = createEntity(ID("Mesh/torus.obj"), ID("Floor"));
-        auto entity2 = createEntity(ID("Mesh/cube.obj"), ID("Bronze"));
-        auto e3 = createEntity(RES_ID_NULL, RES_ID_NULL);
-        auto directionalLight = gEntityManager.GetEntity(e3)->Add<DirectionalLight>();
-        directionalLight->Color = float3(0.9f, 0.9f, 0.9f);
-        directionalLight->Intensity = 1.f;
+        auto entity1 = CreateEntity(ID("Mesh/torus.obj"), ID("Floor"), "Torus");
+        auto playerEntity = CreateEntity(ID("Mesh/cube.obj"), ID("Bronze"), "Box");
+        auto floor = CreateEntity(ID("Mesh/plane.obj"), ID("Floor"), "Floor");
 
-        auto skybox = gEntityManager.GetEntity(e3)->Add<SkyboxComponent>();
-        skybox->mSkybox = gResourceManager->GetTextureHandle(ID("Textures/SunnyCubeMap.dds"));
+        setupSky();
 
-        Store(Vector3Normalize(VectorSet(1, -1, 1, 0)), directionalLight->Direction);
-
-        entity = gEntityManager.GetEntity(entity2);
+        entity = gEntityManager.GetEntity(playerEntity);
 
         auto pos = entity->Get<Position>();
         pos->mPosition.x += 1.f;
@@ -55,28 +73,117 @@ namespace nv
         auto transform = entity->GetTransform();
         gEntityManager.GetEntity(entity1)->GetTransform().mPosition.x -= 1;
         gEntityManager.GetEntity(entity1)->GetTransform().mPosition.z += 1;
+        gEntityManager.GetEntity(floor)->GetTransform().mPosition.y = -1;
+
+        constexpr float floorScale = 10.f;
+        gEntityManager.GetEntity(floor)->GetTransform().mScale = nv::float3(floorScale, floorScale, floorScale);
     }
 
     void DriverSystem::Update(float deltaTime, float totalTime)
     {
-        auto transform = entity->GetTransform();
-        transform.mPosition.y = sin(totalTime * 2.f);
+        using namespace input;
 
-        auto kb = input::GetInputState().mpKeyboardInstance->GetState();
+        auto pPool = gComponentManager.GetPool<math::BoundingBox>();
+        EntityComponents<math::BoundingBox> comps;
+        pPool->GetEntityComponents(comps);
+        
+        for (uint32_t i = 0; i < comps.Size(); ++i)
+        {
+            auto pEntity = comps[i].mpEntity;
+            auto transform = pEntity->GetTransform();
+            auto meshHandle = pEntity->Get<graphics::components::Renderable>()->mMesh;
+            auto pMesh = graphics::gResourceManager->GetMesh(meshHandle);
+            if(!pMesh->HasBones())
+                pMesh->GetBoundingBox().mBounding.Transform(comps[i].mpComponent->mBounding, math::Load(transform.GetTransformMatrix()));
+            else
+            {
+                comps[i].mpComponent->mBounding.Center = transform.mPosition;
+            }
+        }
+
+        if (mFrameRecordState != FRAME_RECORD_REWINDING)
+        {
+            auto transform = entity->GetTransform();
+            transform.mPosition.y = sin(totalTime * 2.f);
+        }
 
         if (input::IsKeyPressed(input::Keys::Escape))
             Instance::SetInstanceState(INSTANCE_STATE_STOPPED);
 
-        if (input::IsKeyComboPressed(input::Keys::LeftShift, input::Keys::T))
+        if (IsKeyPressed(Keys::OemTilde))
         {
-            log::Info("LShift + T Pressed");
+            sbEnableDebugUI = !sbEnableDebugUI;
+            sDelayTimer = 0.f;
+            graphics::SetEnableDebugUI(sbEnableDebugUI);
         }
 
-        if (input::IsKeyPressed(input::Keys::F) && input::IsKeyDown(input::Keys::LeftShift))
-            log::Info("LShift + F Pressed");
+        FrameRecordEvent frameEvent;
 
-        if (input::LeftMouseButtonState() == input::ButtonState::PRESSED)
-            log::Info("Left mouse button pressed");
+        if (IsKeyPressed(Keys::F5))
+        {
+            std::ofstream file("save.bin");
+            SerializeScene(file);
+        }
+
+        if (IsKeyPressed(Keys::F6))
+        {
+            std::ifstream file("save.bin");
+            DeserializeScene(file);
+        }
+
+        static bool bEnableFrameRecord = true;
+
+        if (bEnableFrameRecord)
+        {
+            if (IsKeyDown(Keys::F))
+            {
+                mFrameRecordState = FRAME_RECORD_REWINDING;
+            }
+            else
+                mFrameRecordState = FRAME_RECORD_IN_PROGRESS;
+
+            switch (mFrameRecordState)
+            {
+            case FRAME_RECORD_IN_PROGRESS:
+                PushFrame();
+                break;
+            case FRAME_RECORD_REWINDING:
+                if (!PopFrame())
+                    mFrameRecordState = FRAME_RECORD_IN_PROGRESS;
+                break;
+            default:
+                break;
+            }
+
+            frameEvent.mState = mFrameRecordState;
+            gEventBus.Publish(&frameEvent);
+        }
+    }
+
+    void PushFrame()
+    {
+        FrameData& frame = gFrameStack.emplace_back();
+        const auto& componentPools = gComponentManager.GetAllPools();
+        for (auto& pool : componentPools)
+        {
+            pool.second->SerializeForFrame(frame.mStream);
+        }
+    }
+
+    bool PopFrame()
+    {
+        if (gFrameStack.empty())
+            return false;
+
+        FrameData& frame = gFrameStack.back();
+        const auto& componentPools = gComponentManager.GetAllPools();
+        for (auto& pool : componentPools)
+        {
+            pool.second->DeserializeForFrame(frame.mStream);
+        }
+
+        gFrameStack.pop_back();
+        return true;
     }
 
     void DriverSystem::Destroy()

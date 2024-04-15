@@ -7,6 +7,8 @@
 #include <wrl.h>
 
 #include <DebugUI/Imgui/imgui_impl_dx12.h>
+#include <Renderer/Renderer.h>
+#include <Renderer/Device.h>
 
 // Forward declare message handler from imgui_impl_win32.cpp
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -164,6 +166,20 @@ namespace nv::graphics
         }
 
         return DefWindowProc(hWnd, msg, wParam, lParam);
+    }
+
+    void WindowDX12::OnResize()
+    {
+        if (mWidth == 0 || mHeight == 0)
+            return;
+
+        RECT rc;
+        GetClientRect(mHwnd, &rc);
+        mWidth = rc.right - rc.left;
+        mHeight = rc.bottom - rc.top;
+
+        if(gRenderer)
+            gRenderer->OnResize(*this);
     }
 
     void WindowDX12::SetInputWindow(void* pKeyboard, void* pMouse)

@@ -14,6 +14,9 @@ namespace nv
     template<typename K, typename V>
     using OrderedMap = std::map<K, V>;
 
+    template<typename K, typename V>
+    using UnorderedMap = std::unordered_map<K, V>;
+
     template<typename V>
     using HashSet = ska::flat_hash_set<V>;
 }

@@ -22,6 +22,9 @@ namespace nv
         bool Destroy();
         void Reload();
 
+        void Notify();
+        void Wait();
+
     public:
         static InstanceState GetInstanceState();
         static void SetInstanceState(InstanceState state);

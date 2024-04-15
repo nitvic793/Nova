@@ -163,7 +163,7 @@ namespace nv::asset
                     {
                         mIncludedFiles.insert(path);
                         *ppIncludeSource = pEncoding.Detach();
-                        gpAssetManager->UnloadAsset(id);
+                        //gpAssetManager->UnloadAsset(id);
                     }
                     else
                     {

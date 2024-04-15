@@ -5,8 +5,10 @@
 #include <Engine/System.h>
 #include <Renderer/ResourceManager.h>
 #include <Renderer/Format.h>
+#include <Renderer/GlobalRenderSettings.h>
 #include <Types/MeshAsset.h>
 #include <AssetManager.h>
+#include <Animation/AnimationSystem.h>
 
 #if NV_PLATFORM_WINDOWS && NV_RENDERER_DX12
 #include <DX12/WindowDX12.h>
@@ -26,6 +28,15 @@ namespace nv::graphics
     IRenderer*          gRenderer           = nullptr;
     Window*             gWindow             = nullptr;
     ResourceManager*    gResourceManager    = nullptr;
+    Handle<ecs::Entity> gActiveCamHandle    = Null<ecs::Entity>();
+    Settings            gRenderSettings     = {};
+
+    IRenderReloadManager* gRenderReloadManager = nullptr;
+
+    void InitRenderSettings()
+    {
+        gRenderSettings.mbEnableVSync = true;
+    }
 
     void InitGraphics(void* context)
     {
@@ -45,6 +56,8 @@ namespace nv::graphics
 
         gSystemManager.CreateSystem<RenderSystem>(width, height);
 #endif
+        gSystemManager.CreateSystem<animation::AnimationSystem>();
+        InitRenderSettings();
     }
 
     void DestroyGraphics()
@@ -68,24 +81,61 @@ namespace nv::graphics
     }
 #endif
 
+    void SetActiveCamera(Handle<ecs::Entity> camHandle)
+    {
+        gActiveCamHandle = camHandle;
+    }
+
+    Handle<ecs::Entity> GetActiveCamera()
+    {
+        return gActiveCamHandle;
+    }
+
+    IRenderReloadManager* GetRenderReloadManager()
+    {
+        return gRenderReloadManager;
+    }
+
+    void SetRenderReloadManager(IRenderReloadManager* pManager)
+    {
+        gRenderReloadManager = pManager;
+    }
+
     Device* IRenderer::GetDevice() const
     {
         return mDevice.Get();
     }
 
-    void IRenderer::QueueDestroy(Handle<GPUResource> resource)
+    void IRenderer::QueueDestroy(Handle<GPUResource> resource, uint32_t frameDelay)
     {
-        mDeleteQueue.Push(resource);
+        gResourceTracker.Remove(resource);
+        mDeleteQueue.push_back({ resource, frameDelay });
     }
 
     void IRenderer::ExecuteQueuedDestroy()
     {
-        for (auto res : mDeleteQueue)
+        const auto size = mDeleteQueue.size();
+        uint32_t idxCounter = 0;
+        while (!mDeleteQueue.empty())
         {
-            gResourceManager->DestroyResource(res);
-        }
+            if (idxCounter >= size)
+                break;
 
-        mDeleteQueue.Clear();
+            auto entry = *mDeleteQueue.begin();
+            if (entry.mFrameDelay > 0)
+            {
+                entry.mFrameDelay--;
+                mDeleteQueue.erase(mDeleteQueue.begin());
+                mDeleteQueue.push_back(entry);
+            }
+            else
+            {
+                gResourceManager->DestroyResource(entry.mResource);
+                mDeleteQueue.erase(mDeleteQueue.begin());
+            }
+
+            idxCounter++;
+        }
     }
 
     Viewport IRenderer::GetDefaultViewport() const

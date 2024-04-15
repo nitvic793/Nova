@@ -17,7 +17,7 @@ namespace nv::jobs
         {}
 
         Job(Fn&& func) :
-            mFunction(func),
+            mFunction(std::move(func)),
             mArgs(nullptr)
         {}
 

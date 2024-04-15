@@ -21,7 +21,12 @@
 #include <Debug/Profiler.h>
 #include <Engine/Log.h>
 
-extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 606; }
+#if NV_ENABLE_DEBUG_UI
+#include "GraphicsMemory.h"
+#include <RenderPasses/DebugDrawPass.h>
+#endif
+
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 610; }
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\"; }
 
 namespace nv::graphics
@@ -90,6 +95,10 @@ namespace nv::graphics
         NV_EVENT("Renderer/Present");
         auto device = (DeviceDX12*)mDevice.Get();
         device->Present();
+
+#if NV_RENDERER_DX12 && NV_ENABLE_DEBUG_UI
+        GetGraphicsMemory()->Commit(mCommandQueue.Get());
+#endif
     }
 
     void RendererDX12::InitFrameBuffers(const Window& window, const format::SurfaceFormat format)
@@ -380,6 +389,75 @@ namespace nv::graphics
         return mDescriptorHeapPool.GetAsDerived(handle);
     }
 
+    void RendererDX12::OnResize(const Window& window)
+    {
+        auto dxDevice = mDevice.As<DeviceDX12>();
+        auto pSwapChain = dxDevice->mSwapChain.Get();
+        auto pDevice = dxDevice->GetDevice();
+
+        // Wait for all frames to finish
+        WaitForAllFrames();
+
+        if (pSwapChain)
+        {
+            for (int32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
+            {
+                auto backBuffer = gResourceManager->GetGPUResource(mpBackBuffers[i])->As<GPUResourceDX12>();
+                backBuffer->GetResource()->Release();   
+            }
+
+            auto hr = pSwapChain->ResizeBuffers(FRAMEBUFFER_COUNT, window.GetWidth(), window.GetHeight(), GetFormat(mBackbufferFormat), 0);
+            if (FAILED(hr))
+            {
+                debug::ReportError("Unable to resize swap chain buffers");
+            }
+
+            for (int32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
+            {
+                auto backBuffer = gResourceManager->GetGPUResource(mpBackBuffers[i])->As<GPUResourceDX12>();
+                auto hr = pSwapChain->GetBuffer(
+                    i,
+                    IID_PPV_ARGS(backBuffer->GetResource().GetAddressOf())
+                );
+
+                if (!SUCCEEDED(hr))
+                {
+                    debug::ReportError("Unable to retrieve Swap Chain buffers");
+                }
+
+                backBuffer->GetResource()->SetName(L"Backbuffer Resource");
+            }
+
+            // Recreate render targets
+            for (int32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
+            {
+                TextureDesc rtvDesc = { .mUsage = tex::USAGE_RENDER_TARGET, .mFormat = mBackbufferFormat,.mBuffer = mpBackBuffers[i] };
+                gResourceManager->DestroyTexture(mRenderTargets[i]);
+                mRenderTargets[i] = gResourceManager->CreateTexture(rtvDesc, ID(fmt::format("SwapChainRenderTarget-{}", i).c_str()));
+            }
+
+            // Recreate depth stencil
+            auto depthTex = (TextureDX12*)gResourceManager->GetTexture(mDepthStencil);
+            QueueDestroy(depthTex->GetDesc().mBuffer);
+            gResourceManager->DestroyTexture(mDepthStencil);
+
+            auto depthResource = gResourceManager->CreateResource(
+                {
+                    .mWidth = window.GetWidth(),
+                    .mHeight = window.GetHeight(),
+                    .mFormat = mDsvFormat,
+                    .mType = buffer::TYPE_TEXTURE_2D,
+                    .mFlags = buffer::FLAG_ALLOW_DEPTH,
+                    .mInitialState = buffer::STATE_DEPTH_WRITE,
+                    .mClearValue = {.mFormat = mDsvFormat,.mColor = {1.f,0,0,0} , .mStencil = 0, .mIsDepth = true}
+                }
+            );
+
+            mDepthStencil = gResourceManager->CreateTexture({ .mUsage = tex::USAGE_DEPTH_STENCIL, .mFormat = mDsvFormat, .mBuffer = depthResource, .mType = tex::TEXTURE_2D });
+        }
+
+    }
+
     ConstantBufferView RendererDX12::CreateConstantBuffer(ConstBufferDesc desc)
     {
         auto heapHandle = desc.mUseRayTracingHeap ? mRayTracingHeap : mConstantBufferHeap;
@@ -586,7 +664,7 @@ namespace nv::graphics
 
     void ReportLeaksDX12()
     {
-#ifdef _DEBUG
+#if defined(_DEBUG) || defined(NV_RENDERER_ENABLE_DEBUG_LAYER)
         Microsoft::WRL::ComPtr<IDXGIDebug1> pDebug = nullptr;
         if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDebug))))
         {

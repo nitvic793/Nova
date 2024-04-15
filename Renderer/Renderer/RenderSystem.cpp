@@ -22,6 +22,7 @@
 #include <Renderer/PipelineState.h>
 #include <Renderer/Mesh.h>
 #include <Renderer/Window.h>
+#include <Renderer/GlobalRenderSettings.h>
 #include <Renderer/GPUProfile.h>
 #include <Renderer/ConstantBufferPool.h>
 #include <Components/Material.h>
@@ -31,6 +32,7 @@
 #include <RenderPasses/ForwardPass.h>
 #include <RenderPasses/RaytracePass.h>
 #include <RenderPasses/Skybox.h>
+#include <RenderPasses/DebugDrawPass.h>
 
 #include <DebugUI/DebugUIPass.h>
 
@@ -39,33 +41,39 @@
 
 namespace nv::graphics
 {
-    class RenderReloadManager
+    class RenderReloadManager : public IRenderReloadManager
     {
     public:
         RenderReloadManager(RenderSystem* renderSystem) :
             mRenderSystem(renderSystem)
         {}
 
-        void RegisterPSO(const PipelineStateDesc& desc, Handle<PipelineState>* pso)
+        void RegisterPSO(const PipelineStateDesc& desc, Handle<PipelineState> pso) override
         {
-            auto psId = gResourceManager->GetShader(desc.mPS)->GetDesc().mShader;
-            auto vsId = gResourceManager->GetShader(desc.mVS)->GetDesc().mShader;
+            auto psId = !desc.mPS.IsNull() ? gResourceManager->GetShader(desc.mPS)->GetDesc().mShader : asset::AssetID{ .mId = RES_ID_NULL };
+            auto vsId = !desc.mVS.IsNull() ? gResourceManager->GetShader(desc.mVS)->GetDesc().mShader : asset::AssetID{ .mId = RES_ID_NULL };
+            auto csId = !desc.mCS.IsNull() ? gResourceManager->GetShader(desc.mCS)->GetDesc().mShader : asset::AssetID{ .mId = RES_ID_NULL };
 
-            mPsoShaderMap[psId.mId] = pso;
-            mPsoShaderMap[vsId.mId] = pso;
+            if (psId.mId != RES_ID_NULL)
+                mPsoShaderMap[psId.mId].push_back(pso);
+            if (vsId.mId != RES_ID_NULL)
+                mPsoShaderMap[vsId.mId].push_back(pso);
+            if (csId.mId != RES_ID_NULL)
+                mPsoShaderMap[csId.mId].push_back(pso);
         }
 
         void OnReload(asset::AssetReloadEvent* event)
         {
             if (event->mAssetId.mType == asset::ASSET_SHADER)
             {
-                auto pso = mPsoShaderMap.at(event->mAssetId.mId);
-                mRenderSystem->QueueReload(pso);
+                auto PSOs = mPsoShaderMap.at(event->mAssetId.mId);
+                for(const auto& pso : PSOs)
+                    mRenderSystem->QueueReload(pso);
             }
         }
 
     private:
-        HashMap<uint64_t, Handle<PipelineState>*> mPsoShaderMap;
+        HashMap<uint64_t, std::vector<Handle<PipelineState>>> mPsoShaderMap;
         RenderSystem* mRenderSystem;
     };
 
@@ -76,6 +84,7 @@ namespace nv::graphics
         mpConstantBufferPool(nullptr)
     {
         mReloadManager = Alloc<RenderReloadManager>(SystemAllocator::gPtr, this);
+        SetRenderReloadManager(mReloadManager);
         gEventBus.Subscribe(mReloadManager, &RenderReloadManager::OnReload);
     }
 
@@ -85,7 +94,8 @@ namespace nv::graphics
         {
             auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_MESH, meshId });
             auto m = asset->DeserializeTo<asset::MeshAsset>();
-            return gResourceManager->CreateMesh(m.GetData(), meshId);
+            auto handle = gResourceManager->CreateMesh(m.GetData(), meshId);
+            m.Register(handle);
         };
 
         nv::Vector<PBRMaterial> materials;
@@ -108,6 +118,12 @@ namespace nv::graphics
 
         loadMesh(ID("Mesh/cube.obj"));
         loadMesh(ID("Mesh/torus.obj"));
+        loadMesh(ID("Mesh/cone.obj"));
+        loadMesh(ID("Mesh/plane.obj"));
+        loadMesh(ID("Mesh/male.fbx"));
+        loadMesh(ID("Mesh/anim_running.fbx"));
+        loadMesh(ID("Mesh/anim_idle.fbx"));
+        loadMesh(ID("Mesh/knight.fbx"));
         loadMaterials();
         gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/SunnyCubeMap.dds") });
         gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/Sky.hdr") });
@@ -132,6 +148,7 @@ namespace nv::graphics
         mRenderPasses.Emplace(Alloc<RTCompute>());
         mRenderPasses.Emplace(Alloc<ForwardPass>());
         mRenderPasses.Emplace(Alloc<Skybox>());
+        mRenderPasses.Emplace(Alloc<DebugDrawPass>());
         //mRenderPasses.Emplace(Alloc<RaytracePass>());
         mRenderPasses.Emplace(Alloc<DebugUIPass>());
 
@@ -144,6 +161,8 @@ namespace nv::graphics
 
         mRenderJobHandle = nv::jobs::Execute([this](void* ctx) 
         { 
+            NV_THREAD("RenderThread");
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             log::Info("[Renderer] Start Render Job");
             RenderThreadJob(ctx); 
         });
@@ -156,6 +175,7 @@ namespace nv::graphics
 
     void RenderSystem::Destroy()
     {
+        gContext.mpInstance->Notify();
         nv::jobs::Wait(mRenderJobHandle);
         gRenderer->Wait();
         for (auto& pass : mRenderPasses)
@@ -171,18 +191,18 @@ namespace nv::graphics
     {
     }
 
-    void RenderSystem::QueueReload(Handle<PipelineState>* pso)
+    void RenderSystem::QueueReload(Handle<PipelineState> pso)
     {
         mPsoReloadQueue.Push(pso);
     }
 
-    void RenderSystem::Reload(Handle<PipelineState>* pso)
+    void RenderSystem::Reload(Handle<PipelineState> pso)
     {
         // Since the shaders referred by the pso description have the same asset ID, 
         // recreating with the same description would ensure the updated asset data is 
         // used by the shader. This is possible because the shader bytecode directly 
         // points to the asset data. 
-        *pso = gResourceManager->RecreatePipelineState(*pso); 
+        gResourceManager->RecreatePipelineState(pso); 
     }
 
     void RenderSystem::RenderThreadJob(void* ctx)
@@ -233,19 +253,28 @@ namespace nv::graphics
             gRenderer->EndFrame();
             gRenderer->Present();
             gRenderer->ExecuteQueuedDestroy();
+            if (mRenderData.GetRenderDataQueueSize() > 1 && gContext.mpInstance->GetInstanceState() == INSTANCE_STATE_RUNNING)
+            {
+                gContext.mpInstance->Wait(); // Wait until main thread notifies us it's done
+            }
         }
     }
 
     void RenderSystem::UploadDrawData()
     {
-        auto cams = ecs::gComponentManager.GetComponents<CameraComponent>();
-        if (cams.Size() == 0)
+        NV_EVENT("Renderer/UploadDrawData");
+
+        auto camHandle = GetActiveCamera();
+        if (camHandle.IsNull())
             return;
 
-        auto& camera = cams[0].mCamera;
+        auto cam = ecs::gEntityManager.GetEntity(camHandle);
+        auto camComponent = cam->Get<CameraComponent>();
 
-        mCamera.SetPosition({ 0,0, -5 });
-        mCamera.UpdateViewProjection();
+        auto& camera = camComponent->mCamera;
+
+       // mCamera.SetPosition({ 0,0, -5 });
+       // mCamera.UpdateViewProjection();
         auto view = camera.GetViewTransposed();
         auto proj = camera.GetProjTransposed();
         auto projI = camera.GetProjInverseTransposed();
@@ -256,9 +285,14 @@ namespace nv::graphics
         { 
             .View                   = view, 
             .Projection             = proj, 
+            .PrevView               = camera.GetPreviousViewTransposed(),
+            .PrevProjection         = camera.GetPreviousProjectionTransposed(),
             .ViewInverse            = viewI, 
             .ProjectionInverse      = projI, 
-            .ViewProjectionInverse  = camera.GetViewProjInverseTransposed()
+            .ViewProjectionInverse  = camera.GetViewProjInverseTransposed(),
+            .CameraPosition         = camera.GetPosition(),
+            .NearZ                  = camera.GetNearZ(),
+            .FarZ                   = camera.GetFarZ()
         };
 
         if (dirLights.Size() > 0)
@@ -277,14 +311,17 @@ namespace nv::graphics
         HeapState state = { .ConstBufferOffset = heapState.mConstBufferOffset, .TextureOffset = heapState.mTextureOffset };
         gRenderer->UploadToConstantBuffer(mHeapStateCB, (uint8_t*)&state, sizeof(state));
 
+        uint32_t boneIdx = 0;
         auto objectCbs = mRenderData.GetObjectDescriptors();
         auto materialCbs = mRenderData.GetMaterialDescriptors();
+        auto boneCbs = mRenderData.GetBoneDescriptors();
 
         for (size_t i = 0; i < objectCbs.Size(); ++i)
         {
             auto& objectCb = objectCbs[i];
             auto& objdata = mCurrentRenderData[i].mObjectData;
             auto& mat = mCurrentRenderData[i].mpMaterial;
+            auto& bones = mCurrentRenderData[i].mpBones;
             auto& matCb = materialCbs[i];
 
             objdata.MaterialIndex = gRenderer->GetHeapIndex(matCb);
@@ -299,6 +336,22 @@ namespace nv::graphics
                 matData.MetalnessOffset = gResourceManager->GetTexture(mat->mTextures[Material::METALNESS])->GetHeapIndex();
                 gRenderer->UploadToConstantBuffer(matCb, (uint8_t*)&matData, sizeof(MaterialData));
             }
+        }
+
+        {
+            NV_EVENT("Renderer/UploadBoneTransforms");
+            animation::gAnimManager.Lock();
+            for (size_t i = 0; i < objectCbs.Size(); ++i)
+            {
+                auto& bones = mCurrentRenderData[i].mpBones;
+                if (bones)
+                {
+                    auto boneCb = boneCbs[boneIdx];
+                    gRenderer->UploadToConstantBuffer(boneCb, (uint8_t*)&bones->Bones[0], sizeof(PerArmature));
+                    boneIdx++;
+                }
+            }
+            animation::gAnimManager.Unlock();
         }
     }
 

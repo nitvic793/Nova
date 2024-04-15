@@ -15,6 +15,7 @@ namespace nv::graphics
     {
         auto ps = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultPS.hlsl") };
         auto vs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultVS.hlsl") };
+        auto vsAnim = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/DefaultAnimationVS.hlsl") };
 
         PipelineStateDesc psoDesc = {};
         psoDesc.mPipelineType = PIPELINE_RASTER;
@@ -24,15 +25,25 @@ namespace nv::graphics
         psoDesc.mRenderTargetFormats[0] = gRenderer->GetDefaultRenderTargetFormat();
         psoDesc.mDepthFormat = gRenderer->GetDepthSurfaceFormat();
         mForwardPSO = gResourceManager->CreatePipelineState(psoDesc);
+
+        psoDesc.mVS = gResourceManager->CreateShader({ vsAnim, shader::VERTEX });
+        psoDesc.mbUseAnimLayout = true;
+        mForwardAnimPSO = gResourceManager->CreatePipelineState(psoDesc);
     }
 
     void ForwardPass::Execute(const RenderPassData& renderPassData)
     {
+        uint32_t bonesCbIdx = 0;
         auto ctx = gRenderer->GetContext();
-        const auto bindAndDrawObject = [&](ConstantBufferView objCb, ConstantBufferView matCb, Mesh* mesh)
+        const auto bindAndDrawObject = [&](ConstantBufferView objCb, ConstantBufferView matCb, Mesh* mesh, ConstantBufferView* bonesCb)
         {
             ctx->BindConstantBuffer(0, (uint32_t)objCb.mHeapIndex);
-            //ctx->BindConstantBuffer(4, (uint32_t)matCb.mHeapIndex);
+            if (bonesCb)
+            {
+                ctx->BindConstantBuffer(4, (uint32_t)bonesCb->mHeapIndex);
+                bonesCbIdx++;
+            }
+
             ctx->SetMesh(mesh);
             for (auto entry : mesh->GetDesc().mMeshEntries)
             {
@@ -46,13 +57,28 @@ namespace nv::graphics
 
         auto objectCbs = renderPassData.mRenderDataArray.GetObjectDescriptors();
         auto materialCbs = renderPassData.mRenderDataArray.GetMaterialDescriptors();
+        auto boneCbs = renderPassData.mRenderDataArray.GetBoneDescriptors();
         for (size_t i = 0; i < objectCbs.Size(); ++i)
         {
             const auto& objectCb = objectCbs[i];
             const auto& matCb = materialCbs[i];
             const auto mesh = renderPassData.mRenderData[i].mpMesh;
+
+            RenderDescriptors::CBV* boneCb = nullptr;
             if (mesh)
-                bindAndDrawObject(objectCb, matCb, mesh);
+            {      
+                if (mesh->HasBones())
+                {
+                    boneCb = &boneCbs[bonesCbIdx];
+                    ctx->SetPipeline(mForwardAnimPSO);
+                }
+                else
+                {
+                    ctx->SetPipeline(mForwardPSO);
+                }
+
+                bindAndDrawObject(objectCb, matCb, mesh, boneCb); // Increments bonesCbIdx
+            }
         }
     }
 

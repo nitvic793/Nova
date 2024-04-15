@@ -51,6 +51,21 @@ namespace nv::graphics
                 .mBufferMode = buffer::BUFFER_MODE_UPLOAD
             };
         }
+
+        static GPUResourceDesc Texture2D(uint32_t width, uint32_t height, buffer::Flags flags = buffer::FLAG_NONE, buffer::State initState = buffer::STATE_COMMON, format::SurfaceFormat format = format::R8G8B8A8_UNORM, uint32_t mipLevels = 1, uint32_t sampleCount = 1)
+        {
+            return
+            {
+                .mWidth = width,
+                .mHeight = height,
+                .mFormat = format,
+                .mType = buffer::TYPE_TEXTURE_2D,
+                .mFlags = flags,
+                .mInitialState = initState,
+                .mMipLevels = mipLevels,
+                .mSampleCount = sampleCount
+            };
+        }
     };
 
     class GPUResource : public ResourceBase

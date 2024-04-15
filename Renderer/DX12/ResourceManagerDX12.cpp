@@ -184,58 +184,11 @@ namespace nv::graphics
 
     Handle<PipelineState> ResourceManagerDX12::CreatePipelineState(const PipelineStateDesc& desc)
     {
-        auto pDevice = mDevice->GetDevice();
-        auto renderer = (RendererDX12*)gRenderer;
-
-        const auto setShaderByteCode = [&](const Handle<Shader> shader, D3D12_SHADER_BYTECODE& outByteCode)
-        {
-            if (!shader.IsNull())
-            {
-                auto shaderInstance = mShaders.GetAsDerived(shader);
-                outByteCode = shaderInstance->GetByteCode();
-            }
-        };
-
         Handle<PipelineState> handle;
-
-        // Creating compute pipeline state
-        if (desc.mPipelineType == PIPELINE_COMPUTE)
-        {
-            D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
-            setShaderByteCode(desc.mCS, psoDesc.CS);
-            psoDesc.pRootSignature = renderer->mComputeRootSignature.Get();
-            auto pso = mPipelineStates.CreateInstance(handle, desc);
-            pDevice->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(pso->GetPipelineCom().ReleaseAndGetAddressOf()));
-            return handle;
-        }
-
-        DXGI_SAMPLE_DESC sampleDesc = {};
-        sampleDesc.Count = 1;
-
-        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-
-        psoDesc.InputLayout.pInputElementDescs = dx12::DefaultLayout;
-        psoDesc.InputLayout.NumElements = _countof(dx12::DefaultLayout);
-        psoDesc.pRootSignature = renderer->mRootSignature.Get();
-
-        setShaderByteCode(desc.mPS, psoDesc.PS);
-        setShaderByteCode(desc.mVS, psoDesc.VS);
-
-        psoDesc.DepthStencilState = GetDepthStencilDesc(desc.mDepthStencilState);
-        psoDesc.RasterizerState = GetRasterizerDesc(desc.mRasterizerState);
-        psoDesc.BlendState = GetBlendState(desc.mBlendState);
-
-        psoDesc.NumRenderTargets = desc.mNumRenderTargets;
-        psoDesc.DSVFormat = GetFormat(desc.mDepthFormat);
-        psoDesc.PrimitiveTopologyType = GetPrimitiveTopologyType(desc.mPrimitiveTopology);
-        for (uint32_t i = 0; i < MAX_RENDER_TARGET_COUNT; ++i)
-            psoDesc.RTVFormats[i] = GetFormat(desc.mRenderTargetFormats[i]);
-        psoDesc.SampleDesc = sampleDesc;
-        psoDesc.SampleMask = 0xffffffff;
-
         auto pso = mPipelineStates.CreateInstance(handle, desc);
-        pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pso->GetPipelineCom().ReleaseAndGetAddressOf()));
-
+        CreatePipelineState(desc, pso);
+        auto pRReloadMgr = GetRenderReloadManager();
+        pRReloadMgr->RegisterPSO(desc, handle);
         return handle;
     }
 
@@ -329,7 +282,7 @@ namespace nv::graphics
             srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
             srvDesc.RaytracingAccelerationStructure.Location = resource->GetResource()->GetGPUVirtualAddress();
 
-            heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mRayTracingHeap);
+            heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mTextureHeap);
             cpuHandle = heap->PushCPU();
             device->CreateShaderResourceView(nullptr, &srvDesc, cpuHandle);
             break;
@@ -352,6 +305,10 @@ namespace nv::graphics
     Handle<Mesh> ResourceManagerDX12::CreateMesh(const MeshDesc& desc)
     {
         Handle<Mesh> handle;
+
+        if (desc.mVertices.empty() || desc.mIndices.empty())
+            return handle;
+
         const uint32_t indexBufferSize = sizeof(uint32_t) * (uint32_t)desc.mIndices.size();
         const uint32_t vertexBufferSize = sizeof(Vertex) * (uint32_t)desc.mVertices.size();
 
@@ -401,7 +358,41 @@ namespace nv::graphics
         mGpuResources.Remove(vertexBufferUpload);
         mGpuResources.Remove(indexBufferUpload);
 
-        MeshDX12* mesh = mMeshes.CreateInstance(handle, desc, vertexBuffer, indexBuffer);
+        Handle<GPUResource> boneBuffer = Null<GPUResource>();
+        if (!desc.mBoneDesc.mBones.empty())
+        {
+            auto& bDesc = desc.mBoneDesc;
+            const uint32_t boneBufferSize = (uint32_t)(sizeof(VertexBoneData) * bDesc.mBones.size());
+            Handle<GPUResource> boneBufferUpload = CreateResource({ .mSize = boneBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_GENERIC_READ, .mBufferMode = buffer::BUFFER_MODE_UPLOAD });
+            boneBuffer = CreateResource({ .mSize = boneBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_COPY_DEST });
+            UploadData uploadData =
+            {
+                .mpData = reinterpret_cast<const BYTE*>(bDesc.mBones.data()),
+                .mRowPitch = boneBufferSize,
+                .mSlicePitch = boneBufferSize
+            };
+
+            auto boneUploadResource = (GPUResourceDX12*)this->GetGPUResource(boneBufferUpload);
+            auto boneResource = (GPUResourceDX12*)this->GetGPUResource(boneBuffer);
+
+            {
+                AutoLocalContext localContext(pDevice, ContextType::CONTEXT_GFX, ((RendererDX12*)(gRenderer))->GetCommandQueue());
+                boneResource->UploadResource(localContext.GetCommandList(), uploadData, boneUploadResource->GetResource().Get());
+
+                auto ctx = localContext.GetContext();
+                TransitionBarrier barriers[] =
+                {
+                    {.mFrom = buffer::STATE_COPY_DEST, .mTo = buffer::STATE_VERTEX_BUFFER, .mResource = boneBuffer },
+                };
+
+                ctx->ResourceBarrier({ barriers, _countof(barriers) });
+            }
+
+            mGpuResources.Remove(boneBufferUpload);
+        }
+
+        MeshDX12* mesh = mMeshes.CreateInstance(handle, desc, vertexBuffer, indexBuffer, boneBuffer);
+        mesh->CreateBoundingBox();
         return handle;
     }
 
@@ -410,6 +401,69 @@ namespace nv::graphics
         Handle<Context> handle;
         auto context = (ContextDX12*)mContexts.CreateInstance(handle, desc);
         return handle;
+    }
+
+    void ResourceManagerDX12::CreatePipelineState(const PipelineStateDesc& desc, PipelineState* pPSO)
+    {
+        auto pDevice = mDevice->GetDevice();
+        auto renderer = (RendererDX12*)gRenderer;
+        auto pso = (PipelineStateDX12*)pPSO;
+
+        const auto setShaderByteCode = [&](const Handle<Shader> shader, D3D12_SHADER_BYTECODE& outByteCode)
+            {
+                if (!shader.IsNull())
+                {
+                    auto shaderInstance = mShaders.GetAsDerived(shader);
+                    outByteCode = shaderInstance->GetByteCode();
+                }
+            };
+
+        Handle<PipelineState> handle;
+
+        // Creating compute pipeline state
+        if (desc.mPipelineType == PIPELINE_COMPUTE)
+        {
+            D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
+            setShaderByteCode(desc.mCS, psoDesc.CS);
+            psoDesc.pRootSignature = renderer->mComputeRootSignature.Get();
+            pDevice->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(pso->GetPipelineCom().ReleaseAndGetAddressOf()));
+            return;
+        }
+
+        DXGI_SAMPLE_DESC sampleDesc = {};
+        sampleDesc.Count = 1;
+
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+        if (desc.mbUseAnimLayout)
+        {
+            psoDesc.InputLayout.pInputElementDescs = dx12::AnimationLayout;
+            psoDesc.InputLayout.NumElements = _countof(dx12::AnimationLayout);
+        }
+        else
+        {
+
+            psoDesc.InputLayout.pInputElementDescs = dx12::DefaultLayout;
+            psoDesc.InputLayout.NumElements = _countof(dx12::DefaultLayout);
+        }
+
+        psoDesc.pRootSignature = renderer->mRootSignature.Get();
+
+        setShaderByteCode(desc.mPS, psoDesc.PS);
+        setShaderByteCode(desc.mVS, psoDesc.VS);
+
+        psoDesc.DepthStencilState = GetDepthStencilDesc(desc.mDepthStencilState);
+        psoDesc.RasterizerState = GetRasterizerDesc(desc.mRasterizerState);
+        psoDesc.BlendState = GetBlendState(desc.mBlendState);
+
+        psoDesc.NumRenderTargets = desc.mNumRenderTargets;
+        psoDesc.DSVFormat = GetFormat(desc.mDepthFormat);
+        psoDesc.PrimitiveTopologyType = GetPrimitiveTopologyType(desc.mPrimitiveTopology);
+        for (uint32_t i = 0; i < MAX_RENDER_TARGET_COUNT; ++i)
+            psoDesc.RTVFormats[i] = GetFormat(desc.mRenderTargetFormats[i]);
+        psoDesc.SampleDesc = sampleDesc;
+        psoDesc.SampleMask = 0xffffffff;
+
+        pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pso->GetPipelineCom().ReleaseAndGetAddressOf()));
     }
 
     GPUResource* ResourceManagerDX12::Emplace(Handle<GPUResource>& handle)
@@ -449,14 +503,40 @@ namespace nv::graphics
 
     Handle<PipelineState> ResourceManagerDX12::RecreatePipelineState(Handle<PipelineState> handle)
     {
-        PipelineStateDesc desc = mPipelineStates.Get(handle)->GetDesc();
-        mPipelineStates.Remove(handle);
-        return CreatePipelineState(desc); 
+        auto pso = mPipelineStates.Get(handle);
+        PipelineStateDesc desc = pso->GetDesc();
+
+        const auto reloadShader = [&](Handle<Shader>& shader)
+        {
+            if (!shader.IsNull())
+            {
+                auto pShader = mShaders.GetAsDerived(shader);
+                pShader->Load();
+            }
+        };
+
+        reloadShader(desc.mVS);
+        reloadShader(desc.mPS);
+        reloadShader(desc.mCS);
+
+        CreatePipelineState(desc, pso);
+        return handle;
     }
 
     void ResourceManagerDX12::DestroyResource(Handle<GPUResource> resource)
     {
+        gResourceTracker.Remove(resource);
         mGpuResources.Remove(resource);
+    }
+
+    void ResourceManagerDX12::DestroyTexture(Handle<Texture> resource)
+    {
+        auto pRenderer = (RendererDX12*)gRenderer;
+        DescriptorHeapDX12* pTextureHeap = pRenderer->mDescriptorHeapPool.GetAsDerived(pRenderer->mTextureHeap);
+        TextureDX12* pTex = mTextures.GetAsDerived(resource);
+        pTextureHeap->Remove(pTex->GetHeapOffset());
+        mTextures.Remove(resource);
+        gResourceTracker.Remove(resource);
     }
 
     ResourceManagerDX12::~ResourceManagerDX12()

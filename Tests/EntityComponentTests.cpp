@@ -3,6 +3,7 @@
 #include "TestCommon.h"
 
 #include <Engine/EntityComponent.h>
+#include <Types/Serializers.h>
 
 namespace nv::tests
 {
@@ -12,12 +13,22 @@ namespace nv::tests
     {
         float mSpeed;
         float mMuliplier;
+
+        template<class Archive>
+        void serialize(Archive& archive)
+        {
+        }
     };
 
     struct BComponent : public IComponent
     {
         std::string mString;
         uint64_t    mCount = 0;
+
+        template<class Archive>
+        void serialize(Archive& archive)
+        {
+        }
     };
 
     class AutoEntityManagerInit
@@ -52,7 +63,8 @@ namespace nv::tests
         entity1->Add<AComponent>();
         entity1->Add<BComponent>();
 
-        EXPECT_EQ(entity1->mComponents.size(), 2);
+        auto map = gComponentManager.GetEntityComponentMap(e1);
+        EXPECT_EQ(map.size(), 2);
     }
 
     TEST_F(EntityComponentTests, EntityGetComponent)

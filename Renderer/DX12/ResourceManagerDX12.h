@@ -29,6 +29,7 @@ namespace nv::graphics
         virtual Handle<Mesh>            CreateMesh(const MeshDesc& desc) override;
         virtual Handle<Context>         CreateContext(const ContextDesc& desc) override;
 
+        virtual void                    CreatePipelineState(const PipelineStateDesc& desc, PipelineState* pPSO) override;
         virtual GPUResource*            Emplace(Handle<GPUResource>& handle) override;
 
         virtual Texture*                GetTexture(Handle<Texture>) override;
@@ -40,6 +41,7 @@ namespace nv::graphics
 
         virtual Handle<PipelineState>   RecreatePipelineState(Handle<PipelineState> handle) override;
         virtual void                    DestroyResource(Handle<GPUResource> resource) override;
+        virtual void                    DestroyTexture(Handle<Texture> resource) override;
         ~ResourceManagerDX12();
 
     private:

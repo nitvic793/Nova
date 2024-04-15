@@ -39,6 +39,8 @@ namespace nv::graphics
         virtual Handle<Mesh>            CreateMesh(const MeshDesc& desc, ResID id);
         virtual Handle<Context>         CreateContext(const ContextDesc& desc) = 0;
 
+        virtual void                    CreatePipelineState(const PipelineStateDesc& desc, PipelineState* pPSO) = 0;
+
         virtual GPUResource*            Emplace(Handle<GPUResource>& handle) = 0;
 
         Handle<GPUResource>             CreateResource(const GPUResourceDesc& desc, ResID id);
@@ -49,7 +51,8 @@ namespace nv::graphics
         Handle<GPUResource>             GetGPUResourceHandle(ResID id);
         Material*                       GetMaterial(Handle<Material> handle);
         Material*                       GetMaterial(ResID id);
-
+        void                            DestroyTexture(ResID id);
+        void                            QueueDestroy(Handle<GPUResource> handle, uint32_t frameDelay = 0);
 
         virtual Texture*                GetTexture(Handle<Texture>) = 0;
         virtual Texture*                GetTexture(ResID id);
@@ -62,6 +65,7 @@ namespace nv::graphics
         virtual Handle<PipelineState>   RecreatePipelineState(Handle<PipelineState> handle) = 0;
 
         virtual void                    DestroyResource(Handle<GPUResource> resource) = 0;
+        virtual void                    DestroyTexture(Handle<Texture> texture) = 0;
 
         virtual ~ResourceManager();
 

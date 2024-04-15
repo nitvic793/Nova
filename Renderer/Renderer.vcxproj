@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.Direct3D.D3D12.1.606.4\build\native\Microsoft.Direct3D.D3D12.props" Condition="Exists('..\packages\Microsoft.Direct3D.D3D12.1.606.4\build\native\Microsoft.Direct3D.D3D12.props')" />
+  <Import Project="..\packages\Microsoft.Direct3D.D3D12.1.610.4\build\native\Microsoft.Direct3D.D3D12.props" Condition="Exists('..\packages\Microsoft.Direct3D.D3D12.1.610.4\build\native\Microsoft.Direct3D.D3D12.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -109,13 +109,14 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include;$(SolutionDir)Data\Shaders;$(SolutionDir)Shared\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include;$(SolutionDir)Data\Shaders;$(SolutionDir)Shared\;$(SolutionDir)Shared\External\tracy</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -129,11 +130,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include;$(SolutionDir)Data\Shaders;$(SolutionDir)Shared\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include;$(SolutionDir)Data\Shaders;$(SolutionDir)Shared\;$(SolutionDir)Shared\External\tracy</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -146,9 +147,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Animation\Animation.h" />
+    <ClInclude Include="Animation\AnimationSystem.h" />
     <ClInclude Include="BVH\BVH.h" />
     <ClInclude Include="Components\Material.h" />
     <ClInclude Include="Components\Renderable.h" />
+    <ClInclude Include="DebugUI\DebugDraw.h" />
     <ClInclude Include="DebugUI\DebugUIPass.h" />
     <ClInclude Include="DebugUI\Imgui\imconfig.h" />
     <ClInclude Include="DebugUI\Imgui\imgui.h" />
@@ -176,6 +180,7 @@
     <ClInclude Include="DX12\NvidiaDXR\ShaderBindingTableGenerator.h" />
     <ClInclude Include="DX12\NvidiaDXR\TopLevelASGenerator.h" />
     <ClInclude Include="DX12\PipelineStateDX12.h" />
+    <ClInclude Include="DX12\RayTracingHelpers.h" />
     <ClInclude Include="DX12\RendererDX12.h" />
     <ClInclude Include="DX12\ResourceManagerDX12.h" />
     <ClInclude Include="DX12\ShaderDX12.h" />
@@ -189,6 +194,7 @@
     <ClInclude Include="Renderer\DescriptorHeap.h" />
     <ClInclude Include="Renderer\Device.h" />
     <ClInclude Include="Renderer\Format.h" />
+    <ClInclude Include="Renderer\GlobalRenderSettings.h" />
     <ClInclude Include="Renderer\GPUProfile.h" />
     <ClInclude Include="Renderer\GPUResource.h" />
     <ClInclude Include="Renderer\Mesh.h" />
@@ -203,6 +209,7 @@
     <ClInclude Include="Renderer\SwapChain.h" />
     <ClInclude Include="Renderer\Texture.h" />
     <ClInclude Include="Renderer\Window.h" />
+    <ClInclude Include="RenderPasses\DebugDrawPass.h" />
     <ClInclude Include="RenderPasses\ForwardPass.h" />
     <ClInclude Include="RenderPasses\GBuffer.h" />
     <ClInclude Include="RenderPasses\RaytracePass.h" />
@@ -210,7 +217,10 @@
     <ClInclude Include="RenderPasses\Skybox.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Animation\Animation.cpp" />
+    <ClCompile Include="Animation\AnimationSystem.cpp" />
     <ClCompile Include="BVH\BVH.cpp" />
+    <ClCompile Include="DebugUI\DebugDraw.cpp" />
     <ClCompile Include="DebugUI\DebugUIPass.cpp" />
     <ClCompile Include="DebugUI\Imgui\imgui.cpp" />
     <ClCompile Include="DebugUI\Imgui\imgui_demo.cpp" />
@@ -230,6 +240,7 @@
     <ClCompile Include="DX12\NvidiaDXR\ShaderBindingTableGenerator.cpp" />
     <ClCompile Include="DX12\NvidiaDXR\TopLevelASGenerator.cpp" />
     <ClCompile Include="DX12\PipelineStateDX12.cpp" />
+    <ClCompile Include="DX12\RayTracingHelpers.cpp" />
     <ClCompile Include="DX12\RendererDX12.cpp" />
     <ClCompile Include="DX12\ResourceManagerDX12.cpp" />
     <ClCompile Include="DX12\ShaderDX12.cpp" />
@@ -242,12 +253,14 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Renderer\GPUProfile.cpp" />
+    <ClCompile Include="Renderer\Mesh.cpp" />
     <ClCompile Include="Renderer\RenderDataArray.cpp" />
     <ClCompile Include="Renderer\Renderer.cpp" />
     <ClCompile Include="Renderer\RenderPass.cpp" />
     <ClCompile Include="Renderer\RenderSystem.cpp" />
     <ClCompile Include="Renderer\ResourceManager.cpp" />
     <ClCompile Include="Renderer\ResourceTracker.cpp" />
+    <ClCompile Include="RenderPasses\DebugDrawPass.cpp" />
     <ClCompile Include="RenderPasses\ForwardPass.cpp" />
     <ClCompile Include="RenderPasses\GBuffer.cpp" />
     <ClCompile Include="RenderPasses\RaytracePass.cpp" />
@@ -268,18 +281,18 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\fmt.7.0.1\build\fmt.targets" Condition="Exists('..\packages\fmt.7.0.1\build\fmt.targets')" />
-    <Import Project="..\packages\Microsoft.Direct3D.D3D12.1.606.4\build\native\Microsoft.Direct3D.D3D12.targets" Condition="Exists('..\packages\Microsoft.Direct3D.D3D12.1.606.4\build\native\Microsoft.Direct3D.D3D12.targets')" />
     <Import Project="..\packages\WinPixEventRuntime.1.0.220810001\build\WinPixEventRuntime.targets" Condition="Exists('..\packages\WinPixEventRuntime.1.0.220810001\build\WinPixEventRuntime.targets')" />
     <Import Project="..\packages\directxtk12_desktop_2019.2022.7.30.1\build\native\directxtk12_desktop_2019.targets" Condition="Exists('..\packages\directxtk12_desktop_2019.2022.7.30.1\build\native\directxtk12_desktop_2019.targets')" />
+    <Import Project="..\packages\Microsoft.Direct3D.D3D12.1.610.4\build\native\Microsoft.Direct3D.D3D12.targets" Condition="Exists('..\packages\Microsoft.Direct3D.D3D12.1.610.4\build\native\Microsoft.Direct3D.D3D12.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\fmt.7.0.1\build\fmt.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\fmt.7.0.1\build\fmt.targets'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.606.4\build\native\Microsoft.Direct3D.D3D12.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.606.4\build\native\Microsoft.Direct3D.D3D12.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.606.4\build\native\Microsoft.Direct3D.D3D12.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.606.4\build\native\Microsoft.Direct3D.D3D12.targets'))" />
     <Error Condition="!Exists('..\packages\WinPixEventRuntime.1.0.220810001\build\WinPixEventRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WinPixEventRuntime.1.0.220810001\build\WinPixEventRuntime.targets'))" />
     <Error Condition="!Exists('..\packages\directxtk12_desktop_2019.2022.7.30.1\build\native\directxtk12_desktop_2019.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtk12_desktop_2019.2022.7.30.1\build\native\directxtk12_desktop_2019.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.610.4\build\native\Microsoft.Direct3D.D3D12.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.610.4\build\native\Microsoft.Direct3D.D3D12.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.610.4\build\native\Microsoft.Direct3D.D3D12.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.610.4\build\native\Microsoft.Direct3D.D3D12.targets'))" />
   </Target>
 </Project>

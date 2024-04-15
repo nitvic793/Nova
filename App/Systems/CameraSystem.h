@@ -20,6 +20,7 @@ namespace nv
 
     private:
         Handle<ecs::Entity> mEditorCamera;
+        Handle<ecs::Entity> mPlayerCamera;
         math::float2 mPrevPos;
     };
 }

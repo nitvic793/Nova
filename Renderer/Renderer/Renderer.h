@@ -6,6 +6,11 @@
 #include <Renderer/CommonDefines.h>
 #include <Renderer/Format.h>
 
+namespace nv::ecs
+{
+    struct Entity;
+}
+
 namespace nv::graphics
 {
     class Shader;
@@ -15,6 +20,8 @@ namespace nv::graphics
     class Window;
     class DescriptorHeap;
     class Context;
+    class PipelineState;
+    struct PipelineStateDesc;
 
     struct GpuHeapState
     {
@@ -38,6 +45,19 @@ namespace nv::graphics
         bool        mUseRayTracingHeap = false;
     };
 
+
+    struct DeleteEntry
+    {
+        Handle<GPUResource> mResource;
+        uint32_t            mFrameDelay;
+    };
+
+    class IRenderReloadManager
+    {
+    public:
+        virtual void RegisterPSO(const PipelineStateDesc& desc, Handle<PipelineState> pso) = 0;
+    };
+
     class IRenderer
     {
     public:
@@ -56,6 +76,7 @@ namespace nv::graphics
         virtual void TransitionToPresent() = 0;
         virtual void StartFrame() = 0;
         virtual void EndFrame() = 0;
+        virtual void OnResize(const Window& window) {}
         virtual ~IRenderer() {}
 
         virtual Handle<Texture>         GetDefaultRenderTarget() const = 0; // Return current final default render target
@@ -72,7 +93,7 @@ namespace nv::graphics
         virtual void                    SetComputeContextDefaults(Context* context) const = 0;
 
         Device*     GetDevice() const;
-        void        QueueDestroy(Handle<GPUResource> resource);
+        void        QueueDestroy(Handle<GPUResource> resource, uint32_t frameDelay = 0);
         void        ExecuteQueuedDestroy();
         Viewport    GetDefaultViewport() const;
         Rect        GetDefaultScissorRect() const;
@@ -82,7 +103,7 @@ namespace nv::graphics
         Handle<GPUResource>             mpBackBuffers[FRAMEBUFFER_COUNT];
         Handle<Texture>                 mRenderTargets[FRAMEBUFFER_COUNT];
         Handle<Texture>                 mDepthStencil;
-        nv::Vector<Handle<GPUResource>> mDeleteQueue;
+        std::vector<DeleteEntry>        mDeleteQueue;
     };
 
     extern IRenderer* gRenderer;
@@ -93,4 +114,10 @@ namespace nv::graphics
 #if NV_ENABLE_DEBUG_UI
     bool IsDebugUIInputActive();
 #endif
+
+    void SetActiveCamera(Handle<ecs::Entity> camHandle);
+    Handle<ecs::Entity> GetActiveCamera();
+
+    IRenderReloadManager* GetRenderReloadManager();
+    void SetRenderReloadManager(IRenderReloadManager* pManager);
 }

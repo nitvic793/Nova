@@ -23,6 +23,7 @@ namespace nv
 
         constexpr bool operator<(const Handle& h)  const { return mHandle < h.mHandle; }
         constexpr bool operator==(const Handle& h) const { return mHandle == h.mHandle; }
+        constexpr operator uint64_t() const { return mHandle; }
 
     private:
         constexpr Handle(uint32_t index, uint32_t gen) :

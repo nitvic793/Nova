@@ -16,16 +16,20 @@ namespace nv
 
         T           Pop(bool wait = false);
         void        Pop(T& val, bool wait = false);
+        void        PopUnsafe(T& val) { val = std::move(mQueue.front()); mQueue.pop(); }
         const T&    Peek();
         size_t      Size() const { return mQueue.size(); }
 
-        bool    IsEmpty() const;
+        bool        IsEmpty() const;
+        void        Lock() { mMutex.lock(); }
+        void        Unlock() { mMutex.unlock(); }   
     private:
         using UniqueLock = std::unique_lock<std::mutex>;
 
         std::mutex              mMutex;
         std::condition_variable mConditionVar;
         std::queue<T>           mQueue;
+        std::atomic_bool        mbIsEmpty = true;
     };
 
     template<typename T>
@@ -37,6 +41,7 @@ namespace nv
             lock.unlock();
         }
 
+        mbIsEmpty.store(false);
         mConditionVar.notify_one();
     }
 
@@ -49,6 +54,7 @@ namespace nv
             lock.unlock();
         }
 
+        mbIsEmpty.store(false);
         mConditionVar.notify_one();
     }
 
@@ -61,6 +67,7 @@ namespace nv
             lock.unlock();
         }
 
+        mbIsEmpty.store(false);
         mConditionVar.notify_one();
     }
 
@@ -78,6 +85,7 @@ namespace nv
 
         auto val = mQueue.front();
         mQueue.pop();
+        mbIsEmpty.store(mQueue.empty());
         return val;
     }
 
@@ -95,6 +103,7 @@ namespace nv
 
         val = std::move(mQueue.front());
         mQueue.pop();
+        mbIsEmpty.store(mQueue.empty());
     }
 
     template<typename T>
@@ -106,6 +115,6 @@ namespace nv
     template<typename T>
     inline bool ConcurrentQueue<T>::IsEmpty() const
     {
-        return mQueue.empty();
+        return mbIsEmpty.load();
     }
 }

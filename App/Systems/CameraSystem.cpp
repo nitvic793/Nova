@@ -12,6 +12,10 @@
 #include <Renderer/Window.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/Device.h>
+#include "EntityCommon.h"
+#include <DebugUI/DebugUIPass.h>
+
+#include "Player.h"
 
 namespace nv
 {
@@ -19,52 +23,42 @@ namespace nv
     using namespace math;
     using namespace graphics;
 
-    void CameraSystem::Init()
+    Handle<Entity> CreateCamera(float3 position, const char* pDebugName = nullptr)
     {
-        const auto createEntity = [&](ResID mesh, ResID mat, const Transform& transform = Transform())
-        {
-            Handle<Material> matHandle = gResourceManager->GetMaterialHandle(mat);
-            Handle<Mesh> meshHandle = gResourceManager->GetMeshHandle(mesh);
-
-            Handle<Entity> e = ecs::gEntityManager.Create();
-            Entity* entity = gEntityManager.GetEntity(e);
-
-            entity->AttachTransform(transform);
-            auto renderable = entity->Add<components::Renderable>();
-            renderable->mMaterial = matHandle;
-            renderable->mMesh = meshHandle;
-            return e;
-        };
-
-        mEditorCamera = createEntity(RES_ID_NULL, RES_ID_NULL);
-        auto comp = gEntityManager.GetEntity(mEditorCamera)->Add<CameraComponent>();
-        gEntityManager.GetEntity(mEditorCamera)->GetTransform().mPosition = { 0, 0, -15 };
+        auto entityHandle = CreateEntity(RES_ID_NULL, RES_ID_NULL, pDebugName);
+        auto cameraEntity = gEntityManager.GetEntity(entityHandle);
+        auto comp = cameraEntity->Add<CameraComponent>();
+        cameraEntity->GetTransform().mPosition = { 0, 0, -15 };
         comp->mCamera.SetParams(CameraDesc{ .mWidth = (float)graphics::gWindow->GetWidth(), .mHeight = (float)gWindow->GetHeight() });
         comp->mCamera.UpdateViewProjection();
-        mPrevPos = { (float)input::GetInputState().mMouse.GetLastState().x,  (float)input::GetInputState().mMouse.GetLastState().y };
+        return entityHandle;
     }
 
-    void CameraSystem::Update(float deltaTime, float totalTime)
+    void CameraSystem::Init()
     {
-#if NV_ENABLE_DEBUG_UI
+        mEditorCamera = CreateCamera({ 0, 0, -15 }, "Editor Camera");
+        mPlayerCamera = CreateCamera({ 0, 0, -15 }, "Player Camera");
+        mPrevPos = { (float)input::GetInputState().mMouse.GetLastState().x,  (float)input::GetInputState().mMouse.GetLastState().y };
+        graphics::SetActiveCamera(mEditorCamera);
+    }
+
+    void EditorCameraUpdate(float deltaTime, CameraComponent* component, Handle<Entity> cameraEntity, math::float2& prevPos)
+    {
         const bool isDebugUIActive = graphics::IsDebugUIInputActive();
-#else
-        constexpr bool isDebugUIActive = false;
-#endif
 
         float speed = 3.f;
         float speedMultiplier = 3.f;
         float mouseSpeed = 0.005f;
 
-        auto comp = gEntityManager.GetEntity(mEditorCamera)->Get<CameraComponent>();
-        auto transform = gEntityManager.GetEntity(mEditorCamera)->GetTransform();
-        Camera& camera = comp->mCamera;
+        auto transform = gEntityManager.GetEntity(cameraEntity)->GetTransform();
+        Camera& camera = component->mCamera;
+        camera.SetPreviousViewProjection();
 
         auto up = VectorSet(0, 1, 0, 0);
         auto dir = Load(camera.GetDirection());
         auto pos = Load(transform.mPosition);
         auto rot = Load(transform.mRotation);
-        
+
         auto rotation = VectorSet(0, 0, 0, 0);
         float angle = 0.f;
         QuaternionToAxisAngle(rotation, angle, rot);
@@ -100,10 +94,10 @@ namespace nv
         float yDiff = 0;
 
         auto mousePos = float2{ (float)input::GetInputState().mMouse.GetLastState().x,  (float)input::GetInputState().mMouse.GetLastState().y };;
-        if (input::LeftMouseButtonState() == ButtonState::HELD && !isDebugUIActive) 
+        if (input::LeftMouseButtonState() == ButtonState::HELD && !isDebugUIActive)
         {
-            xDiff = (float)(mousePos.x - mPrevPos.x) * mouseSpeed;
-            yDiff = (float)(mousePos.y - mPrevPos.y) * mouseSpeed;
+            xDiff = (float)(mousePos.x - prevPos.x) * mouseSpeed;
+            yDiff = (float)(mousePos.y - prevPos.y) * mouseSpeed;
         }
 
         auto camRotatin = camera.GetRotation();
@@ -115,10 +109,46 @@ namespace nv
         if(!isDebugUIActive)
             Store(pos, transform.mPosition);
 
-        mPrevPos = { (float)input::GetInputState().mMouse.GetLastState().x,  (float)input::GetInputState().mMouse.GetLastState().y };
-
         camera.SetPosition(transform.mPosition);
         camera.UpdateViewProjection();
+    }
+
+    void PlayerCameraUpdate(Handle<Entity> camHandle, float deltaTime, float totalTime)
+    {
+        Entity* player = GetPlayerEntity();
+        auto transform = player->GetTransform();
+        
+        Entity* camera = gEntityManager.GetEntity(camHandle);
+        auto camTransform = camera->GetTransform();
+        auto& camComponent = camera->Get<CameraComponent>()->mCamera;
+        camComponent.SetPreviousViewProjection();
+        camTransform.mPosition.x = transform.mPosition.x + 5;
+        camTransform.mPosition.y = transform.mPosition.z;
+        camTransform.mPosition.z = transform.mPosition.z - 15;
+
+        camComponent.SetPosition(camTransform.mPosition);
+        camComponent.UpdateViewProjection();
+    }
+
+    void CameraSystem::Update(float deltaTime, float totalTime)
+    {
+#if NV_ENABLE_DEBUG_UI
+        const bool isDebugUIEnabled = graphics::IsDebugUIEnabled();
+#else
+        constexpr bool isDebugUIEnabled = false;
+#endif
+        if (isDebugUIEnabled)
+        {
+            graphics::SetActiveCamera(mEditorCamera);
+            auto comp = gEntityManager.GetEntity(mEditorCamera)->Get<CameraComponent>();
+            EditorCameraUpdate(deltaTime, comp, mEditorCamera, mPrevPos);
+            mPrevPos = { (float)input::GetInputState().mMouse.GetLastState().x,  (float)input::GetInputState().mMouse.GetLastState().y };
+        }
+        else
+        {
+            graphics::SetActiveCamera(mPlayerCamera);
+            PlayerCameraUpdate(mPlayerCamera, deltaTime, totalTime);
+        }
     }
 
     void CameraSystem::Destroy()

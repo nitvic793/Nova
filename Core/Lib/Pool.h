@@ -20,22 +20,25 @@ namespace nv
             mBuffer(nullptr),
             mSize(0),
             mCapacity(kDefaultPoolCount),
-            mFreeIndices(kDefaultPoolCount),
             mGenerations(kDefaultPoolCount)
         {
-            mGenerations.SetSize(kDefaultPoolCount);
+            mGenerations.resize(kDefaultPoolCount);
+            mFreeIndices.reserve(kDefaultPoolCount);
         }
 
         void Init()
         {
             mBuffer = (TDerived*)SystemAllocator::gPtr->Allocate(sizeof(TDerived) * kDefaultPoolCount);
+            mGenerations.resize(kDefaultPoolCount);
+            mFreeIndices.reserve(kDefaultPoolCount);
+            memset(mGenerations.data(), 0, mGenerations.size() * sizeof(uint32_t));
         }
 
         void Destroy()
         {
             for (auto i = 0u; i < mSize; ++i)
             {
-                if (!mFreeIndices.Exists(i))
+                if (std::find(mFreeIndices.begin(), mFreeIndices.end(), i) == std::end(mFreeIndices))
                 {
                     GetIndex(i)->~TDerived();
                 }
@@ -58,7 +61,7 @@ namespace nv
             Handle<T> handle;
             T* data = nullptr;
             assert(mBuffer != nullptr);
-            if (mFreeIndices.Size() == 0)
+            if (mFreeIndices.size() == 0)
             {
                 GrowIfNeeded();
                 data = GetIndex(mSize);
@@ -68,7 +71,8 @@ namespace nv
             }
             else
             {
-                handle.mIndex = mFreeIndices.Pop();
+                handle.mIndex = mFreeIndices.back();
+                mFreeIndices.pop_back();
                 data = GetIndex(handle);
             }
 
@@ -108,7 +112,7 @@ namespace nv
             if (IsValid(handle))
             {
                 mGenerations[handle.mIndex]++;
-                mFreeIndices.Push(handle.mIndex);
+                mFreeIndices.push_back(handle.mIndex);
                 GetIndex(handle)->~TDerived();
             }
         }
@@ -148,8 +152,9 @@ namespace nv
 
         constexpr void Clear()
         {
-            mFreeIndices.Clear();
-            mGenerations.Clear();
+            mFreeIndices.clear();
+            mGenerations.clear();
+            mGenerations.resize(mCapacity);
             mSize = 0;
         }
 
@@ -158,7 +163,7 @@ namespace nv
             return (TDerived*)((Byte*)mBuffer + index * sizeof(TDerived));
         }
 
-        constexpr bool      IsEmpty() const { return mFreeIndices.Size() == mSize; }
+        constexpr bool      IsEmpty() const { return mFreeIndices.size() == mSize; }
         constexpr size_t    GetStrideSize() const { return sizeof(TDerived); }
         constexpr uint32_t  Size() const { return mSize; }
         constexpr uint32_t  Capacity() const { return mCapacity; }
@@ -167,17 +172,23 @@ namespace nv
     private:
         void GrowIfNeeded()
         {
-            if (mSize + 1 > mCapacity)
+            GrowIfNeeded(mSize + 1);
+        }
+
+        void GrowIfNeeded(size_t requestSize)
+        {
+            if (requestSize > mCapacity)
             {
                 auto oldCapacity = mCapacity;
                 mCapacity *= 2;
+                mCapacity = mCapacity >= requestSize ? mCapacity : (uint32_t)requestSize;
                 void* pBuffer = SystemAllocator::gPtr->Allocate(sizeof(TDerived) * mCapacity);// , mBuffer);
                 memcpy(pBuffer, mBuffer, oldCapacity * sizeof(TDerived));
-                if(mBuffer)
+                if (mBuffer)
                     SystemAllocator::gPtr->Free(mBuffer);
                 mBuffer = (TDerived*)pBuffer;
 
-                mGenerations.Grow(mCapacity, true);
+                mGenerations.resize(mCapacity);
             }
         }
 
@@ -190,8 +201,10 @@ namespace nv
         TDerived*               mBuffer;
         uint32_t                mSize;
         uint32_t                mCapacity;
-        nv::Vector<uint32_t>    mFreeIndices;
-        nv::Vector<uint32_t>    mGenerations;
+        std::vector<uint32_t>   mFreeIndices;
+        std::vector<uint32_t>   mGenerations;
+
+        friend class Serializer;
     };
 
     // Gauranteed to have elements contiguously in memory. Useful for iterating.
@@ -203,8 +216,8 @@ namespace nv
         ContiguousPool() :
             mCapacity(InitPoolCount)
         {
-            mGenerations.SetSize(InitPoolCount);
-            mPool.Reserve(InitPoolCount);
+            mGenerations.resize(InitPoolCount);
+            mPool.reserve(InitPoolCount);
             for (auto& val : mGenerations)
                 val = 0;
         }
@@ -217,8 +230,8 @@ namespace nv
         {
             Handle<T> handle;
             GrowIfNeeded();
-            handle.mIndex = (uint32_t)mPool.Size();
-            mPool.Emplace(nv::Forward<Args>(args)...);
+            handle.mIndex = (uint32_t)mPool.size();
+            mPool.emplace_back(nv::Forward<Args>(args)...);
             
             handle.mGeneration = mGenerations[handle.mIndex];
             mHandleIndexMap[handle.mHandle] = handle.mIndex;
@@ -238,7 +251,9 @@ namespace nv
 
         constexpr Span<TDerived> Span() const
         {
-            return mPool.Span();
+            auto pData = mPool.data();
+            auto pTData = (TDerived*)pData;
+            return nv::Span<TDerived>(pTData, mPool.size());
         }
 
         constexpr bool IsValid(Handle<T> handle) const
@@ -257,7 +272,13 @@ namespace nv
             return (T*)&mPool[idx];
         }
 
-        constexpr TDerived* GetAsDerived(Handle<T> handle) const
+        constexpr const TDerived* GetAsDerived(Handle<T> handle) const
+        {
+            const uint32_t idx = mHandleIndexMap.at(handle.mHandle);
+            return &mPool.at(idx);
+        }
+
+        constexpr TDerived* GetAsDerived(Handle<T> handle)
         {
             const uint32_t idx = mHandleIndexMap.at(handle.mHandle);
             return &mPool[idx];
@@ -265,10 +286,11 @@ namespace nv
 
         constexpr size_t Size() const
         {
-            return mPool.Size();
+            return mPool.size();
         }
 
-        constexpr TDerived& operator[](size_t idx) const { return mPool[idx]; }
+        constexpr TDerived& operator[](size_t idx) { return mPool[idx]; }
+        constexpr const TDerived& operator[](size_t idx) const { return mPool.at(idx); }
 
         void Remove(Handle<T> handle)
         {
@@ -276,12 +298,14 @@ namespace nv
                 return;
 
             const uint32_t idx = mHandleIndexMap.at(handle.mHandle);
-            const uint32_t lastIdx = (uint32_t)mPool.Size() - 1;
+            const uint32_t lastIdx = (uint32_t)mPool.size() - 1;
             const auto lastHandle = Handle<T>(lastIdx, mGenerations[lastIdx]);
 
             std::swap(mPool[idx], mPool[lastIdx]);
             std::swap(mGenerations[idx], mGenerations[lastIdx]);
-            TDerived& val = mPool.Pop();
+            TDerived& val = mPool.back();
+            mPool.pop_back();
+
             val.~TDerived();
             mGenerations[lastIdx]++;
             
@@ -289,23 +313,37 @@ namespace nv
             mHandleIndexMap.erase(handle.mHandle);
         }
 
-    private:
-        void GrowIfNeeded()
+        void CopyToPool(TDerived* pData, size_t count)
         {
-            if (mPool.Size() + 1 >= mCapacity)
+            mPool.resize(count/*, true*/);
+            memcpy(mPool.data(), pData, count * sizeof(TDerived));
+        }
+
+    private:
+        void GrowIfNeeded(size_t requestedSize)
+        {
+            if (requestedSize >= mCapacity)
             {
                 mCapacity = mCapacity * 2;
-                mGenerations.Grow(mCapacity, true);
-                for (uint32_t i = (uint32_t)mPool.Size(); i < mCapacity; ++i)
+                mCapacity = mCapacity >= requestedSize ? mCapacity : (uint32_t)requestedSize;
+                mGenerations.resize(mCapacity/*, true*/);
+                for (uint32_t i = (uint32_t)mPool.size(); i < mCapacity; ++i)
                     mGenerations[i] = 0;
             }
         }
 
+        void GrowIfNeeded()
+        {
+            GrowIfNeeded(mPool.size() + 1);
+        }
+
     private:
         uint32_t                mCapacity;
-        nv::Vector<TDerived>    mPool;
-        nv::Vector<uint32_t>    mGenerations;
+        std::vector<TDerived>    mPool;
+        std::vector<uint32_t>    mGenerations;
 
-        HashMap<uint64_t, uint32_t> mHandleIndexMap;
+        UnorderedMap<uint64_t, uint32_t> mHandleIndexMap;
+
+        friend class Serializer;
     };
 }

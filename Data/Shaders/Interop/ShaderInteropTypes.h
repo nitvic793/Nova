@@ -4,6 +4,7 @@
 #pragma once
 
 static const uint32_t MAX_DIRECTIONAL_LIGHTS = 2;
+static const uint32_t MAX_BONES = 128;
 
 #ifdef __cplusplus
 #include <Math/Math.h>
@@ -39,6 +40,7 @@ namespace nv::graphics
     struct ObjectData
     {
         float4x4 World;
+        float4x4 PrevWorld;
         uint32_t MaterialIndex;
         float    _Padding;
     };
@@ -57,6 +59,14 @@ namespace nv::graphics
         float   Intensity;
         float3  Color;
         float   _Padding;
+
+        #ifdef __cplusplus
+        template<class Archive>
+        void serialize(Archive& archive)
+        {
+            archive(Direction, Intensity, Color);
+        }
+        #endif
     };
 
     struct PointLight NV_COMPONENT
@@ -65,6 +75,14 @@ namespace nv::graphics
         float   Intensity;
         float3  Color;
         float   Range;
+
+        #ifdef __cplusplus
+        template<class Archive>
+        void serialize(Archive& archive)
+        {
+            archive(Position, Intensity, Color, Range);
+        }
+        #endif
     };
 
     struct SpotLight NV_COMPONENT
@@ -75,21 +93,36 @@ namespace nv::graphics
         float Range;
         float3 Direction;
         float SpotFalloff;
+
+        #ifdef __cplusplus
+        template<class Archive>
+        void serialize(Archive& archive)
+        {
+            archive(Color, Intensity, Range, Direction, SpotFalloff);
+        }
+        #endif
     };
 
     struct FrameData
     {
         float4x4            View;
         float4x4            Projection;
+        float4x4            PrevView;
+        float4x4            PrevProjection;
         float4x4            ViewInverse;
         float4x4            ProjectionInverse;
         float4x4            ViewProjectionInverse;
         float3              CameraPosition;
-        float               _Padding0;
+        float               NearZ;
         DirectionalLight    DirLights[MAX_DIRECTIONAL_LIGHTS];
         uint32_t            DirLightsCount;
-        float               _Padding1;
+        float               FarZ;
     };
+
+    struct PerArmature
+	{
+		float4x4 Bones[MAX_BONES];
+	};
 
     struct ViewportDesc
     {
@@ -113,9 +146,20 @@ namespace nv::graphics
 
     struct TraceParams
     {
-        float2 Resolution;
-        float  ScaleFactor;
-        uint32_t  StructBufferIdx;
+        float2      Resolution;
+        float       ScaleFactor;
+        uint32_t    FrameCount;
+        uint32_t    RTSceneIdx;
+        uint32_t    SkyBoxHandle;
+        int32_t	    EnableShadows;
+        int32_t	    EnableIndirectGI;
+    };
+
+    struct MeshInstanceData
+    {
+        uint32_t    ObjectDataIdx;
+        uint32_t    VertexBufferIdx;
+        uint32_t    IndexBufferIdx;
     };
 
     //BVH Reference: https://jacco.ompf2.com/2022/06/03/how-to-build-a-bvh-part-9a-to-the-gpu/

@@ -43,8 +43,8 @@ namespace nv::graphics
         void Destroy() override;
         void OnReload() override;
 
-        void QueueReload(Handle<PipelineState>* pso);
-        void Reload(Handle<PipelineState>* pso);
+        void QueueReload(Handle<PipelineState> pso);
+        void Reload(Handle<PipelineState> pso);
 
         void RenderThreadJob(void* ctx);
 
@@ -69,7 +69,7 @@ namespace nv::graphics
         Handle<Texture>         mTexture;
 
         RenderReloadManager* mReloadManager;
-        ConcurrentQueue<Handle<PipelineState>*> mPsoReloadQueue;
+        ConcurrentQueue<Handle<PipelineState>> mPsoReloadQueue;
 
         RenderDataArray         mRenderData;
         RenderData              mCurrentRenderData;

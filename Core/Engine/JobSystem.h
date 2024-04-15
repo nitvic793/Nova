@@ -24,6 +24,7 @@ namespace nv::jobs
     void DestroyJobSystem();
 
     Handle<Job> Execute(Job::Fn&& job);
+    Handle<Job> Execute(Job::Fn&& job, void* context);
 
     // Note: Only wait from the main thread. Waiting from within 
     // a job or worker thread will deadlock the job system. 
