@@ -148,8 +148,9 @@ namespace nv::graphics
         LoadResources();
         gRenderer->GetDevice()->InitRaytracingContext();
 
-        mRenderPasses.Emplace(Alloc<RTCompute>());
         mRenderPasses.Emplace(Alloc<ForwardPass>());
+        mRenderPasses.Emplace(Alloc<RTCompute>());
+
         mRenderPasses.Emplace(Alloc<Skybox>());
         mRenderPasses.Emplace(Alloc<DebugDrawPass>());
         //mRenderPasses.Emplace(Alloc<RaytracePass>());

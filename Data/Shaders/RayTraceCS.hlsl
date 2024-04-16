@@ -33,6 +33,7 @@ struct HitContext
     float3 Color;
     float3 WorldNormal;
     float3 WorldPos;
+    float  ShadowVisibility;
 };
 
 float3 getPerpendicularVector(float3 u)
@@ -326,6 +327,7 @@ float3 OnHit(uint instanceId, DefaultRayQueryT rayQuery, out HitContext hitConte
     hitContext.WorldPos = ctx.WorldPos;
     hitContext.WorldNormal = ctx.Normal;
     hitContext.Color = ctx.Color;
+    hitContext.ShadowVisibility = shadowVisibility;
     return color;
 }
 
@@ -383,6 +385,7 @@ float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
 	else
     {
         resultColor = float3(0, 0, 0); //OnMiss(ray.Direction, rayQuery);
+        return float4(resultColor, 0.f);
     }
 
     result = float4(resultColor, 1.f);
