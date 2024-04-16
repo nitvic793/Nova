@@ -20,19 +20,6 @@ void GetRayDesc(uint2 px, out RayDesc ray)
     ray.Direction = normalize(world.xyz - ray.Origin);
 }
 
-float3 ShootIndirectRay(float3 worldPos, float3 dir, float minT, uint seed)
-{
-    DefaultRayQueryT rayQuery = ShootRay(worldPos, dir, minT, MAX_DIST);
-    if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
-    {
-        HitContext ctx;
-        uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
-        return OnHit(instanceId, rayQuery, ctx);
-    }
-        
-    return OnMiss(dir, rayQuery);
-}
-
 float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
 {
     const float4 HIT_COLOR = float4(1,0,0,1);
