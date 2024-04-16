@@ -24,6 +24,8 @@ struct ShadeContext
     float3 WorldPos;
     float2 BaryUV;
     float2 UV;
+    float  Roughness;
+    float  Metallic;
 };
 
 struct HitContext
@@ -214,6 +216,9 @@ ShadeContext GetShadeContext(uint instanceId, DefaultRayQueryT rayQuery)
     ConstantBuffer<ObjectData> object       = ResourceDescriptorHeap[instanceData.ObjectDataIdx];
     ConstantBuffer<MaterialData> Material   = ResourceDescriptorHeap[object.MaterialIndex];
     Texture2D<float4> albedoTex             = ResourceDescriptorHeap[Material.AlbedoOffset]; 
+    Texture2D<float3> normalTex             = ResourceDescriptorHeap[Material.NormalOffset];
+    Texture2D<float> roughnessTex           = ResourceDescriptorHeap[Material.RoughnessOffset];
+    Texture2D<float> metallicTex            = ResourceDescriptorHeap[Material.MetalnessOffset];
 
     uint index0 = IndexBuffer[rayQuery.CandidatePrimitiveIndex() * 3];
     uint index1 = IndexBuffer[rayQuery.CandidatePrimitiveIndex() * 3 + 1];
@@ -229,9 +234,17 @@ ShadeContext GetShadeContext(uint instanceId, DefaultRayQueryT rayQuery)
         Mesh[index1].mNormal , 
         Mesh[index2].mNormal  
     };
+    
+    float3 vertexTangents[3] = 
+    { 
+        Mesh[index0].mTangent , 
+        Mesh[index1].mTangent , 
+        Mesh[index2].mTangent  
+    };
 
     float2 baryUv = rayQuery.CandidateTriangleBarycentrics();
     float3 triNormal = TriangleNormal(vertexNormals, baryUv);
+    float3 triTangent = TriangleNormal(vertexTangents, baryUv);
     float2 uv = GetUV(baryUv, uv0, uv1, uv2);
 
     const float minT = 0.1f;
@@ -242,11 +255,15 @@ ShadeContext GetShadeContext(uint instanceId, DefaultRayQueryT rayQuery)
     // TODO: calculate gradients by method given here: 
     // https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/Samples/Desktop/D3D12Raytracing/src/D3D12RaytracingMiniEngineSample/DiffuseHitShaderLib.hlsl#L233
     float3 worldPos = rayQuery.WorldRayOrigin() + rayQuery.WorldRayDirection() * rayQuery.CommittedRayT();
-    float3 albedo = albedoTex.SampleGrad(LinearWrapSampler, uv, float2(grad, 0), float2(0, grad)).xyz; 
+    float2 ddx = float2(grad, 0);
+    float2 ddy = float2(0, grad);
+    float3 albedo = albedoTex.SampleGrad(LinearWrapSampler, uv, ddx, ddy).xyz; 
+    float3 normal = normalTex.SampleGrad(LinearWrapSampler, uv, ddx, ddy).xyz;
+    normal = CalculateNormalFromSample(normal, uv, triNormal, triTangent);
 
     ShadeContext ctx;
 
-    ctx.Normal = triNormal;
+    ctx.Normal = normal;
     ctx.WorldPos = worldPos;
     ctx.UV = uv;
     ctx.BaryUV = baryUv;
@@ -335,7 +352,7 @@ float3 ShootIndirectRay(float3 worldPos, float3 dir, float minT, uint seed)
 float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
 {
     const float4 HIT_COLOR = float4(1,0,0,1);
-    const float4 MISS_COLOR = float4(1,0,0,1);
+    const float4 MISS_COLOR = float4(0,0,0,1);
     float4 result = 0.xxxx;
 
     uint randSeed = InitRand(DTid.x * Params.FrameCount, DTid.y * Params.FrameCount, 16);
@@ -346,7 +363,7 @@ float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
 	{
         HitContext ctx;
         uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
-        resultColor = OnHit(instanceId, rayQuery, ctx);
+        /*resultColor =*/ OnHit(instanceId, rayQuery, ctx);
         const bool bEnableIndirectGI = Params.EnableIndirectGI; // Diffuse GI
         const bool bCosSampling = true;
         if(bEnableIndirectGI)
@@ -365,7 +382,7 @@ float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
 	}
 	else
     {
-        resultColor = OnMiss(ray.Direction, rayQuery);
+        resultColor = float3(0, 0, 0); //OnMiss(ray.Direction, rayQuery);
     }
 
     result = float4(resultColor, 1.f);

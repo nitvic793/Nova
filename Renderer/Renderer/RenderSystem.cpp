@@ -66,7 +66,10 @@ namespace nv::graphics
         {
             if (event->mAssetId.mType == asset::ASSET_SHADER)
             {
-                auto PSOs = mPsoShaderMap.at(event->mAssetId.mId);
+                auto it = mPsoShaderMap.find(event->mAssetId.mId);
+                if(it == mPsoShaderMap.end())
+                    return;
+                const auto& PSOs = it->second;
                 for(const auto& pso : PSOs)
                     mRenderSystem->QueueReload(pso);
             }

@@ -103,6 +103,14 @@ namespace nv::graphics
         #endif
     };
 
+    struct BlurParams
+    {
+        int32_t     BlurRadius;
+        float       BlurDepthThreshold;
+        uint32_t    InputTexIdx;
+        float       Padding;
+    };
+
     struct FrameData
     {
         float4x4            View;

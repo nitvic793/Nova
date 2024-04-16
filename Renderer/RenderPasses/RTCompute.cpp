@@ -70,6 +70,12 @@ namespace nv::graphics
         return texHandle;
     }
 
+    template <typename T>
+    void UploadToConstantBuffer(const ConstantBufferView& view, const T& data)
+    {
+        gRenderer->UploadToConstantBuffer(view, (uint8_t*)&data, (uint32_t)sizeof(data));
+    }
+
 #if NV_CUSTOM_RAYTRACING
 
     struct BVHObjects
@@ -191,6 +197,7 @@ namespace nv::graphics
         Handle<Texture>     mDepthTexture;
         ConstantBufferView  mTraceParamsCBV;
         ConstantBufferView  mTraceAccumCBV;
+        ConstantBufferView  mBlurParamsCBV;
     };
 
     static Handle<GPUResource> meshInstanceBuffer;
@@ -200,15 +207,26 @@ namespace nv::graphics
 
     void RTCompute::Init()
     {
-        auto cs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/RayTraceCS.hlsl") };
-        auto rtcs = gResourceManager->CreateShader({ cs, shader::COMPUTE });
-        PipelineStateDesc psoDesc = { .mPipelineType = PIPELINE_COMPUTE, .mCS = rtcs };
-        mRTComputePSO = gResourceManager->CreatePipelineState(psoDesc);
+        {
+            auto cs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/RayTraceCS.hlsl") };
+            auto rtcs = gResourceManager->CreateShader({ cs, shader::COMPUTE });
+            PipelineStateDesc psoDesc = { .mPipelineType = PIPELINE_COMPUTE, .mCS = rtcs };
+            mRTComputePSO = gResourceManager->CreatePipelineState(psoDesc);
+        }
 
-        auto accumCs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/AccumulateRTCS.hlsl") };
-        auto accumCsHandle = gResourceManager->CreateShader({ accumCs, shader::COMPUTE });
-        PipelineStateDesc accumPsoDesc = { .mPipelineType = PIPELINE_COMPUTE, .mCS = accumCsHandle };
-        mAccumulatePSO = gResourceManager->CreatePipelineState(accumPsoDesc);
+        {
+            auto accumCs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/AccumulateRTCS.hlsl") };
+            auto accumCsHandle = gResourceManager->CreateShader({ accumCs, shader::COMPUTE });
+            PipelineStateDesc accumPsoDesc = { .mPipelineType = PIPELINE_COMPUTE, .mCS = accumCsHandle };
+            mAccumulatePSO = gResourceManager->CreatePipelineState(accumPsoDesc);
+        }
+
+        {
+            auto blurCs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/BlurCS.hlsl") };
+            auto blurCsHandle = gResourceManager->CreateShader({ blurCs, shader::COMPUTE });
+            PipelineStateDesc blurPsoDesc = { .mPipelineType = PIPELINE_COMPUTE, .mCS = blurCsHandle };
+            mBlurPSO = gResourceManager->CreatePipelineState(blurPsoDesc);
+        }
 
         uint32_t height = gWindow->GetHeight() / SCALE;
         uint32_t width = gWindow->GetWidth() / SCALE;
@@ -229,14 +247,24 @@ namespace nv::graphics
         sRTComputeObjects.mOutputUAV = outputBufferTexture;
         sRTComputeObjects.mTraceParamsCBV = gpConstantBufferPool->GetConstantBuffer<TraceParams>();
         sRTComputeObjects.mTraceAccumCBV = gpConstantBufferPool->GetConstantBuffer<TraceAccumParams>();
+        sRTComputeObjects.mBlurParamsCBV = gpConstantBufferPool->GetConstantBuffer<BlurParams>();
 
-        sRTComputeObjects.mAccumBuffer = gResourceManager->CreateResource(desc, ID("RTPass/AccumBuffer"));
+        sRTComputeObjects.mAccumBuffer = gResourceManager->CreateResource(desc, ID("RTPass/LightAccumBuffer"));
         texDesc.mBuffer = sRTComputeObjects.mAccumBuffer;
-        sRTComputeObjects.mAccumUAV = gResourceManager->CreateTexture(texDesc, ID("RTPass/AccumBufferTex"));
+        sRTComputeObjects.mAccumUAV = gResourceManager->CreateTexture(texDesc, ID("RTPass/LightAccumBufferTex"));
 
         sRTComputeObjects.mPrevAccumBuffer = gResourceManager->CreateResource(desc, ID("RTPass/PrevAccumBuffer"));
         texDesc.mBuffer = sRTComputeObjects.mPrevAccumBuffer;
         sRTComputeObjects.mPrevAccumUAV = gResourceManager->CreateTexture(texDesc, ID("RTPass/PrevAccumBufferTex"));
+
+        TextureDesc lightAccumSrvDesc = 
+        {
+            .mUsage = tex::USAGE_SHADER,
+            .mBuffer = sRTComputeObjects.mOutputBuffer,
+            .mType = tex::Type::TEXTURE_2D
+        };
+
+        gResourceManager->CreateTexture(lightAccumSrvDesc, ID("RTPass/LightAccumBufferSRV"));
 
         // Get Depth Texture and transition buffer to pixel shader resource
         auto depthTex = gRenderer->GetDefaultDepthTarget();
@@ -250,6 +278,7 @@ namespace nv::graphics
         };
 
         sRTComputeObjects.mDepthTexture = gResourceManager->CreateTexture(depthDesc, ID("RTPass/DepthTexture"));
+        
 
         meshInstanceData = CreateStructuredBuffer(sizeof(MeshInstanceData), MAX_OBJECTS, meshInstanceBuffer);
         auto pResource = gResourceManager->GetGPUResource(meshInstanceBuffer);
@@ -420,11 +449,26 @@ namespace nv::graphics
 
         ctx->ResourceBarrier({ &endBarriers[0] , ArrayCountOf(endBarriers) });
 
+        UploadToConstantBuffer<BlurParams>(sRTComputeObjects.mBlurParamsCBV, {
+            .BlurRadius = 2,
+            .BlurDepthThreshold = 0.1f,
+            .InputTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mAccumUAV)->GetHeapIndex()
+        });
 
+        //Blur Accum Buffer
+        ctx->SetPipeline(mBlurPSO);
+        ctx->ComputeBindConstantBuffer(0, (uint32_t)sRTComputeObjects.mBlurParamsCBV.mHeapIndex);
+        ctx->ComputeBindConstantBuffer(1, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
+        ctx->ComputeBindTexture(2, sRTComputeObjects.mOutputUAV);
+        ctx->ComputeBindTexture(3, sRTComputeObjects.mDepthTexture);
+        ctx->Dispatch(gWindow->GetWidth() / DISPATCH_SCALE, gWindow->GetHeight() / DISPATCH_SCALE, 1);
 
-        // Copy Output UAV to Last Frame UAV
-
-        //SetContextDefault(ctx);
+        {
+            TransitionBarrier endBarriers[] = { 
+                {.mTo = STATE_PIXEL_SHADER_RESOURCE, .mResource = sRTComputeObjects.mOutputBuffer } ,
+            };
+            ctx->ResourceBarrier({ &endBarriers[0] , ArrayCountOf(endBarriers) });
+        }
     }
 
     void RTCompute::Destroy()

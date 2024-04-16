@@ -223,8 +223,12 @@ namespace nv::graphics
 
     void ContextDX12::BindTexture(uint32_t slot, Handle<Texture> texture)
     {
+        if (texture.IsNull())
+            return;
+
         auto tex = (TextureDX12*)gResourceManager->GetTexture(texture);
-        Bind(slot, BIND_TEXTURE, tex->GetHeapOffset());
+        if(tex)
+            Bind(slot, BIND_TEXTURE, tex->GetHeapOffset());
     }
 
     void ContextDX12::CopyResource(Handle<GPUResource> dest, Handle<GPUResource> src)

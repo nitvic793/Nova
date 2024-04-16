@@ -55,6 +55,13 @@
                 "Type": "ComputeShader",
                 "ShaderModel": "6_6"
             }
+        },
+        {
+            "key": "Shaders/BlurCS.hlsl",
+            "value": {
+                "Type": "ComputeShader",
+                "ShaderModel": "6_6"
+            }
         }
     ]
 }
