@@ -33,6 +33,8 @@ namespace nv::graphics
     using namespace buffer;
     using namespace bvh;
 
+    constexpr uint32_t SCALE = 1;
+    constexpr uint32_t MAX_OBJECTS = 32;
 
     Handle<Texture> CreateStructuredBuffer(uint32_t stride, uint32_t elemCount, Handle<GPUResource>& buffer)
     {
@@ -76,124 +78,25 @@ namespace nv::graphics
         gRenderer->UploadToConstantBuffer(view, (uint8_t*)&data, (uint32_t)sizeof(data));
     }
 
-#if NV_CUSTOM_RAYTRACING
-
-    struct BVHObjects
+    static Handle<PipelineState> CreateComputePSO(std::string_view shaderPath)
     {
-        nv::Vector<TriangulatedMesh>        mTriMeshes;
-        nv::Vector<BVHData*>                mBVHs;
-        nv::Vector<graphics::BVHInstance>   mBvhInstances;
-        nv::Vector<Handle<Entity>>          mEntities;
-        nv::Vector<graphics::AABB>          mBvhAabbs;
-        nv::Vector<uint32_t>                mBvhHeapIndices;
-        TLAS                                mTlas;
-    };
-
-    static BVHObjects       sBVHObjects;
-
-    static void BuildBVHs()
-    {
-        nv::Vector<TriangulatedMesh>& triMeshes = sBVHObjects.mTriMeshes;
-        nv::Vector<graphics::BVHInstance>& bvhInstances = sBVHObjects.mBvhInstances;
-        nv::Vector<Handle<Entity>>& entities = sBVHObjects.mEntities;
-        nv::Vector<graphics::AABB>& bvhAabbs = sBVHObjects.mBvhAabbs;
-        nv::Vector<BVHData*>& bvhs = sBVHObjects.mBVHs;
-        TLAS& tlas = sBVHObjects.mTlas;
-
-        nv::Vector<uint32_t> meshHeapIndices;
-        nv::Vector<uint32_t> bvhIndices;
-
-        uint32_t index = 0;
-
-        // Create BVH Instances for all drawable entities, store in component - Done
-        // Build TLAS with all BVH instances - Done
-        // Create structured buffer of bvh nodes in each BVHData, store index of BVHData in BVH Instance
-        // Create structured buffer of BVH instances
-        // Create structured buffer of TLAS
-        gEntityManager.GetEntities(entities);
-
-        const auto getAabb = [](const float3& bmax, const float3& bmin, const float4x4& mat)
-        {
-            auto bounds = bvh::AABB();
-            for (int32_t i = 0; i < 8; ++i)
-            {
-                auto position = float3(i & 1 ? bmax.x : bmin.x,
-                    i & 2 ? bmax.y : bmin.y, i & 4 ? bmax.z : bmin.z);
-                auto pos = Load(position);
-                auto transform = Load(mat);
-                pos = math::Vector3Transform(pos, transform);
-                Store(pos, position);
-                bounds.Grow(position);
-            }
-
-            return bounds.GfxAABB();
-        };
-
-        for (auto handle : entities)
-        {
-            Entity* pEntity = gEntityManager.GetEntity(handle);
-            if (pEntity->Has<Renderable>())
-            {
-                Renderable* renderable = pEntity->Get<Renderable>();
-                auto pMesh = gResourceManager->GetMesh(renderable->mMesh);
-                if (!pMesh)
-                    continue;
-
-                BVHData& bvh = pMesh->GetBVH();
-                if (bvh.mBvhNodes.empty())
-                {
-                    BuildBVH(pMesh, bvh, triMeshes.Emplace());
-                    bvhs.Push(&bvh);
-                }
-
-                TransformRef transform = pEntity->GetTransform();
-                float4x4 mat = transform.GetTransformMatrixTransposed();
-                graphics::BVHInstance& bvhInstance = bvhInstances.Emplace();
-                auto& aabb = bvhAabbs.Emplace();
-                aabb = getAabb(bvh.mBvhNodes[0].AABBMax, bvh.mBvhNodes[0].AABBMin, transform.GetTransformMatrix());
-
-                bvhInstance.transform = mat;
-                bvhInstance.invTransform = transform.GetTransformMatrixInverseTransposed();
-                bvhInstance.idx = index;
-                index++;
-            }
-        }
-
-        if (bvhInstances.size() > 0)
-            BuildTLAS(bvhInstances.Span(), bvhAabbs.Span(), tlas);
-
-        for (auto& triMesh : triMeshes)
-        {
-            Handle<Texture> tex = CreateAndUpload(Span{ triMesh.Tris.data(), triMesh.Tris.size() }, buffer);
-            tex = CreateAndUpload(Span{ triMesh.TriExs.data(), triMesh.TriExs.size() }, buffer);
-            Texture* texture = gResourceManager->GetTexture(tex);
-            meshHeapIndices.Push(texture->GetHeapIndex());
-        }
-
-        for (auto& bvh : bvhs)
-        {
-            Handle<Texture> tex = CreateAndUpload(Span{ bvh->mBvhNodes.data(), bvh->mBvhNodes.size() }, buffer);
-            Texture* texture = gResourceManager->GetTexture(tex);
-            bvhIndices.Push(texture->GetHeapIndex());
-        }
-
-        Handle<Texture> tex = CreateAndUpload(bvhInstances.Span(), buffer);
-        tex = CreateAndUpload(tlas.mTlasNodes.Span(), buffer);
-        tex = CreateAndUpload(meshHeapIndices.Span(), buffer);
-        tex = CreateAndUpload(bvhInstances.Span(), buffer);
+        auto cs = asset::AssetID{ asset::ASSET_SHADER, ID(shaderPath.data()) };
+        auto rtcs = gResourceManager->CreateShader({ cs, shader::COMPUTE });
+        PipelineStateDesc psoDesc = { .mPipelineType = PIPELINE_COMPUTE, .mCS = rtcs };
+        return gResourceManager->CreatePipelineState(psoDesc);
     }
-#endif
 
-    constexpr uint32_t SCALE = 1;
-    constexpr uint32_t MAX_OBJECTS = 32;
+
     struct RTComputeObjects
     {
         Handle<GPUResource> mOutputBuffer;
         Handle<GPUResource> mAccumBuffer;
         Handle<GPUResource> mPrevAccumBuffer;
+        Handle<GPUResource> mDirectLightBuffer;
         Handle<Texture>     mOutputUAV;
         Handle<Texture>	    mAccumUAV;
         Handle<Texture>     mPrevAccumUAV;
+        Handle<Texture>     mDirectLightUAV;
         Handle<Texture>     mDepthTexture;
         ConstantBufferView  mTraceParamsCBV;
         ConstantBufferView  mTraceAccumCBV;
@@ -207,26 +110,10 @@ namespace nv::graphics
 
     void RTCompute::Init()
     {
-        {
-            auto cs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/RayTraceCS.hlsl") };
-            auto rtcs = gResourceManager->CreateShader({ cs, shader::COMPUTE });
-            PipelineStateDesc psoDesc = { .mPipelineType = PIPELINE_COMPUTE, .mCS = rtcs };
-            mRTComputePSO = gResourceManager->CreatePipelineState(psoDesc);
-        }
-
-        {
-            auto accumCs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/AccumulateRTCS.hlsl") };
-            auto accumCsHandle = gResourceManager->CreateShader({ accumCs, shader::COMPUTE });
-            PipelineStateDesc accumPsoDesc = { .mPipelineType = PIPELINE_COMPUTE, .mCS = accumCsHandle };
-            mAccumulatePSO = gResourceManager->CreatePipelineState(accumPsoDesc);
-        }
-
-        {
-            auto blurCs = asset::AssetID{ asset::ASSET_SHADER, ID("Shaders/BlurCS.hlsl") };
-            auto blurCsHandle = gResourceManager->CreateShader({ blurCs, shader::COMPUTE });
-            PipelineStateDesc blurPsoDesc = { .mPipelineType = PIPELINE_COMPUTE, .mCS = blurCsHandle };
-            mBlurPSO = gResourceManager->CreatePipelineState(blurPsoDesc);
-        }
+        mRTDirectLightingPSO = CreateComputePSO("Shaders/DirectLightingRTCS.hlsl");
+        mDirectGIRayTracePSO = CreateComputePSO("Shaders/RayTraceCS.hlsl");
+        mGIAccumulatePSO = CreateComputePSO("Shaders/AccumulateRTCS.hlsl");
+        mBlurPSO = CreateComputePSO("Shaders/BlurCS.hlsl");
 
         uint32_t height = gWindow->GetHeight() / SCALE;
         uint32_t width = gWindow->GetWidth() / SCALE;
@@ -256,6 +143,11 @@ namespace nv::graphics
         sRTComputeObjects.mPrevAccumBuffer = gResourceManager->CreateResource(desc, ID("RTPass/PrevAccumBuffer"));
         texDesc.mBuffer = sRTComputeObjects.mPrevAccumBuffer;
         sRTComputeObjects.mPrevAccumUAV = gResourceManager->CreateTexture(texDesc, ID("RTPass/PrevAccumBufferTex"));
+
+        desc.mInitialState = STATE_UNORDERED_ACCESS;
+        sRTComputeObjects.mDirectLightBuffer = gResourceManager->CreateResource(desc, ID("RTPass/DirectLightBuffer"));
+        texDesc.mBuffer = sRTComputeObjects.mDirectLightBuffer;
+        sRTComputeObjects.mDirectLightUAV = gResourceManager->CreateTexture(texDesc, ID("RTPass/DirectLightTex"));
 
         TextureDesc lightAccumSrvDesc = 
         {
@@ -302,9 +194,6 @@ namespace nv::graphics
 
         if (sbBuildAccelerationStructure && renderPassData.mRenderData.mSize > 0)
         {
-#if NV_CUSTOM_RAYTRACING
-            BuildBVHs();
-#else
             meshIds.clear();
             rtMeshData.clear();
 
@@ -325,13 +214,11 @@ namespace nv::graphics
             }
 
             dx12::BuildAccelerationStructure(((ContextDX12*)ctx)->GetDXRCommandList(), meshes, transforms, sRTRuntimeData);
-#endif
             sbBuildAccelerationStructure = false;
             sFrameCounter = 0;
         }
         else
         {
-#if !NV_CUSTOM_RAYTRACING
             // Update acceleration structures
             constexpr bool UPDATE = true;
 
@@ -345,7 +232,6 @@ namespace nv::graphics
             }
 
             dx12::BuildAccelerationStructure(((ContextDX12*)ctx)->GetDXRCommandList(), meshes, transforms, sRTRuntimeData, UPDATE);
-#endif
         }
 
         assert(meshIds.size() <= MAX_OBJECTS);
@@ -423,19 +309,20 @@ namespace nv::graphics
             {.mTo = STATE_UNORDERED_ACCESS, .mResource = sRTComputeObjects.mPrevAccumBuffer }
         };
 
+        constexpr uint32_t DISPATCH_SCALE = 8;
+
         ctx->ResourceBarrier({ &rtInitBarriers[0] , ArrayCountOf(rtInitBarriers) });
 
-        ctx->SetPipeline(mRTComputePSO);
+        // Direct Diffuse GI
+        ctx->SetPipeline(mDirectGIRayTracePSO);
         ctx->ComputeBindConstantBuffer(0, (uint32_t)sRTComputeObjects.mTraceParamsCBV.mHeapIndex);
         ctx->ComputeBindConstantBuffer(1, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
         ctx->ComputeBindTexture(2, sRTComputeObjects.mOutputUAV);
         ctx->ComputeBindTexture(3, meshInstanceData);
-
-        constexpr uint32_t DISPATCH_SCALE = 8;
         ctx->Dispatch(gWindow->GetWidth() / DISPATCH_SCALE, gWindow->GetHeight() / DISPATCH_SCALE, 1);
 
-        // Accumulate Results
-        ctx->SetPipeline(mAccumulatePSO);
+        // Accumulate GI Results
+        ctx->SetPipeline(mGIAccumulatePSO);
         ctx->ComputeBindConstantBuffer(0, (uint32_t)sRTComputeObjects.mTraceAccumCBV.mHeapIndex);
         ctx->ComputeBindConstantBuffer(1, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
         ctx->ComputeBindTexture(2, sRTComputeObjects.mOutputUAV);
@@ -455,12 +342,21 @@ namespace nv::graphics
             .InputTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mAccumUAV)->GetHeapIndex()
         });
 
-        //Blur Accum Buffer
+        // Blur GI Accumulation Buffer
         ctx->SetPipeline(mBlurPSO);
         ctx->ComputeBindConstantBuffer(0, (uint32_t)sRTComputeObjects.mBlurParamsCBV.mHeapIndex);
         ctx->ComputeBindConstantBuffer(1, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
         ctx->ComputeBindTexture(2, sRTComputeObjects.mOutputUAV);
         ctx->ComputeBindTexture(3, sRTComputeObjects.mDepthTexture);
+        ctx->Dispatch(gWindow->GetWidth() / DISPATCH_SCALE, gWindow->GetHeight() / DISPATCH_SCALE, 1);
+
+        // Direct Lighting
+        ctx->ResourceBarrier({ UAVBarrier{.mResource = sRTComputeObjects.mOutputBuffer } });
+        ctx->SetPipeline(mRTDirectLightingPSO);
+        ctx->ComputeBindConstantBuffer(0, (uint32_t)sRTComputeObjects.mTraceParamsCBV.mHeapIndex);
+        ctx->ComputeBindConstantBuffer(1, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
+        ctx->ComputeBindTextures(2, { sRTComputeObjects.mDirectLightUAV, sRTComputeObjects.mOutputUAV });
+        ctx->ComputeBindTexture(3, meshInstanceData);
         ctx->Dispatch(gWindow->GetWidth() / DISPATCH_SCALE, gWindow->GetHeight() / DISPATCH_SCALE, 1);
 
         {

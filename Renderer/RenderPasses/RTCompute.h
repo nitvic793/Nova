@@ -16,8 +16,9 @@ namespace nv::graphics
         void Destroy() override;
 
     private:
-        Handle<PipelineState> mRTComputePSO;
-        Handle<PipelineState> mAccumulatePSO;
+        Handle<PipelineState> mRTDirectLightingPSO;
+        Handle<PipelineState> mDirectGIRayTracePSO;
+        Handle<PipelineState> mGIAccumulatePSO;
         Handle<PipelineState> mBlurPSO;
     };
 }

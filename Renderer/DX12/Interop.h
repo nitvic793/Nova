@@ -6,7 +6,7 @@
 #include <Renderer/CommonDefines.h>
 #include <Renderer/Format.h>
 #include <d3d12.h>
-#include <DX12/d3dx12.h>
+#include <d3dx12/d3dx12.h>
 #include <dxgiformat.h>
 
 namespace nv::graphics

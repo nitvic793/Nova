@@ -85,6 +85,15 @@ void main(uint3 DTid: SV_DispatchThreadID)
         accumLastFrame = clamp(accumLastFrame, colorMin, colorMax);
     }
 
+    const bool bVerifyTemporalNormals = true;
+    float normalPow = 2.0f;
+    if(bVerifyTemporalNormals && accumAlpha < 1.0f)
+    {
+        float3 normalThisFrame = normalize(RawRTTex[px].xyz);
+        float3 normalLastFrame = normalize(PrevAccumTex[pxLastFrame].xyz);
+
+        accumAlpha = lerp(1.0f, accumAlpha, pow(clamp(dot(normalThisFrame, normalLastFrame), 0.0f, 1.0f), normalPow));
+    }
 
     if(accumAlpha < 1.0f)
         AccumTex[px] = lerp(accumLastFrame, RawRTTex[px], accumAlpha);

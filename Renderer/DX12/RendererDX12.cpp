@@ -26,7 +26,7 @@
 #include <RenderPasses/DebugDrawPass.h>
 #endif
 
-extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 610; }
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 613; }
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\"; }
 
 namespace nv::graphics
@@ -660,6 +660,29 @@ namespace nv::graphics
     Context* RendererDX12::GetContext() const
     {
         return gResourceManager->GetContext(mContexts[GetBackBufferIndex()]);
+    }
+
+    D3D12_GPU_DESCRIPTOR_HANDLE RendererDX12::AllocateDescriptors(nv::Span<Handle<Texture>> textures)
+    {
+        nv::Vector<D3D12_CPU_DESCRIPTOR_HANDLE> handles;
+        handles.Reserve((uint32_t)textures.Size());
+        for (auto tex : textures)
+        {
+            auto texture = (TextureDX12*)gResourceManager->GetTexture(tex);
+            handles.Push(texture->GetCPUHandle());
+        }
+
+        auto heap = mDescriptorHeapPool.GetAsDerived(mGpuHeap);
+        const uint32_t frameOffset = GetBackBufferIndex() * kDefaultFrameDescriptorCount;
+        const uint32_t offset = mGpuHeapState.mCurrentCount;
+        auto dxDevice = mDevice.As<DeviceDX12>()->GetDevice();
+        for (const auto& handle : handles)
+        {
+            dxDevice->CopyDescriptorsSimple(1, heap->HandleCPU(frameOffset + mGpuHeapState.mCurrentCount), handle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            mGpuHeapState.mCurrentCount++;
+        }
+
+        return heap->HandleGPU(frameOffset + offset);
     }
 
     void ReportLeaksDX12()

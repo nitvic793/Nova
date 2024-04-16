@@ -62,6 +62,13 @@
                 "Type": "ComputeShader",
                 "ShaderModel": "6_6"
             }
+        },
+        {
+            "key": "Shaders/DirectLightingRTCS.hlsl",
+            "value": {
+                "Type": "ComputeShader",
+                "ShaderModel": "6_6"
+            }
         }
     ]
 }
