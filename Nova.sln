@@ -21,14 +21,16 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shaders", "Shaders", "{FB4061FF-DBF9-499B-9C03-60CC9DB5DA7D}"
 	ProjectSection(SolutionItems) = preProject
 		Data\Shaders\AccumulateRTCS.hlsl = Data\Shaders\AccumulateRTCS.hlsl
-		Data\Shaders\Common.hlsli = Data\Shaders\Common.hlsli
 		Data\Shaders\BlurCS.hlsl = Data\Shaders\BlurCS.hlsl
+		Data\Shaders\Common.hlsli = Data\Shaders\Common.hlsli
 		Data\Shaders\DefaultAnimationVS.hlsl = Data\Shaders\DefaultAnimationVS.hlsl
 		Data\Shaders\DefaultPS.hlsl = Data\Shaders\DefaultPS.hlsl
 		Data\Shaders\DefaultVS.hlsl = Data\Shaders\DefaultVS.hlsl
+		Data\Shaders\DirectLightingRTCS.hlsl = Data\Shaders\DirectLightingRTCS.hlsl
 		Data\Shaders\Lighting.hlsli = Data\Shaders\Lighting.hlsli
 		Data\Shaders\RayTraceCS.hlsl = Data\Shaders\RayTraceCS.hlsl
 		Data\Shaders\Raytracing.hlsl = Data\Shaders\Raytracing.hlsl
+		Data\Shaders\RTCommon.hlsli = Data\Shaders\RTCommon.hlsli
 		Data\Shaders\SkyboxPS.hlsl = Data\Shaders\SkyboxPS.hlsl
 		Data\Shaders\SkyboxVS.hlsl = Data\Shaders\SkyboxVS.hlsl
 	EndProjectSection

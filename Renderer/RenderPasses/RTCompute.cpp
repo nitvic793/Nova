@@ -285,7 +285,7 @@ namespace nv::graphics
         {
             .AccumulationAlpha = 0.1f,
             .PrevFrameTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mPrevAccumUAV)->GetHeapIndex(),
-            .AccumulationTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mAccumUAV)->GetHeapIndex(),
+            .AccumulationTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mOutputUAV)->GetHeapIndex(),
             .FrameIndex = frameCount
         };
 
@@ -321,11 +321,30 @@ namespace nv::graphics
         ctx->ComputeBindTexture(3, meshInstanceData);
         ctx->Dispatch(gWindow->GetWidth() / DISPATCH_SCALE, gWindow->GetHeight() / DISPATCH_SCALE, 1);
 
+        ctx->ResourceBarrier({ UAVBarrier{.mResource = sRTComputeObjects.mOutputBuffer } });
+        
+        UploadToConstantBuffer<BlurParams>(sRTComputeObjects.mBlurParamsCBV, {
+            .BlurRadius = 2,
+            .BlurDepthThreshold = 0.1f,
+            .InputTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mOutputUAV)->GetHeapIndex()
+        });
+
+        // TODO: Confirm order, Blur before or after GI Accumulation.Rename texture variables to be more clear.
+        // Blur GI Accumulation Buffer
+        ctx->SetPipeline(mBlurPSO);
+        ctx->ComputeBindConstantBuffer(0, (uint32_t)sRTComputeObjects.mBlurParamsCBV.mHeapIndex);
+        ctx->ComputeBindConstantBuffer(1, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
+        ctx->ComputeBindTexture(2, sRTComputeObjects.mAccumUAV);
+        ctx->ComputeBindTexture(3, sRTComputeObjects.mDepthTexture);
+        ctx->Dispatch(gWindow->GetWidth() / DISPATCH_SCALE, gWindow->GetHeight() / DISPATCH_SCALE, 1);
+
+        ctx->ResourceBarrier({ UAVBarrier{.mResource = sRTComputeObjects.mAccumBuffer } });
+
         // Accumulate GI Results
         ctx->SetPipeline(mGIAccumulatePSO);
         ctx->ComputeBindConstantBuffer(0, (uint32_t)sRTComputeObjects.mTraceAccumCBV.mHeapIndex);
         ctx->ComputeBindConstantBuffer(1, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
-        ctx->ComputeBindTexture(2, sRTComputeObjects.mOutputUAV);
+        ctx->ComputeBindTexture(2, sRTComputeObjects.mAccumUAV);
         ctx->ComputeBindTexture(3, sRTComputeObjects.mDepthTexture);
         ctx->Dispatch(gWindow->GetWidth() / DISPATCH_SCALE, gWindow->GetHeight() / DISPATCH_SCALE, 1);
 
@@ -335,20 +354,6 @@ namespace nv::graphics
         };
 
         ctx->ResourceBarrier({ &endBarriers[0] , ArrayCountOf(endBarriers) });
-
-        UploadToConstantBuffer<BlurParams>(sRTComputeObjects.mBlurParamsCBV, {
-            .BlurRadius = 2,
-            .BlurDepthThreshold = 0.1f,
-            .InputTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mAccumUAV)->GetHeapIndex()
-        });
-
-        // Blur GI Accumulation Buffer
-        ctx->SetPipeline(mBlurPSO);
-        ctx->ComputeBindConstantBuffer(0, (uint32_t)sRTComputeObjects.mBlurParamsCBV.mHeapIndex);
-        ctx->ComputeBindConstantBuffer(1, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
-        ctx->ComputeBindTexture(2, sRTComputeObjects.mOutputUAV);
-        ctx->ComputeBindTexture(3, sRTComputeObjects.mDepthTexture);
-        ctx->Dispatch(gWindow->GetWidth() / DISPATCH_SCALE, gWindow->GetHeight() / DISPATCH_SCALE, 1);
 
         // Direct Lighting
         ctx->ResourceBarrier({ UAVBarrier{.mResource = sRTComputeObjects.mOutputBuffer } });
