@@ -27,7 +27,7 @@ float3 ShootIndirectRay(float3 worldPos, float3 dir, float minT, uint seed)
     {
         HitContext ctx;
         uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
-        return OnHit(instanceId, rayQuery, ctx);
+        return OnHit(instanceId, rayQuery, ctx, seed);
     }
         
     return OnMiss(dir, rayQuery);
@@ -47,7 +47,7 @@ float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
 	{
         HitContext ctx;
         uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
-        /*resultColor =*/ OnHit(instanceId, rayQuery, ctx);
+        /*resultColor =*/ OnHit(instanceId, rayQuery, ctx, randSeed);
         const bool bEnableIndirectGI = Params.EnableIndirectGI; // Diffuse GI
         const bool bCosSampling = true;
         if(bEnableIndirectGI)

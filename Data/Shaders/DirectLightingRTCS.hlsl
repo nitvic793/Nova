@@ -35,7 +35,7 @@ float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
 	{
         HitContext ctx;
         uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
-        resultColor = OnHit(instanceId, rayQuery, ctx);
+        resultColor = OnHit(instanceId, rayQuery, ctx, randSeed);
 	}
 	else
     {
