@@ -155,7 +155,7 @@ namespace nv::graphics
     struct TraceParams
     {
         float2      Resolution;
-        float       ScaleFactor;
+        uint32_t    NoiseTexIdx;
         uint32_t    FrameCount;
         uint32_t    RTSceneIdx;
         uint32_t    SkyBoxHandle;

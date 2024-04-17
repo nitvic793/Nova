@@ -271,7 +271,7 @@ namespace nv::graphics
         TraceParams params = 
         {
             .Resolution = float2((float)gWindow->GetWidth(), (float)gWindow->GetHeight()),
-            .ScaleFactor = 1.f / SCALE,
+            .NoiseTexIdx = gResourceManager->GetTexture(ID("Textures/bluenoise256.png"))->GetHeapIndex(),
             .FrameCount = frameCount,
             .RTSceneIdx = gResourceManager->GetTexture(tlasHandle)->GetHeapIndex(),
             .SkyBoxHandle = gResourceManager->GetTexture(skyHandle)->GetHeapIndex(),
