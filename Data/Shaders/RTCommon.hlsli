@@ -34,7 +34,29 @@ struct HitContext
     float3 WorldNormal;
     float3 WorldPos;
     float  ShadowVisibility;
+    float2 UV;
 };
+
+float AnimateBlueNoise(in float blueNoise, in int frameIndex)
+{
+    return frac(blueNoise + float(frameIndex % 32) * 0.61803399);
+}
+
+float3 GetBlueNoise(uint2 px, bool animate = false)
+{
+    Texture2D<float4> blueNoise = ResourceDescriptorHeap[Params.NoiseTexIdx];
+    uint2 texDims;
+    blueNoise.GetDimensions(texDims.x, texDims.y);
+    float3 result = clamp(blueNoise.Load(int3(px % texDims, 0)).xyz, 0.xxx, 1.xxx);
+    if(animate)
+    {
+        result.x = AnimateBlueNoise(result.x, Params.FrameCount);
+        result.y = AnimateBlueNoise(result.y, Params.FrameCount);
+        result.z = AnimateBlueNoise(result.z, Params.FrameCount);
+    }
+    
+    return result;
+}
 
 float3 getPerpendicularVector(float3 u)
 {
@@ -82,6 +104,21 @@ float3 GetCosHemisphereSample(inout uint randSeed, float3 hitNorm)
 
 	// Get our cosine-weighted hemisphere lobe sample direction
 	return tangent * (r * cos(phi).x) + bitangent * (r * sin(phi)) + hitNorm.xyz * sqrt(max(0.0, 1.0f - randVal.x));
+}
+
+float3 GetCosHemisphereSample_BlueNoise(inout uint randSeed, float3 hitNorm, uint2 px)
+{
+    float3 noise = GetBlueNoise(uint2(px.x, px.y));
+    float2 randVal = noise.xy;
+    
+    // Cosine weighted hemisphere sample from RNG
+    float3 bitangent = getPerpendicularVector(hitNorm);
+    float3 tangent = cross(bitangent, hitNorm);
+    float r = sqrt(randVal.x);
+    float phi = 2.0f * 3.14159265f * randVal.y;
+
+	// Get our cosine-weighted hemisphere lobe sample direction
+    return tangent * (r * cos(phi).x) + bitangent * (r * sin(phi)) + hitNorm.xyz * sqrt(max(0.0, 1.0f - randVal.x));
 }
 
 // From: https://github.com/NVIDIAGameWorks/GettingStartedWithRTXRayTracing/blob/f1946147ea50987efd4e897d8bb996e2f8bc99df/CommonPasses/Data/CommonPasses/simpleDiffuseGIUtils.hlsli#L131
@@ -145,7 +182,7 @@ uint2 GetSkyUV( Ray ray, uint2 texDims )
 
 inline void GenerateCameraRay(uint2 idx, out Ray ray)
 {
-    float2 dimensions = (Params.Resolution.xy * Params.ScaleFactor);
+    float2 dimensions = (Params.Resolution.xy);
     // float2 xy = idx + 0.5f;
     // float2 screenPos = xy / (Params.Resolution.xy * Params.ScaleFactor) * 2.0 - 1.0;
     // screenPos.y = -screenPos.y;
@@ -288,13 +325,119 @@ float ShadowRayVisibility(float3 origin, float3 direction, float minT, float max
 	return (hitDist > maxT) ? 1.0f : 0.0f;
 }
 
-float3 OnHit(uint instanceId, DefaultRayQueryT rayQuery, out HitContext hitContext)
+// Rotation with angle (in radians) and axis
+float3x3 angleAxis3x3(float angle, float3 axis)
+{
+    float c, s;
+    sincos(angle, s, c);
+
+    float t = 1 - c;
+    float x = axis.x;
+    float y = axis.y;
+    float z = axis.z;
+
+    return float3x3(
+        t * x * x + c, t * x * y - s * z, t * x * z + s * y,
+        t * x * y + s * z, t * y * y + c, t * y * z - s * x,
+        t * x * z - s * y, t * y * z + s * x, t * z * z + c
+    );
+}
+
+float3 GetConeSample(inout uint randSeed, float3 direction, float coneAngle, float randA, float randB)
+{
+    float cosAngle = cos(coneAngle);
+
+    // Generate points on the spherical cap around the north pole [1].
+    // [1] See https://math.stackexchange.com/a/205589/81266
+    float z = randA * (1.0f - cosAngle) + cosAngle;
+    float phi = randB * 2.0f * PI;
+
+    float x = sqrt(1.0f - z * z) * cos(phi);
+    float y = sqrt(1.0f - z * z) * sin(phi);
+    float3 north = float3(0.f, 0.f, 1.f);
+
+    // Find the rotation axis `u` and rotation angle `rot` [1]
+    float3 axis = normalize(cross(north, normalize(direction)));
+    float angle = acos(dot(normalize(direction), north));
+
+    // Convert rotation axis and angle to 3x3 rotation matrix [2]
+    float3x3 R = angleAxis3x3(angle, axis);
+
+    return mul(R, float3(x, y, z));
+}
+
+float3 GetConeSample(inout uint randSeed, float3 direction, float coneAngle)
+{
+    float randA = NextRand(randSeed);
+    float randB = NextRand(randSeed);
+    return GetConeSample(randSeed, direction, coneAngle, randA, randB);
+}
+
+
+float2 MapRectToCircle(in float2 rect)
+{
+    float radius = sqrt(rect.x);
+    float angle = 2.0f * PI * rect.y;
+    return float2(radius * cos(angle), radius * sin(angle));
+}
+
+float3 SphericalDirectionLightRayDirection(in float2 randRect, in float3 direction, in float radius)
+{
+    float2 randCircle = MapRectToCircle(randRect) * radius;
+    float3 tangent = normalize(cross(direction, float3(0.0f, 1.0f, 0.0f)));
+    float3 bitangent = normalize(cross(direction, tangent));
+    return normalize(direction + tangent * randCircle.x + bitangent * randCircle.y);
+}
+
+float2 GetRandomBlueNoiseRect(uint2 px)
+{
+    Texture2D<float4> blueNoise = ResourceDescriptorHeap[Params.NoiseTexIdx];
+    uint2 texDims;
+    blueNoise.GetDimensions(texDims.x, texDims.y);
+    return clamp(blueNoise.Load(int3(px % texDims, 0)).xy, 0.xx, 1.xx);
+    //return blueNoise.Load(int3(px % texDims, 0)).xy;
+}
+
+
+float3 OnHit(uint instanceId, DefaultRayQueryT rayQuery, out HitContext hitContext, inout uint randSeed, uint3 DTid)
 {
     ShadeContext ctx = GetShadeContext(instanceId, rayQuery);
-
+    
     DirectionalLight dirLight = Frame.DirLights[0];
     float3 toLight = normalize(-dirLight.Direction);
-    float shadowVisibility = Params.EnableShadows ? ShadowRayVisibility(ctx.WorldPos, toLight, MIN_DIST, MAX_DIST - 100.f) : 1.0f;
+    const float coneAngle = 0.5 * PI / 180.f; // The sun has a width of 0.5 degrees in the sky
+    const float radius = 0.1f;
+    
+    const uint SampleCount = 8;
+    float shadowVisibility = 1.0f;
+    float3 noise1 = GetBlueNoise(uint2(DTid.x + 13, DTid.y + 41), true);
+    float3 noise2 = GetBlueNoise(uint2(DTid.x + 51, DTid.y + 31), true);
+    float2 noiseSamples[] = { noise1.xy, noise1.yx, noise1.xz, noise1.yz, noise2.xy, noise2.yx, noise2.xz, noise2.yz };
+    if(Params.EnableShadows)
+    {
+        #if USE_BLUE_NOISE
+        for (uint i = 0; i < SampleCount; i++)
+        {
+            float3 toLightSample = GetConeSample(randSeed, toLight, coneAngle, noiseSamples[i].x, noiseSamples[i].y); //SphericalDirectionLightRayDirection(randRect, toLight, radius);
+            shadowVisibility += ShadowRayVisibility(ctx.WorldPos, toLightSample, MIN_DIST, MAX_DIST - 100.f);
+
+        }
+        #else
+        for (uint i = 0; i < SampleCount; i++)
+        {
+            float3 toLightSample = GetConeSample(randSeed, toLight, coneAngle);
+            shadowVisibility += ShadowRayVisibility(ctx.WorldPos, toLightSample, MIN_DIST, MAX_DIST - 100.f);
+        }
+        #endif
+        
+        shadowVisibility /= SampleCount;
+    }
+    
+    //float2 randRect = GetRandomBlueNoiseRect(uint2(DTid.x + 13, DTid.y + 41));
+    //float3 toLightSample = SphericalDirectionLightRayDirection(randRect, toLight, 0.01f);
+    
+    ////float3 toLightSample = GetConeSample(randSeed, toLight, coneAngle, randRect.x, randRect.y);
+    //shadowVisibility = Params.EnableShadows ? ShadowRayVisibility(ctx.WorldPos, toLightSample, MIN_DIST, MAX_DIST - 100.f) : 1.0f;
     float3 light = CalculateDirectionalLight(ctx.Normal, dirLight) * shadowVisibility;
 
     float3 color = light * ctx.Color;
@@ -303,6 +446,7 @@ float3 OnHit(uint instanceId, DefaultRayQueryT rayQuery, out HitContext hitConte
     hitContext.WorldNormal = ctx.Normal;
     hitContext.Color = ctx.Color;
     hitContext.ShadowVisibility = shadowVisibility;
+    hitContext.UV = ctx.UV;
     return color;
 }
 

@@ -128,8 +128,10 @@ namespace nv::graphics
         loadMesh(ID("Mesh/anim_idle.fbx"));
         loadMesh(ID("Mesh/knight.fbx"));
         loadMaterials();
+
         gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/SunnyCubeMap.dds") });
         gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/Sky.hdr") });
+        gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/bluenoise256.png") });
 
         for (const auto& mat : materials)
             unloadMaterialAssets(mat);

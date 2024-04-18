@@ -34,18 +34,22 @@ float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
 	{
         HitContext ctx;
         uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
-        /*resultColor =*/ OnHit(instanceId, rayQuery, ctx);
+        /*resultColor =*/ OnHit(instanceId, rayQuery, ctx, randSeed, DTid);
         const bool bEnableIndirectGI = Params.EnableIndirectGI; // Diffuse GI
         const bool bCosSampling = true;
         if(bEnableIndirectGI)
         {
             float3 bounceDir;
-            if(bCosSampling)
-                bounceDir = GetCosHemisphereSample(randSeed, ctx.WorldNormal.xyz); 
+            if (bCosSampling)
+            {
+                bounceDir = GetCosHemisphereSample(randSeed, ctx.WorldNormal.xyz);
+            }
             else
-                bounceDir = GetUniformHemisphereSample(randSeed, ctx.WorldNormal.xyz); 
+            {
+                bounceDir = GetUniformHemisphereSample(randSeed, ctx.WorldNormal.xyz);
+            }
             float NdotL = saturate(dot(ctx.WorldNormal.xyz, bounceDir));
-            float3 bounceColor = ShootIndirectRay(ctx.WorldPos, bounceDir, MIN_DIST, randSeed);
+            float3 bounceColor = ShootIndirectRay(ctx.WorldPos, bounceDir, MIN_DIST, randSeed, DTid);
             float sampleProb = bCosSampling ? NdotL / PI : 1.0f / (2.0f * PI);
 
             resultColor += (NdotL * bounceColor * ctx.Color / PI) / sampleProb;
