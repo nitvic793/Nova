@@ -32,7 +32,7 @@ extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\
 namespace nv::graphics
 {
     constexpr uint64_t MAX_CONST_BUFFER_SIZE = 10 * 1024 * 1024; // 10MB
-    constexpr uint32_t kDefaultDescriptorCount = 32;
+    constexpr uint32_t kDefaultDescriptorCount = 64;
     constexpr uint32_t kDefaultFrameDescriptorCount = 1024 * 3;
     constexpr uint32_t kDefaultGPUDescriptorCount = kDefaultFrameDescriptorCount * 3;
 

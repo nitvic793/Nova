@@ -33,11 +33,20 @@ float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
 	if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
 	{
         HitContext ctx;
+        ShadeContext shadeCtx;
         uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
-        /*resultColor =*/ OnHit(instanceId, rayQuery, ctx, randSeed, DTid);
+        /*resultColor =*/ OnHitGGX(instanceId, rayQuery, ctx, randSeed, DTid, shadeCtx);
         const bool bEnableIndirectGI = Params.EnableIndirectGI; // Diffuse GI
         const bool bCosSampling = true;
-        if(bEnableIndirectGI)
+#define USE_GGX 1
+#if USE_GGX
+        if (bEnableIndirectGI)
+        {
+            float3 V = normalize(Frame.CameraPosition - shadeCtx.WorldPos);
+            resultColor += ggxIndirect(randSeed, shadeCtx.WorldPos, shadeCtx.Normal, shadeCtx.Normal, V, shadeCtx.Color, shadeCtx.Metallic, shadeCtx.Roughness, 0, DTid);
+        }
+#else
+        if (bEnableIndirectGI)
         {
             float3 bounceDir;
             if (bCosSampling)
@@ -54,7 +63,8 @@ float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
 
             resultColor += (NdotL * bounceColor * ctx.Color / PI) / sampleProb;
         }
-	}
+#endif
+    }
 	else
     {
         resultColor = float3(0, 0, 0); //OnMiss(ray.Direction, rayQuery);

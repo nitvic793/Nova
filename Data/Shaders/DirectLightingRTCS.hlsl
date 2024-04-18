@@ -36,9 +36,16 @@ float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
 	if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
 	{
         HitContext ctx;
+        ShadeContext shadeCtx;
         uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
+        
+#define USE_GGX 1
+#if USE_GGX
+        resultColor = OnHitGGX(instanceId, rayQuery, ctx, randSeed, DTid, shadeCtx);
+#else
         resultColor = OnHit(instanceId, rayQuery, ctx, randSeed, DTid);
-	}
+#endif
+    }
 	else
     {
         resultColor = OnMiss(ray.Direction, rayQuery);
@@ -55,5 +62,5 @@ void main(uint3 DTid: SV_DispatchThreadID)
     RayDesc rayDesc;
     GetRayDesc(DTid.xy, rayDesc);
     float4 GIColor = DirectGITexture[DTid.xy];
-    OutputTexture[DTid.xy] = DoInlineRayTracing(rayDesc, DTid).xyz + GIColor.xyz;
+    OutputTexture[DTid.xy] = DoInlineRayTracing(rayDesc, DTid).xyz + GIColor.xyz * 0.5f;
 }

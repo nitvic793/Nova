@@ -273,6 +273,8 @@ ShadeContext GetShadeContext(uint instanceId, DefaultRayQueryT rayQuery)
     float3 albedo = albedoTex.SampleGrad(LinearWrapSampler, uv, ddx, ddy).xyz; 
     float3 normal = normalTex.SampleGrad(LinearWrapSampler, uv, ddx, ddy).xyz;
     normal = CalculateNormalFromSample(normal, uv, triNormal, triTangent);
+    float metallic = metallicTex.SampleGrad(LinearWrapSampler, uv, ddx, ddy).x;
+    float roughness = roughnessTex.SampleGrad(LinearWrapSampler, uv, ddx, ddy).x;
 
     ShadeContext ctx;
 
@@ -281,6 +283,8 @@ ShadeContext GetShadeContext(uint instanceId, DefaultRayQueryT rayQuery)
     ctx.UV = uv;
     ctx.BaryUV = baryUv;
     ctx.Color = albedo;
+    ctx.Roughness = roughness;
+    ctx.Metallic = metallic;
 
     return ctx;
 }
@@ -398,13 +402,8 @@ float2 GetRandomBlueNoiseRect(uint2 px)
     //return blueNoise.Load(int3(px % texDims, 0)).xy;
 }
 
-
-float3 OnHit(uint instanceId, DefaultRayQueryT rayQuery, out HitContext hitContext, inout uint randSeed, uint3 DTid)
+float GetShadowVisibility(inout uint randSeed, float3 toLight, float3 worldPos, float distToLight, uint3 DTid)
 {
-    ShadeContext ctx = GetShadeContext(instanceId, rayQuery);
-    
-    DirectionalLight dirLight = Frame.DirLights[0];
-    float3 toLight = normalize(-dirLight.Direction);
     const float coneAngle = 0.5 * PI / 180.f; // The sun has a width of 0.5 degrees in the sky
     const float radius = 0.1f;
     
@@ -419,19 +418,31 @@ float3 OnHit(uint instanceId, DefaultRayQueryT rayQuery, out HitContext hitConte
         for (uint i = 0; i < SampleCount; i++)
         {
             float3 toLightSample = GetConeSample(randSeed, toLight, coneAngle, noiseSamples[i].x, noiseSamples[i].y); //SphericalDirectionLightRayDirection(randRect, toLight, radius);
-            shadowVisibility += ShadowRayVisibility(ctx.WorldPos, toLightSample, MIN_DIST, MAX_DIST - 100.f);
+            shadowVisibility += ShadowRayVisibility(worldPos, toLightSample, MIN_DIST, distToLight);
 
         }
 #else
         for (uint i = 0; i < SampleCount; i++)
         {
             float3 toLightSample = GetConeSample(randSeed, toLight, coneAngle);
-            shadowVisibility += ShadowRayVisibility(ctx.WorldPos, toLightSample, MIN_DIST, MAX_DIST - 100.f);
+            shadowVisibility += ShadowRayVisibility(worldPos, toLightSample, MIN_DIST, distToLight);
         }
 #endif
         
         shadowVisibility /= SampleCount;
     }
+    
+    return shadowVisibility;
+}
+
+
+float3 OnHit(uint instanceId, DefaultRayQueryT rayQuery, out HitContext hitContext, inout uint randSeed, uint3 DTid)
+{
+    ShadeContext ctx = GetShadeContext(instanceId, rayQuery);
+    
+    DirectionalLight dirLight = Frame.DirLights[0];
+    float3 toLight = normalize(-dirLight.Direction);
+    float shadowVisibility = GetShadowVisibility(randSeed, toLight, ctx.WorldPos, MAX_DIST - 100.f, DTid);
 
     float3 light = CalculateDirectionalLight(ctx.Normal, dirLight) * shadowVisibility;
 
@@ -452,6 +463,22 @@ float3 OnMiss(float3 rayDir, DefaultRayQueryT rayQuery)
     return color;
 }
 
+float3 ggxIndirect(inout uint rndSeed, float3 hit, float3 N, float3 noNormalN, float3 V, float3 dif, float3 spec, float rough, uint rayDepth, uint3 DTid);
+float3 ggxDirect(inout uint rndSeed, float3 hit, float3 N, float3 V, float3 dif, float3 spec, float rough, float3 toLight, float intensity, uint3 DTid);
+
+float3 OnHitGGX(uint instanceId, DefaultRayQueryT rayQuery, out HitContext hitContext, inout uint randSeed, uint3 DTid, out ShadeContext shadeCtx)
+{
+    ShadeContext ctx = GetShadeContext(instanceId, rayQuery);
+    
+    DirectionalLight dirLight = Frame.DirLights[0];
+    float3 toLight = normalize(-dirLight.Direction);
+    
+    float3 V = normalize(Frame.CameraPosition - ctx.WorldPos);
+    shadeCtx = ctx;
+    
+    return ggxDirect(randSeed, ctx.WorldPos, ctx.Normal, V, ctx.Color, ctx.Metallic, ctx.Roughness, toLight, dirLight.Intensity, DTid);
+}
+
 float3 ShootIndirectRay(float3 worldPos, float3 dir, float minT, inout uint seed, uint3 DTid)
 {
     DefaultRayQueryT rayQuery = ShootRay(worldPos, dir, minT, MAX_DIST);
@@ -460,6 +487,20 @@ float3 ShootIndirectRay(float3 worldPos, float3 dir, float minT, inout uint seed
         HitContext ctx;
         uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
         return OnHit(instanceId, rayQuery, ctx, seed, DTid);
+    }
+        
+    return OnMiss(dir, rayQuery);
+}
+
+float3 ShootIndirectRayGGX(float3 worldPos, float3 dir, float minT, inout uint seed, uint3 DTid)
+{
+    DefaultRayQueryT rayQuery = ShootRay(worldPos, dir, minT, MAX_DIST);
+    if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
+    {
+        HitContext ctx;
+        ShadeContext shadeCtx;
+        uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
+        return OnHitGGX(instanceId, rayQuery, ctx, seed, DTid, shadeCtx);
     }
         
     return OnMiss(dir, rayQuery);
@@ -491,10 +532,10 @@ float3 schlickFresnel(float3 f0, float lDotH)
 	return f0 + (float3(1.0f, 1.0f, 1.0f) - f0) * pow(1.0f - lDotH, 5.0f);
 }
 
-float3 getGGXMicrofacet(inout uint randSeed, float roughness, float3 hitNorm)
+float3 getGGXMicrofacet(inout uint randSeed, float roughness, float3 hitNorm, float2 rand = float2(0, 0))
 {
 	// Get our uniform random numbers
-	float2 randVal = float2(NextRand(randSeed), NextRand(randSeed));
+	float2 randVal = rand;//float2(NextRand(randSeed), NextRand(randSeed));
 
 	// Get an orthonormal basis from the normal
 	float3 B = getPerpendicularVector(hitNorm);
@@ -512,7 +553,8 @@ float3 getGGXMicrofacet(inout uint randSeed, float roughness, float3 hitNorm)
            hitNorm * cosThetaH;
 }
 
-float3 ggxDirect(inout uint rndSeed, float3 hit, float3 N, float3 V, float3 dif, float3 spec, float rough, float3 toLight, float intensity)
+
+float3 ggxDirect(inout uint rndSeed, float3 hit, float3 N, float3 V, float3 dif, float3 spec, float rough, float3 toLight, float intensity, uint3 DTid)
 {
 	// Query the scene to find info about the randomly selected light
 	float distToLight = MAX_DIST - 10.f;
@@ -523,7 +565,7 @@ float3 ggxDirect(inout uint rndSeed, float3 hit, float3 N, float3 V, float3 dif,
 	float NdotL = saturate(dot(N, L));
 
 	// Shoot our shadow ray to our randomly selected light
-	float shadowMult =  ShadowRayVisibility(hit, L, MIN_DIST, distToLight);
+    float shadowMult = GetShadowVisibility(rndSeed, L, hit, distToLight, DTid); //ShadowRayVisibility(hit, L, MIN_DIST, distToLight);
 
 	// Compute half vectors and additional dot products for GGX
 	float3 H = normalize(V + L);
@@ -569,7 +611,7 @@ float3 ggxIndirect(inout uint rndSeed, float3 hit, float3 N, float3 noNormalN, f
 	if (chooseDiffuse)
 	{
 		// Shoot a randomly selected cosine-sampled diffuse ray.
-		float3 L = GetCosHemisphereSample(rndSeed, N);
+		float3 L = GetCosHemisphereSample_BlueNoise(rndSeed, N, DTid.xy);
         float3 bounceColor = ShootIndirectRay(hit, L, MIN_DIST, rndSeed, DTid);
 
 		// Check to make sure our randomly selected, normal mapped diffuse ray didn't go below the surface.
@@ -582,14 +624,16 @@ float3 ggxIndirect(inout uint rndSeed, float3 hit, float3 N, float3 noNormalN, f
 	// Otherwise we randomly selected to sample our GGX lobe
 	else
 	{
+        float3 noise = GetBlueNoise(uint2(DTid.x, DTid.y), true);
+        
 		// Randomly sample the NDF to get a microfacet in our BRDF to reflect off of
-		float3 H = getGGXMicrofacet(rndSeed, rough, N);
+        float3 H = getGGXMicrofacet(rndSeed, rough, N, noise.xy);
 
 		// Compute the outgoing direction based on this (perfectly reflective) microfacet
 		float3 L = normalize(2.f * dot(V, H) * H - V);
 
 		// Compute our color by tracing a ray in this direction
-        float3 bounceColor = ShootIndirectRay(hit, L, MIN_DIST, rndSeed, DTid);
+        float3 bounceColor = ShootIndirectRayGGX(hit, L, MIN_DIST, rndSeed, DTid);
 
 		// Check to make sure our randomly selected, normal mapped diffuse ray didn't go below the surface.
 		if (dot(noNormalN, L) <= 0.0f) bounceColor = float3(0, 0, 0);
