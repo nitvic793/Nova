@@ -69,6 +69,13 @@
                 "Type": "ComputeShader",
                 "ShaderModel": "6_6"
             }
+        },
+        {
+            "key": "Shaders/GBufferPS.hlsl",
+            "value": {
+                "Type": "PixelShader",
+                "ShaderModel": "6_6"
+            }
         }
     ]
 }

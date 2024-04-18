@@ -118,7 +118,7 @@ namespace nv::graphics
         uint32_t height = gWindow->GetHeight() / SCALE;
         uint32_t width = gWindow->GetWidth() / SCALE;
 
-        GPUResourceDesc desc = GPUResourceDesc::Texture2D(width, height, FLAG_ALLOW_UNORDERED, STATE_COMMON);
+        GPUResourceDesc desc = GPUResourceDesc::Texture2D(width, height, FLAG_ALLOW_UNORDERED, STATE_COMMON/*, format::R16G16B16A16_FLOAT*/);
 
         auto outputBuffer = gResourceManager->CreateResource(desc, ID("RTPass/OutputBuffer"));
         sRTComputeObjects.mOutputBuffer = outputBuffer;

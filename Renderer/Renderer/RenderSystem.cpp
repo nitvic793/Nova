@@ -33,6 +33,7 @@
 #include <RenderPasses/RaytracePass.h>
 #include <RenderPasses/Skybox.h>
 #include <RenderPasses/DebugDrawPass.h>
+#include <RenderPasses/GBuffer.h>
 
 #include <DebugUI/DebugUIPass.h>
 
@@ -150,6 +151,7 @@ namespace nv::graphics
         LoadResources();
         gRenderer->GetDevice()->InitRaytracingContext();
 
+        mRenderPasses.Emplace(Alloc<GBuffer>());
         mRenderPasses.Emplace(Alloc<ForwardPass>());
         mRenderPasses.Emplace(Alloc<RTCompute>());
 
