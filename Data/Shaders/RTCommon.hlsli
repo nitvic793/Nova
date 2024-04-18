@@ -413,31 +413,26 @@ float3 OnHit(uint instanceId, DefaultRayQueryT rayQuery, out HitContext hitConte
     float3 noise1 = GetBlueNoise(uint2(DTid.x + 13, DTid.y + 41), true);
     float3 noise2 = GetBlueNoise(uint2(DTid.x + 51, DTid.y + 31), true);
     float2 noiseSamples[] = { noise1.xy, noise1.yx, noise1.xz, noise1.yz, noise2.xy, noise2.yx, noise2.xz, noise2.yz };
-    if(Params.EnableShadows)
+    if (Params.EnableShadows)
     {
-        #if USE_BLUE_NOISE
+#if USE_BLUE_NOISE
         for (uint i = 0; i < SampleCount; i++)
         {
             float3 toLightSample = GetConeSample(randSeed, toLight, coneAngle, noiseSamples[i].x, noiseSamples[i].y); //SphericalDirectionLightRayDirection(randRect, toLight, radius);
             shadowVisibility += ShadowRayVisibility(ctx.WorldPos, toLightSample, MIN_DIST, MAX_DIST - 100.f);
 
         }
-        #else
+#else
         for (uint i = 0; i < SampleCount; i++)
         {
             float3 toLightSample = GetConeSample(randSeed, toLight, coneAngle);
             shadowVisibility += ShadowRayVisibility(ctx.WorldPos, toLightSample, MIN_DIST, MAX_DIST - 100.f);
         }
-        #endif
+#endif
         
         shadowVisibility /= SampleCount;
     }
-    
-    //float2 randRect = GetRandomBlueNoiseRect(uint2(DTid.x + 13, DTid.y + 41));
-    //float3 toLightSample = SphericalDirectionLightRayDirection(randRect, toLight, 0.01f);
-    
-    ////float3 toLightSample = GetConeSample(randSeed, toLight, coneAngle, randRect.x, randRect.y);
-    //shadowVisibility = Params.EnableShadows ? ShadowRayVisibility(ctx.WorldPos, toLightSample, MIN_DIST, MAX_DIST - 100.f) : 1.0f;
+
     float3 light = CalculateDirectionalLight(ctx.Normal, dirLight) * shadowVisibility;
 
     float3 color = light * ctx.Color;
@@ -457,14 +452,14 @@ float3 OnMiss(float3 rayDir, DefaultRayQueryT rayQuery)
     return color;
 }
 
-float3 ShootIndirectRay(float3 worldPos, float3 dir, float minT, uint seed)
+float3 ShootIndirectRay(float3 worldPos, float3 dir, float minT, inout uint seed, uint3 DTid)
 {
     DefaultRayQueryT rayQuery = ShootRay(worldPos, dir, minT, MAX_DIST);
     if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
     {
         HitContext ctx;
         uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
-        return OnHit(instanceId, rayQuery, ctx);
+        return OnHit(instanceId, rayQuery, ctx, seed, DTid);
     }
         
     return OnMiss(dir, rayQuery);
@@ -520,7 +515,7 @@ float3 getGGXMicrofacet(inout uint randSeed, float roughness, float3 hitNorm)
 float3 ggxDirect(inout uint rndSeed, float3 hit, float3 N, float3 V, float3 dif, float3 spec, float rough, float3 toLight, float intensity)
 {
 	// Query the scene to find info about the randomly selected light
-	float distToLight;
+	float distToLight = MAX_DIST - 10.f;
 	float3 lightIntensity = intensity.xxx;
 	float3 L = toLight;
 
@@ -561,7 +556,7 @@ float probabilityToSampleDiffuse(float3 difColor, float3 specColor)
 	return lumDiffuse / (lumDiffuse + lumSpecular);
 }
 
-float3 ggxIndirect(inout uint rndSeed, float3 hit, float3 N, float3 noNormalN, float3 V, float3 dif, float3 spec, float rough, uint rayDepth)
+float3 ggxIndirect(inout uint rndSeed, float3 hit, float3 N, float3 noNormalN, float3 V, float3 dif, float3 spec, float rough, uint rayDepth, uint3 DTid)
 {
 	// We have to decide whether we sample our diffuse or specular/ggx lobe.
 	float probDiffuse = probabilityToSampleDiffuse(dif, spec);
@@ -575,7 +570,7 @@ float3 ggxIndirect(inout uint rndSeed, float3 hit, float3 N, float3 noNormalN, f
 	{
 		// Shoot a randomly selected cosine-sampled diffuse ray.
 		float3 L = GetCosHemisphereSample(rndSeed, N);
-		float3 bounceColor = ShootIndirectRay(hit, L, MIN_DIST, rndSeed);
+        float3 bounceColor = ShootIndirectRay(hit, L, MIN_DIST, rndSeed, DTid);
 
 		// Check to make sure our randomly selected, normal mapped diffuse ray didn't go below the surface.
 		if (dot(noNormalN, L) <= 0.0f) bounceColor = float3(0, 0, 0);
@@ -594,7 +589,7 @@ float3 ggxIndirect(inout uint rndSeed, float3 hit, float3 N, float3 noNormalN, f
 		float3 L = normalize(2.f * dot(V, H) * H - V);
 
 		// Compute our color by tracing a ray in this direction
-		float3 bounceColor = ShootIndirectRay(hit, L, MIN_DIST, rndSeed);
+        float3 bounceColor = ShootIndirectRay(hit, L, MIN_DIST, rndSeed, DTid);
 
 		// Check to make sure our randomly selected, normal mapped diffuse ray didn't go below the surface.
 		if (dot(noNormalN, L) <= 0.0f) bounceColor = float3(0, 0, 0);
@@ -618,3 +613,4 @@ float3 ggxIndirect(inout uint rndSeed, float3 hit, float3 N, float3 noNormalN, f
 		return NdotL * bounceColor * ggxTerm / (ggxProb * (1.0f - probDiffuse));
 	}
 }
+
