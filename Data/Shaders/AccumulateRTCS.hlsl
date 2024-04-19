@@ -96,8 +96,7 @@ void main(uint3 DTid: SV_DispatchThreadID)
     AccumTex[px] = RawRTTex[px];
     return;
 #endif
-    
-    float3 prevNormals = UnpackNormal(PrevNormalsTex[px].xyz);
+        
     float3 currentNormals = GetGBuffersNormal(px, Frame);
     
     float accumAlpha = (Params.FrameIndex == 0) ? 1.0f : Params.AccumulationAlpha;
@@ -134,6 +133,7 @@ void main(uint3 DTid: SV_DispatchThreadID)
     }
     
     float3 accumLastFrame = PrevAccumTex[pxLastFrame].xyz;
+    float3 prevNormals = UnpackNormal(PrevNormalsTex[pxLastFrame].xyz);
     float3 raw = RawRTTex[px].xyz;
 
 	// Neighborhood clamp
