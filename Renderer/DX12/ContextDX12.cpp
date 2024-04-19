@@ -152,6 +152,8 @@ namespace nv::graphics
             ID3D12Resource* pResource = dxResource->GetResource().Get();
             auto from = GetState(dxResource->GetResourceState());
             auto to = GetState(barrier.mTo);
+            if(from == to)
+                continue;
             
             dxResource->UpdateResourceState(barrier.mTo);
             dxBarriers.Push(CD3DX12_RESOURCE_BARRIER::Transition(pResource, from, to));

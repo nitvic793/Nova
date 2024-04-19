@@ -9,7 +9,7 @@ RWTexture2D<float3>         Output          : register(u0);
 float GetDepth(int2 pos)
 {
     float depth = GetGBufferDepth(pos, Frame);
-    if (depth == 0.0)
+    if (depth >= 1.0)
     {
         depth = 100000.0f;
     }
@@ -21,6 +21,7 @@ float GetDepth(int2 pos)
     return depth;
 }
 
+#define ENABLE_BLUR 1
 
 [numthreads(8, 8, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
@@ -29,7 +30,12 @@ void main(uint3 DTid : SV_DispatchThreadID)
     Output.GetDimensions(dimensions.x, dimensions.y);
     Texture2D<float3> Input = ResourceDescriptorHeap[Params.InputTexIdx];
     
+#if ENABLE_BLUR
     const int32_t BlurRadius = Params.BlurRadius;
+#else
+    const int32_t BlurRadius = 0;
+#endif
+
     uint2 px = DTid.xy;
     float centerDepth = GetDepth(px);
     float3 centerValue = Input[px].xyz;
@@ -47,7 +53,8 @@ void main(uint3 DTid : SV_DispatchThreadID)
                 if (samplePx.x >= 0 && samplePx.y >= 0 && samplePx.x < dimensions.x && samplePx.y < dimensions.y)
                 {
                     float depth = GetDepth(samplePx);
-                    if (abs(depth - centerDepth) <= Params.BlurDepthThreshold)
+                    float threshold = Params.BlurDepthThreshold;
+                    if (abs(depth - centerDepth) <= threshold)
                     {
                         value += Input[samplePx].xyz;
                         weight += 1.0f;

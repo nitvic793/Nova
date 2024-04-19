@@ -62,5 +62,5 @@ void main(uint3 DTid: SV_DispatchThreadID)
     RayDesc rayDesc;
     GetRayDesc(DTid.xy, rayDesc);
     float4 GIColor = DirectGITexture[DTid.xy];
-    OutputTexture[DTid.xy] = DoInlineRayTracing(rayDesc, DTid).xyz + GIColor.xyz * 0.5f;
+    OutputTexture[DTid.xy] = DoInlineRayTracing(rayDesc, DTid).xyz + GIColor.xyz * 0.8f;
 }
