@@ -93,11 +93,13 @@ namespace nv::graphics
         Handle<GPUResource> mAccumBuffer;
         Handle<GPUResource> mPrevAccumBuffer;
         Handle<GPUResource> mDirectLightBuffer;
+        Handle<GPUResource> mPrevNormalsBuffer;
         Handle<Texture>     mOutputUAV;
         Handle<Texture>	    mAccumUAV;
         Handle<Texture>     mPrevAccumUAV;
         Handle<Texture>     mDirectLightUAV;
         Handle<Texture>     mDepthTexture;
+        Handle<Texture>     mPrevNormalsTex;
         ConstantBufferView  mTraceParamsCBV;
         ConstantBufferView  mTraceAccumCBV;
         ConstantBufferView  mBlurParamsCBV;
@@ -143,6 +145,10 @@ namespace nv::graphics
         sRTComputeObjects.mPrevAccumBuffer = gResourceManager->CreateResource(desc, ID("RTPass/PrevAccumBuffer"));
         texDesc.mBuffer = sRTComputeObjects.mPrevAccumBuffer;
         sRTComputeObjects.mPrevAccumUAV = gResourceManager->CreateTexture(texDesc, ID("RTPass/PrevAccumBufferTex"));
+
+        sRTComputeObjects.mPrevNormalsBuffer = gResourceManager->CreateResource(desc, ID("RTPass/PrevNormals"));
+        texDesc.mBuffer = sRTComputeObjects.mPrevNormalsBuffer;
+        sRTComputeObjects.mPrevNormalsTex = gResourceManager->CreateTexture(texDesc, ID("RTPass/PrevNormalsTex"));
 
         desc.mInitialState = STATE_UNORDERED_ACCESS;
         sRTComputeObjects.mDirectLightBuffer = gResourceManager->CreateResource(desc, ID("RTPass/DirectLightBuffer"));
@@ -286,7 +292,8 @@ namespace nv::graphics
             .AccumulationAlpha = 0.1f,
             .PrevFrameTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mPrevAccumUAV)->GetHeapIndex(),
             .AccumulationTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mOutputUAV)->GetHeapIndex(),
-            .FrameIndex = frameCount
+            .FrameIndex = frameCount,
+            .PrevNormalTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mPrevNormalsTex)->GetHeapIndex()
         };
 
         gRenderer->UploadToConstantBuffer(sRTComputeObjects.mTraceAccumCBV, (uint8_t*)&accumParams, (uint32_t)sizeof(accumParams));
@@ -297,7 +304,8 @@ namespace nv::graphics
             {.mTo = STATE_COPY_DEST, .mResource = sRTComputeObjects.mOutputBuffer },
 			{.mTo = STATE_COPY_SOURCE, .mResource = sRTComputeObjects.mAccumBuffer },
 			{.mTo = STATE_COPY_DEST, .mResource = sRTComputeObjects.mPrevAccumBuffer },
-            {.mTo = STATE_PIXEL_SHADER_RESOURCE, .mResource = depthResource }
+            {.mTo = STATE_PIXEL_SHADER_RESOURCE, .mResource = depthResource },
+            {.mTo = STATE_UNORDERED_ACCESS, .mResource = sRTComputeObjects.mPrevNormalsBuffer}
         };
 
         ctx->ResourceBarrier({ &initBarriers[0] , ArrayCountOf(initBarriers) });
@@ -364,12 +372,18 @@ namespace nv::graphics
         ctx->ComputeBindTexture(3, meshInstanceData);
         ctx->Dispatch(gWindow->GetWidth() / DISPATCH_SCALE, gWindow->GetHeight() / DISPATCH_SCALE, 1);
 
+        Handle<GPUResource> curNormalsBuffer = gResourceManager->GetGPUResourceHandle(ID("GBuffer/GBufferMatB"));
         {
-            TransitionBarrier endBarriers[] = { 
+            TransitionBarrier endBarriers[] = {
                 {.mTo = STATE_PIXEL_SHADER_RESOURCE, .mResource = sRTComputeObjects.mOutputBuffer } ,
+                {.mTo = STATE_COPY_DEST, .mResource = sRTComputeObjects.mPrevNormalsBuffer },
+                {.mTo = STATE_COPY_SOURCE, .mResource = curNormalsBuffer }
             };
             ctx->ResourceBarrier({ &endBarriers[0] , ArrayCountOf(endBarriers) });
         }
+
+        // Copy current normals to previous normals buffer
+        ctx->CopyResource(sRTComputeObjects.mPrevNormalsBuffer, curNormalsBuffer);
     }
 
     void RTCompute::Destroy()

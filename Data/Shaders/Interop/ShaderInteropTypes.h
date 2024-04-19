@@ -125,6 +125,10 @@ namespace nv::graphics
         DirectionalLight    DirLights[MAX_DIRECTIONAL_LIGHTS];
         uint32_t            DirLightsCount;
         float               FarZ;
+        uint32_t            GBufferAIdx;
+        uint32_t            GBufferBIdx;
+        uint32_t            GBufferCIdx;
+        uint32_t            GBufferDepthIdx;
     };
 
     struct PerArmature
@@ -169,6 +173,8 @@ namespace nv::graphics
         uint32_t    PrevFrameTexIdx;
         uint32_t    AccumulationTexIdx;
         uint32_t    FrameIndex;
+        uint32_t    PrevNormalTexIdx;
+        float	   _Padding[3];
     };
 
     struct MeshInstanceData

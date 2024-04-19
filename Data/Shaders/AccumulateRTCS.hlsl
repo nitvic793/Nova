@@ -1,4 +1,5 @@
 #include "Common.hlsli"
+#include "GBufferCommon.hlsli"
 
 ConstantBuffer<TraceAccumParams> Params     : register(b0);
 ConstantBuffer<FrameData>   Frame           : register(b1);
@@ -29,6 +30,11 @@ void main(uint3 DTid: SV_DispatchThreadID)
     uint2 px = DTid.xy;
     RWTexture2D<float3> AccumTex = ResourceDescriptorHeap[Params.AccumulationTexIdx];
     RWTexture2D<float3> PrevAccumTex = ResourceDescriptorHeap[Params.PrevFrameTexIdx];
+    RWTexture2D<float4> PrevNormalsTex = ResourceDescriptorHeap[Params.PrevNormalTexIdx];
+    
+    float3 prevNormals = UnpackNormal(PrevNormalsTex[px].xyz);
+    float3 currentNormals = GetGBuffersNormal(px, Frame);
+    
     float accumAlpha = (Params.FrameIndex == 0) ? 1.0f : Params.AccumulationAlpha;
     float2 pxLastFrame = float2(px);
     const bool bTemporalReprojection = true;
@@ -89,8 +95,8 @@ void main(uint3 DTid: SV_DispatchThreadID)
     float normalPow = 2.0f;
     if(bVerifyTemporalNormals && accumAlpha < 1.0f)
     {
-        float3 normalThisFrame = normalize(RawRTTex[px].xyz);
-        float3 normalLastFrame = normalize(PrevAccumTex[pxLastFrame].xyz);
+        float3 normalThisFrame = normalize(currentNormals);
+        float3 normalLastFrame = normalize(prevNormals);
 
         accumAlpha = lerp(1.0f, accumAlpha, pow(clamp(dot(normalThisFrame, normalLastFrame), 0.0f, 1.0f), normalPow));
     }

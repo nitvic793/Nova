@@ -300,7 +300,11 @@ namespace nv::graphics
             .ViewProjectionInverse  = camera.GetViewProjInverseTransposed(),
             .CameraPosition         = camera.GetPosition(),
             .NearZ                  = camera.GetNearZ(),
-            .FarZ                   = camera.GetFarZ()
+            .FarZ                   = camera.GetFarZ(),
+            .GBufferAIdx            = gResourceManager->GetTexture(ID("GBuffer/GBufferMatA_SRV"))->GetHeapIndex(),
+            .GBufferBIdx            = gResourceManager->GetTexture(ID("GBuffer/GBufferMatB_SRV"))->GetHeapIndex(),
+            .GBufferCIdx            = gResourceManager->GetTexture(ID("GBuffer/GBufferWorldPos_SRV"))->GetHeapIndex(),
+            .GBufferDepthIdx		= gResourceManager->GetTexture(ID("GBuffer/GBufferDepth_SRV"))->GetHeapIndex()
         };
 
         if (dirLights.Size() > 0)

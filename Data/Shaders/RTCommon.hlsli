@@ -1,5 +1,6 @@
 #include "Common.hlsli"
 #include "Lighting.hlsli"
+#include "GBufferCommon.hlsli"
 
 // Inputs expected when Raytracing
 ConstantBuffer<TraceParams> Params              : register(b0);
@@ -289,6 +290,25 @@ ShadeContext GetShadeContext(uint instanceId, DefaultRayQueryT rayQuery)
     return ctx;
 }
 
+ShadeContext GetShadeContextGBuffer(uint2 px)
+{
+    float3 normal = normalize(GetGBuffersNormal(px, Frame));
+    float3 worldPos = GetGBuffersWorldPos(px, Frame);
+    float3 albedo = GetGBufferAlbedo(px, Frame);
+    float metallic = GetGBufferMetalness(px, Frame);
+    float roughness = GetGBufferRoughness(px, Frame);
+
+    ShadeContext ctx;
+
+    ctx.Normal = normal;
+    ctx.WorldPos = worldPos;
+    ctx.Color = albedo;
+    ctx.Roughness = roughness;
+    ctx.Metallic = metallic;
+
+    return ctx;
+}
+
 DefaultRayQueryT ShootRay(RayDesc ray)
 {
     RaytracingAccelerationStructure Scene = ResourceDescriptorHeap[Params.RTSceneIdx];
@@ -469,14 +489,16 @@ float3 ggxDirect(inout uint rndSeed, float3 hit, float3 N, float3 V, float3 dif,
 float3 OnHitGGX(uint instanceId, DefaultRayQueryT rayQuery, out HitContext hitContext, inout uint randSeed, uint3 DTid, out ShadeContext shadeCtx)
 {
     ShadeContext ctx = GetShadeContext(instanceId, rayQuery);
+    //ShadeContext ctx = GetShadeContextGBuffer(uint2(DTid.x, DTid.y));
     
     DirectionalLight dirLight = Frame.DirLights[0];
     float3 toLight = normalize(-dirLight.Direction);
+    float3 lightColor = dirLight.Color;
     
     float3 V = normalize(Frame.CameraPosition - ctx.WorldPos);
     shadeCtx = ctx;
     
-    return ggxDirect(randSeed, ctx.WorldPos, ctx.Normal, V, ctx.Color, ctx.Metallic, ctx.Roughness, toLight, dirLight.Intensity, DTid);
+    return ggxDirect(randSeed, ctx.WorldPos, ctx.Normal, V, ctx.Color, ctx.Metallic, ctx.Roughness, toLight, dirLight.Intensity, DTid) * lightColor;
 }
 
 float3 ShootIndirectRay(float3 worldPos, float3 dir, float minT, inout uint seed, uint3 DTid)
