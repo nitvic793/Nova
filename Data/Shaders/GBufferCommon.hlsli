@@ -46,3 +46,15 @@ float GetGBufferMetalness(int2 px, ConstantBuffer<FrameData> frame)
     Texture2D<float4> gBufferB = ResourceDescriptorHeap[frame.GBufferBIdx];
     return gBufferB.Load(int3(px, 0)).w;
 }
+
+float GetGBufferDepth(int2 px, ConstantBuffer<FrameData> frame)
+{
+    Texture2D<float> gBufferD = ResourceDescriptorHeap[frame.GBufferDepthIdx];
+    return gBufferD.Load(int3(px, 0));
+}
+
+float2 GetGBufferMotionVector(int2 px, ConstantBuffer<FrameData> frame)
+{
+    Texture2D<float4> gBufferD = ResourceDescriptorHeap[frame.GBufferDIdx];
+    return gBufferD.Load(int3(px, 0)).xy;
+}

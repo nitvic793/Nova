@@ -43,6 +43,8 @@ namespace nv::graphics
 
         GPUResourceDesc materialBufferDesc = GPUResourceDesc::Texture2D(width, height, FLAG_ALLOW_RENDER_TARGET, STATE_PIXEL_SHADER_RESOURCE);
         materialBufferDesc.mClearValue = matClear;
+        GPUResourceDesc velocityBufferDesc = GPUResourceDesc::Texture2D(width, height, FLAG_ALLOW_RENDER_TARGET, STATE_PIXEL_SHADER_RESOURCE, format::R16G16_FLOAT);
+        velocityBufferDesc.mClearValue = { .mFormat = format::R16G16_FLOAT,.mColor = {0,0,0,0} , .mStencil = 0, .mIsDepth = false };
         GPUResourceDesc worldPosBufferDesc = GPUResourceDesc::Texture2D(width, height, FLAG_ALLOW_RENDER_TARGET, STATE_PIXEL_SHADER_RESOURCE, format::R16G16B16A16_FLOAT); // Higher precision for world pos
         worldPosBufferDesc.mClearValue = worldPosClear;
         GPUResourceDesc depthBufferDesc = GPUResourceDesc::Texture2D(width, height, FLAG_ALLOW_DEPTH, STATE_PIXEL_SHADER_RESOURCE, format::D32_FLOAT);
@@ -51,6 +53,7 @@ namespace nv::graphics
         mGBufferA = gResourceManager->CreateResource(materialBufferDesc, ID("GBuffer/GBufferMatA"));
         mGBufferB = gResourceManager->CreateResource(materialBufferDesc, ID("GBuffer/GBufferMatB"));
         mGBufferC = gResourceManager->CreateResource(worldPosBufferDesc, ID("GBuffer/GBufferWorldPos"));
+        mGBufferD = gResourceManager->CreateResource(velocityBufferDesc, ID("GBuffer/GBufferVelocityBuffer"));
         mDepthBuffer = gResourceManager->CreateResource(depthBufferDesc, ID("GBuffer/GBufferDepth"));
 
         TextureDesc gBufferDesc = { .mUsage = tex::USAGE_RENDER_TARGET, .mBuffer = mGBufferA };
@@ -59,12 +62,14 @@ namespace nv::graphics
         mGBufferRenderTargets[1] = gResourceManager->CreateTexture(gBufferDesc, ID("GBuffer/GBufferTargetB"));
         gBufferDesc.mBuffer = mGBufferC;
         mGBufferRenderTargets[2] = gResourceManager->CreateTexture(gBufferDesc, ID("GBuffer/GBufferTargetC"));
+        gBufferDesc.mBuffer = mGBufferD;
+        mGBufferRenderTargets[3] = gResourceManager->CreateTexture(gBufferDesc, ID("GBuffer/GBufferTargetD"));
 
         gBufferDesc.mUsage = tex::USAGE_DEPTH_STENCIL;
         gBufferDesc.mBuffer = mDepthBuffer;
         mDepthTarget = gResourceManager->CreateTexture(gBufferDesc, ID("GBuffer/GBufferDepthTarget"));
 
-        mGBufferPSO = CreateGBufferPSO({ format::R8G8B8A8_UNORM, format::R8G8B8A8_UNORM, format::R16G16B16A16_FLOAT }, format::D32_FLOAT);
+        mGBufferPSO = CreateGBufferPSO({ format::R8G8B8A8_UNORM, format::R8G8B8A8_UNORM, format::R16G16B16A16_FLOAT, format::R16G16_FLOAT }, format::D32_FLOAT);
 
         TextureDesc gBufferTexDesc = { .mUsage = tex::USAGE_SHADER, .mBuffer = mGBufferA };
         gResourceManager->CreateTexture(gBufferTexDesc, ID("GBuffer/GBufferMatA_SRV"));
@@ -75,6 +80,9 @@ namespace nv::graphics
         gBufferTexDesc.mBuffer = mDepthBuffer;
         gBufferTexDesc.mFormat = format::R32_FLOAT;
         gResourceManager->CreateTexture(gBufferTexDesc, ID("GBuffer/GBufferDepth_SRV"));
+        gBufferTexDesc.mBuffer = mGBufferD;
+        gBufferTexDesc.mFormat = format::R16G16_FLOAT;
+        gResourceManager->CreateTexture(gBufferTexDesc, ID("GBuffer/GBufferVelocity_SRV"));
     }
 
     void GBuffer::Execute(const RenderPassData& renderPassData)
@@ -95,6 +103,7 @@ namespace nv::graphics
 			{.mTo = STATE_RENDER_TARGET, .mResource = mGBufferA,  },
             {.mTo = STATE_RENDER_TARGET, .mResource = mGBufferB,  },
             {.mTo = STATE_RENDER_TARGET, .mResource = mGBufferC,  },
+            {.mTo = STATE_RENDER_TARGET, .mResource = mGBufferD,  },
 			{.mTo = STATE_DEPTH_WRITE,   .mResource = mDepthBuffer }
 		};
 
@@ -114,7 +123,7 @@ namespace nv::graphics
             ctx->ClearRenderTarget(rt, clearColor, 1, &rect);
         }
 
-        ctx->SetRenderTarget({ mGBufferRenderTargets, 3 }, mDepthTarget);
+        ctx->SetRenderTarget({ mGBufferRenderTargets, _countof(mGBufferRenderTargets)}, mDepthTarget);
         ctx->SetPipeline(mGBufferPSO);
         ctx->BindConstantBuffer(3, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
 
@@ -144,6 +153,7 @@ namespace nv::graphics
             {.mTo = STATE_PIXEL_SHADER_RESOURCE, .mResource = mGBufferA,  },
             {.mTo = STATE_PIXEL_SHADER_RESOURCE, .mResource = mGBufferB,  },
             {.mTo = STATE_PIXEL_SHADER_RESOURCE, .mResource = mGBufferC,  },
+            {.mTo = STATE_PIXEL_SHADER_RESOURCE, .mResource = mGBufferD,  },
             {.mTo = STATE_PIXEL_SHADER_RESOURCE, .mResource = mDepthBuffer }
         };
 

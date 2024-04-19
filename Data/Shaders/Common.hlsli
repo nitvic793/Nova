@@ -26,6 +26,8 @@ struct PixelInput
 	float3 Tangent		: TANGENT;
 	float3 WorldPos		: POSITION0;
     float2 ScreenPos    : TEXCOORD1;
+    float4 CurPosition  : POSITION1;
+    float4 PrevPosition : POSITION2;
 };
 
 float3 CalculateNormalFromSample(float3 normalSample, float2 uv, float3 normal, float3 tangent)

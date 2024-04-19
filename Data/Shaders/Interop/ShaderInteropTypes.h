@@ -128,6 +128,7 @@ namespace nv::graphics
         uint32_t            GBufferAIdx;
         uint32_t            GBufferBIdx;
         uint32_t            GBufferCIdx;
+        uint32_t            GBufferDIdx;
         uint32_t            GBufferDepthIdx;
     };
 

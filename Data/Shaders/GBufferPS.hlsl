@@ -13,7 +13,17 @@ struct PixelOutput
 	float4 AlbedoRoughness		: SV_TARGET0;
     float4 NormalMetalness	    : SV_TARGET1;
 	float4 WorldPos		        : SV_TARGET2;
+    float4 MotionVector         : SV_TARGET3;
 };
+
+float2 GetVelocity(PixelInput input)
+{
+    float2 prevScreenPos = input.PrevPosition.xy / input.PrevPosition.w;
+    float2 currentScreenPos = input.CurPosition.xy/ input.CurPosition.w;
+    prevScreenPos = prevScreenPos * 0.5f + 0.5f;
+    currentScreenPos = currentScreenPos * 0.5f + 0.5f;
+    return prevScreenPos - currentScreenPos;
+}
 
 PixelOutput main(PixelInput input)
 {
@@ -33,6 +43,7 @@ PixelOutput main(PixelInput input)
     output.AlbedoRoughness = float4(albedo, roughness);
     output.NormalMetalness = float4(PackNormal(normal), metallic);
     output.WorldPos = float4(input.WorldPos.xyz, 1.f); // fourth component is unused
+    output.MotionVector = float4(GetVelocity(input), 0.xx);
 
     return output; 
 }

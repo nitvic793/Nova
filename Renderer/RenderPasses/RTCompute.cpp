@@ -165,17 +165,7 @@ namespace nv::graphics
         gResourceManager->CreateTexture(lightAccumSrvDesc, ID("RTPass/LightAccumBufferSRV"));
 
         // Get Depth Texture and transition buffer to pixel shader resource
-        auto depthTex = gRenderer->GetDefaultDepthTarget();
-        auto depthResource = gResourceManager->GetTexture(depthTex)->GetBuffer();
-        TextureDesc depthDesc =
-        {
-            .mUsage = tex::USAGE_SHADER,
-            .mFormat = format::R32_FLOAT,
-			.mBuffer = depthResource,
-			.mType = tex::Type::TEXTURE_2D,
-        };
-
-        sRTComputeObjects.mDepthTexture = gResourceManager->CreateTexture(depthDesc, ID("RTPass/DepthTexture"));
+        sRTComputeObjects.mDepthTexture = gResourceManager->GetTextureHandle(ID("GBuffer/GBufferDepth_SRV"));// = gResourceManager->CreateTexture(depthDesc, ID("RTPass/DepthTexture"));
         
 
         meshInstanceData = CreateStructuredBuffer(sizeof(MeshInstanceData), MAX_OBJECTS, meshInstanceBuffer);
@@ -298,13 +288,10 @@ namespace nv::graphics
 
         gRenderer->UploadToConstantBuffer(sRTComputeObjects.mTraceAccumCBV, (uint8_t*)&accumParams, (uint32_t)sizeof(accumParams));
 
-        auto depthResource = gResourceManager->GetTexture(sRTComputeObjects.mDepthTexture)->GetBuffer();
-
         TransitionBarrier initBarriers[] = { 
             {.mTo = STATE_COPY_DEST, .mResource = sRTComputeObjects.mOutputBuffer },
 			{.mTo = STATE_COPY_SOURCE, .mResource = sRTComputeObjects.mAccumBuffer },
 			{.mTo = STATE_COPY_DEST, .mResource = sRTComputeObjects.mPrevAccumBuffer },
-            {.mTo = STATE_PIXEL_SHADER_RESOURCE, .mResource = depthResource },
             {.mTo = STATE_UNORDERED_ACCESS, .mResource = sRTComputeObjects.mPrevNormalsBuffer}
         };
 
@@ -357,8 +344,7 @@ namespace nv::graphics
         ctx->Dispatch(gWindow->GetWidth() / DISPATCH_SCALE, gWindow->GetHeight() / DISPATCH_SCALE, 1);
 
         TransitionBarrier endBarriers[] = { 
-            {.mTo = STATE_UNORDERED_ACCESS, .mResource = sRTComputeObjects.mOutputBuffer } ,
-            {.mTo = STATE_DEPTH_WRITE, .mResource = depthResource }
+            {.mTo = STATE_UNORDERED_ACCESS, .mResource = sRTComputeObjects.mOutputBuffer }
         };
 
         ctx->ResourceBarrier({ &endBarriers[0] , ArrayCountOf(endBarriers) });

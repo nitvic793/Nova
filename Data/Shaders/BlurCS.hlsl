@@ -1,4 +1,5 @@
 #include "Common.hlsli"
+#include "GBufferCommon.hlsli"
 
 ConstantBuffer<BlurParams>  Params          : register(b0);
 ConstantBuffer<FrameData>   Frame           : register(b1);
@@ -7,7 +8,7 @@ RWTexture2D<float3>         Output          : register(u0);
 
 float GetDepth(int2 pos)
 {
-    float depth = DepthTexture[pos];
+    float depth = GetGBufferDepth(pos, Frame);
     if (depth == 0.0)
     {
         depth = 100000.0f;

@@ -304,6 +304,7 @@ namespace nv::graphics
             .GBufferAIdx            = gResourceManager->GetTexture(ID("GBuffer/GBufferMatA_SRV"))->GetHeapIndex(),
             .GBufferBIdx            = gResourceManager->GetTexture(ID("GBuffer/GBufferMatB_SRV"))->GetHeapIndex(),
             .GBufferCIdx            = gResourceManager->GetTexture(ID("GBuffer/GBufferWorldPos_SRV"))->GetHeapIndex(),
+            .GBufferDIdx            = gResourceManager->GetTexture(ID("GBuffer/GBufferVelocity_SRV"))->GetHeapIndex(),
             .GBufferDepthIdx		= gResourceManager->GetTexture(ID("GBuffer/GBufferDepth_SRV"))->GetHeapIndex()
         };
 
