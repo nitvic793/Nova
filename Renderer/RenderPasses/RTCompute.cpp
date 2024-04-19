@@ -94,12 +94,14 @@ namespace nv::graphics
         Handle<GPUResource> mPrevAccumBuffer;
         Handle<GPUResource> mDirectLightBuffer;
         Handle<GPUResource> mPrevNormalsBuffer;
+        Handle<GPUResource> mHistoryLengthBuffer;
         Handle<Texture>     mOutputUAV;
         Handle<Texture>	    mAccumUAV;
         Handle<Texture>     mPrevAccumUAV;
         Handle<Texture>     mDirectLightUAV;
         Handle<Texture>     mDepthTexture;
         Handle<Texture>     mPrevNormalsTex;
+        Handle<Texture>     mHistoryLengthTex;
         ConstantBufferView  mTraceParamsCBV;
         ConstantBufferView  mTraceAccumCBV;
         ConstantBufferView  mBlurParamsCBV;
@@ -154,6 +156,11 @@ namespace nv::graphics
         sRTComputeObjects.mDirectLightBuffer = gResourceManager->CreateResource(desc, ID("RTPass/DirectLightBuffer"));
         texDesc.mBuffer = sRTComputeObjects.mDirectLightBuffer;
         sRTComputeObjects.mDirectLightUAV = gResourceManager->CreateTexture(texDesc, ID("RTPass/DirectLightTex"));
+
+        desc.mFormat = format::R16_UINT;
+        sRTComputeObjects.mHistoryLengthBuffer = gResourceManager->CreateResource(desc, ID("RTPass/HistoryLengthBuffer"));
+        texDesc.mBuffer = sRTComputeObjects.mHistoryLengthBuffer;
+        sRTComputeObjects.mHistoryLengthTex = gResourceManager->CreateTexture(texDesc, ID("RTPass/HistoryLengthTex"));
 
         TextureDesc lightAccumSrvDesc = 
         {
@@ -283,7 +290,8 @@ namespace nv::graphics
             .PrevFrameTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mPrevAccumUAV)->GetHeapIndex(),
             .AccumulationTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mOutputUAV)->GetHeapIndex(),
             .FrameIndex = frameCount,
-            .PrevNormalTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mPrevNormalsTex)->GetHeapIndex()
+            .PrevNormalTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mPrevNormalsTex)->GetHeapIndex(),
+            .HistoryTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mHistoryLengthTex)->GetHeapIndex()
         };
 
         gRenderer->UploadToConstantBuffer(sRTComputeObjects.mTraceAccumCBV, (uint8_t*)&accumParams, (uint32_t)sizeof(accumParams));

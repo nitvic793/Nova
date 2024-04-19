@@ -175,7 +175,8 @@ namespace nv::graphics
         uint32_t    AccumulationTexIdx;
         uint32_t    FrameIndex;
         uint32_t    PrevNormalTexIdx;
-        float	   _Padding[3];
+        uint32_t    HistoryTexIdx;
+        float	   _Padding[2];
     };
 
     struct MeshInstanceData

@@ -15,6 +15,7 @@ float3 UnpackNormal(float3 normal)
     A: AlbedoRoughness (Albedo.xyz, Roughness) | RGBA8
     B: NormalMetalness (Normal.xyz, Metalness) | RGBA8
     C: WorldPos (WorldPos.xyz, unused) | RGBA16F
+    D: MotionVector (MotionVector.xy) | RG16F
 */
 
 float3 GetGBuffersNormal(int2 px, ConstantBuffer<FrameData> frame)
@@ -55,6 +56,6 @@ float GetGBufferDepth(int2 px, ConstantBuffer<FrameData> frame)
 
 float2 GetGBufferMotionVector(int2 px, ConstantBuffer<FrameData> frame)
 {
-    Texture2D<float4> gBufferD = ResourceDescriptorHeap[frame.GBufferDIdx];
+    Texture2D<float2> gBufferD = ResourceDescriptorHeap[frame.GBufferDIdx];
     return gBufferD.Load(int3(px, 0)).xy;
 }
