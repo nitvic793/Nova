@@ -44,6 +44,7 @@ bool IsReprojectCoordValid(uint2 px, uint2 pxLastFrame, float3 normal, float3 pr
 #define ENABLE_ACCUMULATION 1
 #define TEMPORAL_FILTER 0
 
+// WIP Not working
 void TemporalFilter(uint2 px, uint2 dims)
 {
     RWTexture2D<float3> AccumTex = ResourceDescriptorHeap[Params.AccumulationTexIdx];
@@ -57,7 +58,7 @@ void TemporalFilter(uint2 px, uint2 dims)
     float2 uv = px / float2(dims);
 
     float3 curSample = RawRTTex[px];
-    float2 motionVec = GetGBufferMotionVector(px, Frame) * 2.0f - 1.f;
+    float2 motionVec = GetGBufferMotionVector(px, Frame);
     float2 pxLastFrameUV = uv - motionVec;
     uint2 pxLastFrame = pxLastFrameUV * float2(dims);
     float3 prevNormals = UnpackNormal(PrevNormalsTex[pxLastFrame].xyz);
@@ -78,31 +79,43 @@ void TemporalFilter(uint2 px, uint2 dims)
     HistoryLengthTex[px] = historyLength;
 }
 
-
 [numthreads(8, 8, 1)]
 void main(uint3 DTid: SV_DispatchThreadID)
 {
-    uint2 dims = uint2(1920, 1080);
 #if TEMPORAL_FILTER
         TemporalFilter(DTid.xy, dims);
 #else
+
+#if !ENABLE_ACCUMULATION
+    AccumTex[px] = RawRTTex[px];
+    return;
+#endif
+
+    uint2 dims = uint2(1920, 1080);
     uint2 px = DTid.xy;
     RWTexture2D<float3> AccumTex = ResourceDescriptorHeap[Params.AccumulationTexIdx];
     RWTexture2D<float3> PrevAccumTex = ResourceDescriptorHeap[Params.PrevFrameTexIdx];
     RWTexture2D<float4> PrevNormalsTex = ResourceDescriptorHeap[Params.PrevNormalTexIdx];
     RWTexture2D<uint>   HistoryLengthTex = ResourceDescriptorHeap[Params.HistoryTexIdx];
 
-#if !ENABLE_ACCUMULATION
-    AccumTex[px] = RawRTTex[px];
-    return;
-#endif
-        
-    float3 currentNormals = GetGBuffersNormal(px, Frame);
-    
     float accumAlpha = (Params.FrameIndex == 0) ? 1.0f : Params.AccumulationAlpha;
-    float2 pxLastFrame = float2(px);
-    const bool bTemporalReprojection = false;
+    float3 currentNormals = GetGBuffersNormal(px, Frame);
+    float2 motionVec = GetGBufferMotionVector(px, Frame) * float2(dims);
+    float2 pxLastFrame = float2(px) - motionVec;
+    float3 accumLastFrame = PrevAccumTex[pxLastFrame].xyz;
+    float3 raw = RawRTTex[px].xyz;
 
+    const float PrevFrameDistThreshold = 1.f;
+    float2 dif = abs(float2(px) - pxLastFrame);
+
+    // Early exit if the pixel is too far from the previous frame
+    if(dif.x > PrevFrameDistThreshold || dif.y > PrevFrameDistThreshold)
+    {
+        AccumTex[px] = raw;
+        return;
+    }
+
+    const bool bTemporalReprojection = false;
     if(bTemporalReprojection)
     {
         float depth = DepthTexture[DTid.xy];
@@ -132,10 +145,6 @@ void main(uint3 DTid: SV_DispatchThreadID)
         }
     }
     
-    float3 accumLastFrame = PrevAccumTex[pxLastFrame].xyz;
-    float3 prevNormals = UnpackNormal(PrevNormalsTex[pxLastFrame].xyz);
-    float3 raw = RawRTTex[px].xyz;
-
 	// Neighborhood clamp
     bool bHistoryClamp = true;
     if (bHistoryClamp)
@@ -157,6 +166,7 @@ void main(uint3 DTid: SV_DispatchThreadID)
         accumLastFrame = clamp(accumLastFrame, colorMin, colorMax);
     }
 
+    float3 prevNormals = UnpackNormal(PrevNormalsTex[pxLastFrame].xyz);
     const bool bVerifyTemporalNormals = true;
     float normalPow = 2.0f;
     if(bVerifyTemporalNormals && accumAlpha < 1.0f)
