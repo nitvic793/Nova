@@ -36,7 +36,7 @@
 #include <cereal/cereal.hpp>
 #include <cereal/archives/json.hpp>
 
-int main()
+int main(int argc, char* argv[])
 {
     // Enabled memory leak detection
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -51,7 +51,10 @@ int main()
             SetCurrentDirectoryA(currentDir);
         }
     }
-    
+
+    // Check if -f was passed
+    const bool bForce = (argc > 1 && strcmp(argv[1], "-f") == 0);
+
     constexpr int PIPELINE_ERROR = -1;
     constexpr int PIPELINE_SUCCESS = 0;
     auto hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
@@ -65,7 +68,7 @@ int main()
     nv::InitContext(nullptr, "\\Data");
     auto assetManager = nv::asset::GetAssetManager();
     bool result = false;
-    auto jobHandle = assetManager->ExportAssets(".\\Build\\Assets.novapkg", result);
+    auto jobHandle = assetManager->ExportAssets(".\\Build\\Assets.novapkg", result, bForce);
     nv::jobs::Wait(jobHandle);
     nv::DestroyContext();
     CoUninitialize();

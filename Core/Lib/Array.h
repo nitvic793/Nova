@@ -5,6 +5,9 @@ namespace nv
 	template<typename T, int size>
 	constexpr int ArrayCountOf(T(&)[size]) { return size; }
 
+	template<typename T, int size>
+	constexpr int ArrayCountOf(const T(&)[size]) { return size; }
+
 	template<typename T>
 	struct Span
 	{
@@ -24,7 +27,7 @@ namespace nv
 			mSize(items.size())
 		{}
 
-		constexpr Span(T items[]) :
+		constexpr Span(const T items[]) :
 			mData(items),
 			mSize(ArrayCountOf(items))
 		{}

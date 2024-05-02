@@ -34,6 +34,7 @@ namespace nv::graphics
         virtual void SetRenderTarget(Span<Handle<Texture>> renderTargets, Handle<Texture> dsvHandle, bool singleRTV) override;
         virtual void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation, uint32_t baseVertexLocation, uint32_t startInstanceLocation) override;
         virtual void ResourceBarrier(Span<TransitionBarrier> barriers) override;
+        virtual void ResourceBarrier(Span<UAVBarrier> barriers) override;
         virtual void UpdateSubresources(Handle<GPUResource> dest, Handle<GPUResource> staging, const SubResourceDesc& desc) override;
         virtual void ClearRenderTarget(Handle<Texture> renderTarget, float color[4], uint32_t numRects, Rect* pRects) override;
         virtual void ClearDepthStencil(Handle<Texture> depthStencil, float depth, uint8_t stencil, uint32_t numRects, Rect* pRects) override;
@@ -44,11 +45,14 @@ namespace nv::graphics
         virtual void Bind(uint32_t slot, BindResourceType type, uint32_t offset) override;
         virtual void BindConstantBuffer(uint32_t slot, uint32_t offset) override;
         virtual void BindTexture(uint32_t slot, Handle<Texture> texture) override;
+        virtual void CopyResource(Handle<GPUResource> dest, Handle<GPUResource> src) override;
+
         // Compute
         virtual void Dispatch(uint32_t x, uint32_t y, uint32_t z) override;
         virtual void ComputeBind(uint32_t slot, BindResourceType type, uint32_t offset) override;
         virtual void ComputeBindConstantBuffer(uint32_t slot, uint32_t offset) override;
         virtual void ComputeBindTexture(uint32_t slot, Handle<Texture> texture) override;
+        virtual void ComputeBindTextures(uint32_t slot, Span<Handle<Texture>> textures) override;
 
     public:
         ID3D12GraphicsCommandList4* GetCommandList() const { return mCommandList.Get(); }

@@ -103,6 +103,14 @@ namespace nv::graphics
         #endif
     };
 
+    struct BlurParams
+    {
+        int32_t     BlurRadius;
+        float       BlurDepthThreshold;
+        uint32_t    InputTexIdx;
+        float       Padding;
+    };
+
     struct FrameData
     {
         float4x4            View;
@@ -117,6 +125,11 @@ namespace nv::graphics
         DirectionalLight    DirLights[MAX_DIRECTIONAL_LIGHTS];
         uint32_t            DirLightsCount;
         float               FarZ;
+        uint32_t            GBufferAIdx;
+        uint32_t            GBufferBIdx;
+        uint32_t            GBufferCIdx;
+        uint32_t            GBufferDIdx;
+        uint32_t            GBufferDepthIdx;
     };
 
     struct PerArmature
@@ -147,12 +160,23 @@ namespace nv::graphics
     struct TraceParams
     {
         float2      Resolution;
-        float       ScaleFactor;
+        uint32_t    NoiseTexIdx;
         uint32_t    FrameCount;
         uint32_t    RTSceneIdx;
         uint32_t    SkyBoxHandle;
         int32_t	    EnableShadows;
         int32_t	    EnableIndirectGI;
+    };
+
+    struct TraceAccumParams
+    {
+        float       AccumulationAlpha;
+        uint32_t    PrevFrameTexIdx;
+        uint32_t    AccumulationTexIdx;
+        uint32_t    FrameIndex;
+        uint32_t    PrevNormalTexIdx;
+        uint32_t    HistoryTexIdx;
+        float	   _Padding[2];
     };
 
     struct MeshInstanceData

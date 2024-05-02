@@ -1,7 +1,8 @@
 #pragma once
 
 #include <d3d12.h>
-#include "d3dx12.h"
+#include <d3dx12/d3dx12.h>
+
 #include <DX12/GPUResourceDX12.h>
 #include <DX12/ResourceManagerDX12.h>
 

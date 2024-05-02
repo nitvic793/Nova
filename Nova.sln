@@ -18,6 +18,33 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Asset", "Asset\Asset.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Pipeline", "Pipeline\Pipeline.vcxproj", "{335E1817-529F-4F52-85AC-FD5C8E121414}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shaders", "Shaders", "{FB4061FF-DBF9-499B-9C03-60CC9DB5DA7D}"
+	ProjectSection(SolutionItems) = preProject
+		Data\Shaders\AccumulateRTCS.hlsl = Data\Shaders\AccumulateRTCS.hlsl
+		Data\Shaders\BlurCS.hlsl = Data\Shaders\BlurCS.hlsl
+		Data\Shaders\Common.hlsli = Data\Shaders\Common.hlsli
+		Data\Shaders\DefaultAnimationVS.hlsl = Data\Shaders\DefaultAnimationVS.hlsl
+		Data\Shaders\DefaultPS.hlsl = Data\Shaders\DefaultPS.hlsl
+		Data\Shaders\DefaultVS.hlsl = Data\Shaders\DefaultVS.hlsl
+		Data\Shaders\DirectLightingRTCS.hlsl = Data\Shaders\DirectLightingRTCS.hlsl
+		Data\Shaders\GBufferCommon.hlsli = Data\Shaders\GBufferCommon.hlsli
+		Data\Shaders\GBufferPS.hlsl = Data\Shaders\GBufferPS.hlsl
+		Data\Shaders\Lighting.hlsli = Data\Shaders\Lighting.hlsli
+		Data\Shaders\RayTraceCS.hlsl = Data\Shaders\RayTraceCS.hlsl
+		Data\Shaders\Raytracing.hlsl = Data\Shaders\Raytracing.hlsl
+		Data\Shaders\RTCommon.hlsli = Data\Shaders\RTCommon.hlsli
+		Data\Shaders\SkyboxPS.hlsl = Data\Shaders\SkyboxPS.hlsl
+		Data\Shaders\SkyboxVS.hlsl = Data\Shaders\SkyboxVS.hlsl
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Configs", "Configs", "{FED8DB46-B1A0-4EBE-903B-26FD2097CBDC}"
+	ProjectSection(SolutionItems) = preProject
+		Data\Configs\Materials.json = Data\Configs\Materials.json
+		Data\Configs\ShaderConfig.json = Data\Configs\ShaderConfig.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{89889E4A-215D-4B2E-8BC7-691688268327}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -77,6 +104,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FB4061FF-DBF9-499B-9C03-60CC9DB5DA7D} = {89889E4A-215D-4B2E-8BC7-691688268327}
+		{FED8DB46-B1A0-4EBE-903B-26FD2097CBDC} = {89889E4A-215D-4B2E-8BC7-691688268327}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {433E672D-139C-4B84-8BFC-848F5C6CE0BC}

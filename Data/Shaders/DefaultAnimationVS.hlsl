@@ -41,5 +41,6 @@ PixelInput main(VertexAnimatedInput input)
 	output.UV = input.UV;
 	output.Tangent = normalize(mul(input.Tangent, (float3x3)Object.World));;
     output.WorldPos = worldPos.xyz;
+    output.ScreenPos = output.Position.xy / output.Position.w;
     return output;
 }

@@ -13,6 +13,7 @@ namespace nv::graphics
     class DescriptorHeap;
 
     struct TransitionBarrier;
+    struct UAVBarrier;
 
     struct ContextDesc
     {
@@ -52,6 +53,7 @@ namespace nv::graphics
         virtual void SetRenderTarget(Span<Handle<Texture>> renderTargets, Handle<Texture> dsvHandle, bool singleRTV = false) = 0;
         virtual void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation, uint32_t baseVertexLocation, uint32_t startInstanceLocation) = 0;
         virtual void ResourceBarrier(Span<TransitionBarrier> barriers) = 0;
+        virtual void ResourceBarrier(Span<UAVBarrier> barriers) = 0;
         virtual void UpdateSubresources(Handle<GPUResource> dest, Handle<GPUResource> staging, const SubResourceDesc& desc) = 0;
         virtual void ClearRenderTarget(Handle<Texture> renderTarget, float color[4], uint32_t numRects, Rect* pRects) = 0;
         virtual void ClearDepthStencil(Handle<Texture> depthStencil, float depth, uint8_t stencil, uint32_t numRects, Rect* pRects) = 0;
@@ -62,12 +64,14 @@ namespace nv::graphics
         virtual void Bind(uint32_t slot, BindResourceType type, uint32_t offset) = 0;
         virtual void BindConstantBuffer(uint32_t slot, uint32_t offset) = 0;
         virtual void BindTexture(uint32_t slot, Handle<Texture> texture) = 0;
+        virtual void CopyResource(Handle<GPUResource> dest, Handle<GPUResource> src) = 0;
 
         // Compute Functions
         virtual void Dispatch(uint32_t x, uint32_t y, uint32_t z) = 0;
         virtual void ComputeBind(uint32_t slot, BindResourceType type, uint32_t offset) = 0;
         virtual void ComputeBindConstantBuffer(uint32_t slot, uint32_t offset) = 0;
         virtual void ComputeBindTexture(uint32_t slot, Handle<Texture> texture) = 0;
+        virtual void ComputeBindTextures(uint32_t slot, Span<Handle<Texture>> textures) = 0;
 
 
     protected:

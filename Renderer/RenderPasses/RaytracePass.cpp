@@ -23,7 +23,7 @@
 #include <DX12/DXR.h>
 #include <DX12/ContextDX12.h>
 #include <DX12/ShaderDX12.h>
-#include <DX12/d3dx12.h>
+#include <d3dx12/d3dx12.h>
 #include <DX12/TextureDX12.h>
 
 // Nvidia DXR Helpers

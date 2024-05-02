@@ -272,7 +272,7 @@ namespace nv::asset
             UnloadAsset(handle);
         }
 
-        virtual Handle<jobs::Job> ExportAssets(const char* exportPath, bool& result) override
+        virtual Handle<jobs::Job> ExportAssets(const char* exportPath, bool& result, bool bForce) override
         {
             constexpr std::string_view exportPipelineCache = "exportcache.novacache";
 
@@ -340,7 +340,7 @@ namespace nv::asset
 
             const auto addCacheEntry = [&](const std::string& path, std::vector<CacheEntry>& entries)
             {
-                CacheEntry entry = { path, getTimestamp(path) };
+                CacheEntry entry = { path, (uint64_t)getTimestamp(path) };
                 entries.push_back(entry);
             };
 
@@ -366,7 +366,7 @@ namespace nv::asset
             if (!fs::is_directory(folder))
                 fs::create_directory(folder);
 
-            if (!isRebuildNeeded())
+            if (!isRebuildNeeded() && !bForce)
             {
                 log::Info("[Asset] Package is up-to-date. Skipping export.");
                 result = true;
