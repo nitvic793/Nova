@@ -14,6 +14,11 @@ namespace nv::graphics
         Handle<GPUResource> mResource   = Null<GPUResource>();
     };
 
+    struct UAVBarrier
+    {
+        Handle<GPUResource> mResource = Null<GPUResource>();
+    };
+
     struct ResourceClearValue
     {
         format::SurfaceFormat   mFormat     = format::UNKNOWN;

@@ -15,7 +15,7 @@
 
 #include <D3D12MemAlloc.h>
 #include <d3d12.h>
-#include "d3dx12.h"
+#include <d3dx12/d3dx12.h>
 
 namespace nv::graphics
 {
@@ -130,6 +130,18 @@ namespace nv::graphics
         mCommandList->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
     }
 
+    void ResourceBarrier(ID3D12GraphicsCommandList* pCommandList, ID3D12Resource* pResource, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to)
+    {
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(pResource, from, to);
+        pCommandList->ResourceBarrier(1, &barrier);
+    }
+
+    void UavBarrier(ID3D12GraphicsCommandList* pCommandList, ID3D12Resource* pResource)
+    {
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::UAV(pResource);
+        pCommandList->ResourceBarrier(1, &barrier);
+    };
+
     void ContextDX12::ResourceBarrier(Span<TransitionBarrier> barriers)
     {
         nv::Vector<CD3DX12_RESOURCE_BARRIER> dxBarriers;
@@ -140,9 +152,25 @@ namespace nv::graphics
             ID3D12Resource* pResource = dxResource->GetResource().Get();
             auto from = GetState(dxResource->GetResourceState());
             auto to = GetState(barrier.mTo);
+            if(from == to)
+                continue;
             
             dxResource->UpdateResourceState(barrier.mTo);
             dxBarriers.Push(CD3DX12_RESOURCE_BARRIER::Transition(pResource, from, to));
+        }
+
+        mCommandList->ResourceBarrier((UINT)dxBarriers.Size(), dxBarriers.Data());
+    }
+
+    void ContextDX12::ResourceBarrier(Span<UAVBarrier> barriers)
+    {
+        nv::Vector<CD3DX12_RESOURCE_BARRIER> dxBarriers;
+        dxBarriers.Reserve((uint32_t)barriers.Size());
+        for (auto barrier : barriers)
+        {
+            auto dxResource = util::GetResource(barrier.mResource);
+            ID3D12Resource* pResource = dxResource->GetResource().Get();
+            dxBarriers.Push(CD3DX12_RESOURCE_BARRIER::UAV(pResource));
         }
 
         mCommandList->ResourceBarrier((UINT)dxBarriers.Size(), dxBarriers.Data());
@@ -223,8 +251,20 @@ namespace nv::graphics
 
     void ContextDX12::BindTexture(uint32_t slot, Handle<Texture> texture)
     {
+        if (texture.IsNull())
+            return;
+
         auto tex = (TextureDX12*)gResourceManager->GetTexture(texture);
-        Bind(slot, BIND_TEXTURE, tex->GetHeapOffset());
+        if(tex)
+            Bind(slot, BIND_TEXTURE, tex->GetHeapOffset());
+    }
+
+    void ContextDX12::CopyResource(Handle<GPUResource> dest, Handle<GPUResource> src)
+    {
+        auto dxDest = util::GetResource(dest);
+		auto dxSrc = util::GetResource(src);
+
+		mCommandList->CopyResource(dxDest->GetResource().Get(), dxSrc->GetResource().Get());
     }
 
     void ContextDX12::SetRootSignature(ID3D12RootSignature* pRootSig)
@@ -270,4 +310,12 @@ namespace nv::graphics
         auto tex = (TextureDX12*)gResourceManager->GetTexture(texture);
         ComputeBind(slot, BIND_TEXTURE, tex->GetHeapOffset());
     }
+
+    void ContextDX12::ComputeBindTextures(uint32_t slot, Span<Handle<Texture>> textures)
+    {
+        auto renderer = (RendererDX12*)gRenderer;
+        auto handle = renderer->AllocateDescriptors(textures);
+        mCommandList->SetComputeRootDescriptorTable(slot, handle);
+    }
+
 }

@@ -53,6 +53,8 @@ namespace nv::graphics
 
         SetContextDefault(ctx);
         ctx->SetPipeline(mForwardPSO);
+        auto lightAccumTex = gResourceManager->GetTextureHandle(ID("RTPass/LightAccumBufferSRV"));
+        ctx->BindTexture(1, lightAccumTex);
         ctx->Bind(3, BIND_BUFFER, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
 
         auto objectCbs = renderPassData.mRenderDataArray.GetObjectDescriptors();

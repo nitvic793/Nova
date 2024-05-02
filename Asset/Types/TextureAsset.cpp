@@ -3,7 +3,7 @@
 
 #if NV_RENDERER_DX12
 #include <d3d12.h>
-#include <DX12/d3dx12.h>
+#include <d3dx12/d3dx12.h>
 #include <DX12/GPUResourceDX12.h>
 #include <DX12/RendererDX12.h>
 #include <DX12/DeviceDX12.h>

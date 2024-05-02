@@ -1,7 +1,10 @@
 
+#define USE_BLUE_NOISE 1
+        
 #include "RTCommon.hlsli"
 
 RWTexture2D<float3> OutputTexture : register(u0);
+RWTexture2D<float4> DirectGITexture : register(u1);
 
 void GetRayDesc(uint2 px, out RayDesc ray)
 {
@@ -35,39 +38,17 @@ float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
         HitContext ctx;
         ShadeContext shadeCtx;
         uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
-        /*resultColor =*/ OnHitGGX(instanceId, rayQuery, ctx, randSeed, DTid, shadeCtx);
-        const bool bEnableIndirectGI = Params.EnableIndirectGI; // Diffuse GI
-        const bool bCosSampling = true;
+        
 #define USE_GGX 1
 #if USE_GGX
-        if (bEnableIndirectGI)
-        {
-            float3 V = normalize(Frame.CameraPosition - shadeCtx.WorldPos);
-            resultColor += ggxIndirect(randSeed, shadeCtx.WorldPos, shadeCtx.Normal, shadeCtx.Normal, V, shadeCtx.Color, shadeCtx.Metallic, shadeCtx.Roughness, 0, DTid);
-        }
+        resultColor = OnHitGGX(instanceId, rayQuery, ctx, randSeed, DTid, shadeCtx);
 #else
-        if (bEnableIndirectGI)
-        {
-            float3 bounceDir;
-            if (bCosSampling)
-            {
-                bounceDir = GetCosHemisphereSample(randSeed, ctx.WorldNormal.xyz);
-            }
-            else
-            {
-                bounceDir = GetUniformHemisphereSample(randSeed, ctx.WorldNormal.xyz);
-            }
-            float NdotL = saturate(dot(ctx.WorldNormal.xyz, bounceDir));
-            float3 bounceColor = ShootIndirectRay(ctx.WorldPos, bounceDir, MIN_DIST, randSeed, DTid);
-            float sampleProb = bCosSampling ? NdotL / PI : 1.0f / (2.0f * PI);
-
-            resultColor += (NdotL * bounceColor * ctx.Color / PI) / sampleProb;
-        }
+        resultColor = OnHit(instanceId, rayQuery, ctx, randSeed, DTid);
 #endif
     }
 	else
     {
-        resultColor = float3(0, 0, 0); //OnMiss(ray.Direction, rayQuery);
+        resultColor = OnMiss(ray.Direction, rayQuery);
         return float4(resultColor, 0.f);
     }
 
@@ -80,5 +61,6 @@ void main(uint3 DTid: SV_DispatchThreadID)
 {
     RayDesc rayDesc;
     GetRayDesc(DTid.xy, rayDesc);
-    OutputTexture[DTid.xy] = DoInlineRayTracing(rayDesc, DTid).xyz;
+    float4 GIColor = DirectGITexture[DTid.xy];
+    OutputTexture[DTid.xy] = DoInlineRayTracing(rayDesc, DTid).xyz + GIColor.xyz * 0.5f;
 }

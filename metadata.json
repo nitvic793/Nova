@@ -12,6 +12,10 @@
                 ]
             },
             {
+                "key": "nv::PrevTransform",
+                "value": []
+            },
+            {
                 "key": "nv::Position",
                 "value": [
                     {

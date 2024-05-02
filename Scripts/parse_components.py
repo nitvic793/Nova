@@ -106,6 +106,8 @@ def main():
     components = parse_components('./')
     metadata = generate_metadata(components=components)
     meta_json = json.dumps({"Components": metadata}, indent=4)
+    #print (meta_json)
+    print('Writing metadata.json')
     with open("metadata.json", "w") as outfile:
         outfile.write(meta_json)
 

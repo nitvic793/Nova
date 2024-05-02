@@ -33,6 +33,7 @@
 #include <RenderPasses/RaytracePass.h>
 #include <RenderPasses/Skybox.h>
 #include <RenderPasses/DebugDrawPass.h>
+#include <RenderPasses/GBuffer.h>
 
 #include <DebugUI/DebugUIPass.h>
 
@@ -66,7 +67,10 @@ namespace nv::graphics
         {
             if (event->mAssetId.mType == asset::ASSET_SHADER)
             {
-                auto PSOs = mPsoShaderMap.at(event->mAssetId.mId);
+                auto it = mPsoShaderMap.find(event->mAssetId.mId);
+                if(it == mPsoShaderMap.end())
+                    return;
+                const auto& PSOs = it->second;
                 for(const auto& pso : PSOs)
                     mRenderSystem->QueueReload(pso);
             }
@@ -125,8 +129,10 @@ namespace nv::graphics
         loadMesh(ID("Mesh/anim_idle.fbx"));
         loadMesh(ID("Mesh/knight.fbx"));
         loadMaterials();
+
         gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/SunnyCubeMap.dds") });
         gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/Sky.hdr") });
+        gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/bluenoise256.png") });
 
         for (const auto& mat : materials)
             unloadMaterialAssets(mat);
@@ -145,8 +151,10 @@ namespace nv::graphics
         LoadResources();
         gRenderer->GetDevice()->InitRaytracingContext();
 
-        mRenderPasses.Emplace(Alloc<RTCompute>());
+        mRenderPasses.Emplace(Alloc<GBuffer>());
         mRenderPasses.Emplace(Alloc<ForwardPass>());
+        mRenderPasses.Emplace(Alloc<RTCompute>());
+
         mRenderPasses.Emplace(Alloc<Skybox>());
         mRenderPasses.Emplace(Alloc<DebugDrawPass>());
         //mRenderPasses.Emplace(Alloc<RaytracePass>());
@@ -292,7 +300,12 @@ namespace nv::graphics
             .ViewProjectionInverse  = camera.GetViewProjInverseTransposed(),
             .CameraPosition         = camera.GetPosition(),
             .NearZ                  = camera.GetNearZ(),
-            .FarZ                   = camera.GetFarZ()
+            .FarZ                   = camera.GetFarZ(),
+            .GBufferAIdx            = gResourceManager->GetTexture(ID("GBuffer/GBufferMatA_SRV"))->GetHeapIndex(),
+            .GBufferBIdx            = gResourceManager->GetTexture(ID("GBuffer/GBufferMatB_SRV"))->GetHeapIndex(),
+            .GBufferCIdx            = gResourceManager->GetTexture(ID("GBuffer/GBufferWorldPos_SRV"))->GetHeapIndex(),
+            .GBufferDIdx            = gResourceManager->GetTexture(ID("GBuffer/GBufferVelocity_SRV"))->GetHeapIndex(),
+            .GBufferDepthIdx		= gResourceManager->GetTexture(ID("GBuffer/GBufferDepth_SRV"))->GetHeapIndex()
         };
 
         if (dirLights.Size() > 0)
