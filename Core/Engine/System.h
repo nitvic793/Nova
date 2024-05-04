@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <Lib/Handle.h>
 #include <Lib/Map.h>
 #include <Lib/StringHash.h>
 #include <Lib/Pool.h>
