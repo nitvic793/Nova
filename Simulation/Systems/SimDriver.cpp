@@ -17,6 +17,7 @@ namespace nv
         mAgentStore.Register<Position>();
         mAgentStore.Register<AgentState>();
         mAgentStore.Register<AgentLocationState>();
+        mAgentStore.Register<AgentAge>();
 
         mAgentStore.Resize(128);
     }

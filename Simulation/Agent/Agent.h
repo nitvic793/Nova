@@ -16,7 +16,8 @@ namespace nv::sim::agent
         AGENT_STUDYING,
         AGENT_SHOPPING,
         AGENT_FREE_TIME,
-        AGENT_COMMUTING
+        AGENT_COMMUTING,
+        AGENT_DEAD
     };
 
     enum class AgentLocationState : uint8_t
@@ -48,6 +49,6 @@ namespace nv::sim::agent
         Float3 mValue;
     };
 
-    
+    using AgentAge = float;
 
 }
