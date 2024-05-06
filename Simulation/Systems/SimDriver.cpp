@@ -28,6 +28,10 @@ namespace nv
             s += i/10.f;
             i = (i + 1) % 10;
         }
+
+        auto inst = mAgentData.GetInstance(2);
+        auto instRef = mAgentData.GetInstanceRef(2);
+        std::get<AgentAge&>(instRef) = (AgentAge)50.f;
         
         jobs::InitJobSystem(4);
         mAgentManager = std::make_unique<AgentManager>();

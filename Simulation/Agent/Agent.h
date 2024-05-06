@@ -33,25 +33,25 @@ namespace nv::sim::agent
 
     enum class AgentState : uint8_t
     {
-        AGENT_NONE,
-        AGENT_IDLE,
-        AGENT_MOVING_IN,
-        AGENT_WORKING,
-        AGENT_STUDYING,
-        AGENT_SHOPPING,
-        AGENT_FREE_TIME,
-        AGENT_COMMUTING,
-        AGENT_DEAD
+        ASTATE_NONE,
+        ASTATE_IDLE,
+        ASTATE_MOVING_IN,
+        ASTATE_WORKING,
+        ASTATE_STUDYING,
+        ASTATE_SHOPPING,
+        ASTATE_FREE_TIME,
+        ASTATE_COMMUTING,
+        ASTATE_DEAD
     };
 
     enum class AgentLocationState : uint8_t
     {
-        AGENT_NONE,
-        AGENT_HOME,
-        AGENT_WORK,
-        AGENT_OUT_SHOPPING,
-        AGENT_OUT_FREETIME,
-        AGENT_HOMELESS
+        ALOCSTATE_NONE,
+        ALOCSTATE_HOME,
+        ALOCSTATE_WORK,
+        ALOCSTATE_OUT_SHOPPING,
+        ALOCSTATE_OUT_FREETIME,
+        ALOCSTATE_HOMELESS
     };
 
     struct Float3

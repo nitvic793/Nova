@@ -15,6 +15,7 @@ namespace nv::sim
 
     public:
         using Instance = std::tuple<Types...>;
+        using InstanceRef = std::tuple<Types&...>;
 
     public:
         void Init()
@@ -39,10 +40,45 @@ namespace nv::sim
             return items;
         }
 
-        //Instance GetInstance(size_t idx)
-        //{
-        //    Instance result = { mItems. }
-        //}
+        Instance GetInstance(size_t idx)
+        {
+            Instance result;
+            std::apply(
+                [idx, this, &result](auto&&... args) mutable
+                {
+                    ((this->Set(idx, args, result)), ...);
+                },
+                mItems);
+
+            return result;
+        }
+
+        InstanceRef GetInstanceRef(size_t idx)
+        {
+            InstanceRef instRef = { Get<Types>(idx)... };
+            return instRef;
+        }
+
+    private:
+        template<typename T>
+        T& Get(size_t idx)
+        {
+            std::vector<T>& v = Get<T>();
+            T& val = v[idx];
+            return val;
+        }
+
+        template<typename T>
+        void Set(size_t idx, T& out)
+        {
+            out = Get(idx);
+        }
+
+        template<typename T>
+        void Set(size_t idx, std::vector<T>& v, Instance& instance)
+        {
+            std::get<T>(instance) = v[idx];
+        }
 
     private:
         std::tuple<std::vector<Types>...> mItems;
