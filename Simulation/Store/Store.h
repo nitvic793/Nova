@@ -14,12 +14,20 @@ namespace nv::sim
         static constexpr uint32_t INIT_SIZE = 32;
 
     public:
+        using Instance = std::tuple<Types...>;
+
+    public:
         void Init()
         {
+            Resize(INIT_SIZE);
+        }
+
+        void Resize(size_t size)
+        {
             std::apply(
-                [](auto&&... args)
+                [size](auto&&... args)
                 {
-                    ((args.resize(INIT_SIZE)), ...);
+                    ((args.resize(size)), ...);
                 },
                 mItems);
         }
@@ -30,6 +38,11 @@ namespace nv::sim
             std::vector<T>& items = std::get<std::vector<T>>(mItems);
             return items;
         }
+
+        //Instance GetInstance(size_t idx)
+        //{
+        //    Instance result = { mItems. }
+        //}
 
     private:
         std::tuple<std::vector<Types>...> mItems;
