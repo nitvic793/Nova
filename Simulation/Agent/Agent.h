@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <Lib/StringHash.h>
+#include <Store/Store.h>
 
 #define PROP(name) static constexpr uint32_t Hash = ID(#name);
 
@@ -11,6 +12,16 @@ namespace nv::sim::agent
     struct Property
     {
         T mValue = {};
+
+        operator T() { return mValue; }
+        operator T& () { return mValue; }
+        operator T&&() { return mValue; }
+        operator T() const { return mValue; }
+        operator const T&() const { return mValue; }
+
+        Property(const T& val) : mValue(val) {}
+        Property(T&& val) : mValue(val) {}
+        Property() : mValue(){}
     };
 
     using FloatProperty = Property<float>;
@@ -59,4 +70,12 @@ namespace nv::sim::agent
     {
         Float3 mValue;
     };
+
+    using AgentArchetype = Archetype<
+        AgentID,
+        AgentState,
+        AgentLocationState,
+        AgentAge,
+        AgentSatisfaction
+    >;
 }

@@ -8,6 +8,46 @@
 
 namespace nv::sim
 {
+    template <typename... Types>
+    class Data
+    {
+        static constexpr uint32_t INIT_SIZE = 32;
+
+    public:
+        void Init()
+        {
+            std::apply(
+                [](auto&&... args)
+                {
+                    ((args.resize(INIT_SIZE)), ...);
+                },
+                mItems);
+        }
+
+        template<typename T>
+        std::vector<T>& Get()
+        {
+            std::vector<T>& items = std::get<std::vector<T>>(mItems);
+            return items;
+        }
+
+    private:
+        std::tuple<std::vector<Types>...> mItems;
+    };
+
+
+    template<typename... Types>
+    struct Archetype
+    {
+        template <template <typename...> typename T>
+        using Apply = T<Types...>;
+
+        using Store = Apply<Data>;
+    };
+
+    template<typename T>
+    using ArchetypeStore = T::Store;
+
     struct IProperty
     {
         virtual void Resize(size_t size) = 0;
