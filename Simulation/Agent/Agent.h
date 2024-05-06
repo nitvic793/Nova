@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <Lib/StringHash.h>
 #include <Store/Store.h>
+#include <Math/Math.h>
 
 #define PROP(name) static constexpr uint32_t Hash = ID(#name);
 
@@ -13,23 +14,29 @@ namespace nv::sim::agent
     {
         T mValue = {};
 
-        operator T() { return mValue; }
-        operator T& () { return mValue; }
-        operator T&&() { return mValue; }
-        operator T() const { return mValue; }
-        operator const T&() const { return mValue; }
+        constexpr operator T() { return mValue; }
+        constexpr operator T& () { return mValue; }
+        constexpr operator T&&() { return mValue; }
+        constexpr operator T() const { return mValue; }
+        constexpr operator const T&() const { return mValue; }
 
-        Property(const T& val) : mValue(val) {}
-        Property(T&& val) : mValue(val) {}
-        Property() : mValue(){}
+        constexpr T& operator=(T& val) { mValue = val; }
+        constexpr T& operator=(T&& val) { mValue = std::move(val); }
+        constexpr T& operator=(const T& val) const { mValue = val; }
+
+        constexpr Property(const T& val) : mValue(val) {}
+        constexpr Property(T&& val) : mValue(val) {}
+        constexpr Property() : mValue(){}
     };
 
-    using FloatProperty = Property<float>;
-    using UIntProperty = Property<uint32_t>;
+    using FloatProperty     = Property<float>;
+    using Float3Property    = Property<math::float3>;
+    using UIntProperty      = Property<uint32_t>;
 
-    struct AgentAge : public FloatProperty {};
-    struct AgentSatisfaction : public FloatProperty {};
-    struct AgentID : public UIntProperty {};
+    struct AgentAge             : public FloatProperty {};
+    struct AgentSatisfaction    : public FloatProperty {};
+    struct AgentID              : public UIntProperty  {};
+    struct Position             : public Float3Property{};
 
     enum class AgentState : uint8_t
     {
@@ -54,21 +61,9 @@ namespace nv::sim::agent
         ALOCSTATE_HOMELESS
     };
 
-    struct Float3
-    {
-        float X;
-        float Y;
-        float Z;
-    };
-
     struct AgentUID
     {
         AgentID mUID;
-    };
-
-    struct Position
-    {
-        Float3 mValue;
     };
 
     using AgentArchetype = Archetype<
@@ -76,6 +71,7 @@ namespace nv::sim::agent
         AgentState,
         AgentLocationState,
         AgentAge,
-        AgentSatisfaction
+        AgentSatisfaction,
+        Position
     >;
 }
