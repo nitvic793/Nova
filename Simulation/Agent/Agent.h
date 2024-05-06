@@ -7,6 +7,19 @@
 
 namespace nv::sim::agent
 {
+    template<typename T>
+    struct Property
+    {
+        T mValue = {};
+    };
+
+    using FloatProperty = Property<float>;
+    using UIntProperty = Property<uint32_t>;
+
+    struct AgentAge : public FloatProperty {};
+    struct AgentSatisfaction : public FloatProperty {};
+    struct AgentID : public UIntProperty {};
+
     enum class AgentState : uint8_t
     {
         AGENT_NONE,
@@ -37,8 +50,6 @@ namespace nv::sim::agent
         float Z;
     };
 
-    using AgentID = uint32_t;
-
     struct AgentUID
     {
         AgentID mUID;
@@ -48,7 +59,4 @@ namespace nv::sim::agent
     {
         Float3 mValue;
     };
-
-    using AgentAge = float;
-
 }

@@ -1,9 +1,9 @@
 
 #pragma once
 
-
 #include <Engine/System.h>
 #include <Store/Store.h>
+#include <Agent/AgentManager.h>
 
 namespace nv
 {
@@ -15,6 +15,6 @@ namespace nv
         void Destroy() override;
 
     private:
-       sim::Store mAgentStore;
+        std::unique_ptr<sim::AgentManager> mAgentManager;
     };
 }

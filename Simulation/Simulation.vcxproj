@@ -148,6 +148,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Agent\Agent.h" />
+    <ClInclude Include="Agent\AgentManager.h" />
     <ClInclude Include="Simulation.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
@@ -155,6 +156,7 @@
     <ClInclude Include="Systems\SimDriver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Agent\AgentManager.cpp" />
     <ClCompile Include="Simulation.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="pch.cpp">

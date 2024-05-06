@@ -11,6 +11,8 @@ namespace nv::sim
     struct IProperty
     {
         virtual void Resize(size_t size) = 0;
+        virtual void Swap(uint32_t idxA, uint32_t idxB) = 0;
+        virtual size_t Size() const = 0;
     };
 
     template<typename T>
@@ -19,6 +21,8 @@ namespace nv::sim
         std::vector<T> mItems;
 
         void Resize(size_t size) override { mItems.resize(size); }
+        void Swap(uint32_t idxA, uint32_t idxB) override { std::swap(mItems[idxA], mItems[idxB]); }
+        size_t Size() const override { return mItems.size(); }
     };
 
     class Store
@@ -29,6 +33,9 @@ namespace nv::sim
         template<typename T> std::span<T> Data();
 
         void Resize(size_t size);
+        void Swap(uint32_t idxA, uint32_t idxB);
+        size_t Size() const;
+
     private:
         std::unordered_map<StringID, std::unique_ptr<IProperty>> mPropertyMap;
     };
@@ -49,6 +56,4 @@ namespace nv::sim
         Property<T>* prop = (Property<T>*)mPropertyMap[typeHash].get();
         return std::span<T>{ prop->mItems.data(), prop->mItems.size() };
     }
-
-    void RegisterStores();
 }
