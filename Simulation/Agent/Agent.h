@@ -16,13 +16,13 @@ namespace nv::sim::agent
 
         constexpr operator T() { return mValue; }
         constexpr operator T& () { return mValue; }
-        constexpr operator T&&() { return mValue; }
+        //constexpr operator T&&() { return mValue; }
         constexpr operator T() const { return mValue; }
         constexpr operator const T&() const { return mValue; }
 
         constexpr T& operator=(T& val) { mValue = val; }
         constexpr T& operator=(T&& val) { mValue = std::move(val); }
-        constexpr T& operator=(const T& val) const { mValue = val; }
+        constexpr T& operator=(const T& val)  { mValue = val; }
 
         constexpr Property(const T& val) : mValue(val) {}
         constexpr Property(T&& val) : mValue(val) {}
@@ -37,6 +37,7 @@ namespace nv::sim::agent
     struct AgentSatisfaction    : public FloatProperty {};
     struct AgentID              : public UIntProperty  {};
     struct Position             : public Float3Property{};
+    struct Wealth               : public UIntProperty  {};
 
     enum class AgentState : uint8_t
     {
@@ -72,6 +73,7 @@ namespace nv::sim::agent
         AgentLocationState,
         AgentAge,
         AgentSatisfaction,
-        Position
+        Position,
+        Wealth
     >;
 }

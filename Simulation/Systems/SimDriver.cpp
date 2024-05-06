@@ -20,13 +20,19 @@ namespace nv
         mAgentData.Init();
 
         auto& sats = mAgentData.Get<AgentSatisfaction>();
-        auto& ages = mAgentData.Get<AgentAge>();
+        auto ages = mAgentData.GetSpan<AgentAge>();
 
         int i = 0;
         for (auto& s : sats)
         {
             s += i/10.f;
             i = (i + 1) % 10;
+        }
+
+        i = 0;
+        for (auto& age : ages)
+        {
+            age.mValue =  (float) i++;
         }
 
         auto inst = mAgentData.GetInstance(2);

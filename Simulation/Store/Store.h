@@ -40,6 +40,13 @@ namespace nv::sim
             return items;
         }
 
+        template<typename T>
+        constexpr std::span<T> GetSpan()
+        {
+            std::vector<T>& items = std::get<std::vector<T>>(mItems);
+            return std::span<T> { items.data(), items.size() };
+        }
+
         Instance GetInstance(size_t idx)
         {
             Instance result;
