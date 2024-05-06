@@ -8,8 +8,6 @@
 #include <Engine/Timer.h>
 #include <Simulation.h>
 
-typedef void(*InitF)();
-
 namespace nv::sim
 {
     class SimulationAPI
