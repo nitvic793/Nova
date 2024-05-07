@@ -9,7 +9,7 @@
 namespace nv::sim
 {
     template <typename... Types>
-    class Data
+    class DataStore
     {
         static constexpr uint32_t INIT_SIZE = 32;
 
@@ -51,6 +51,12 @@ namespace nv::sim
         constexpr std::tuple<std::span<T>...> GetSpans()
         {
             std::tuple<std::span<T>...> spans = { GetSpan<T>()... };
+            return spans;
+        }
+
+        constexpr std::tuple<std::span<Types>...> GetSpans()
+        {
+            std::tuple<std::span<Types>...> spans = { GetSpan<Types>()... };
             return spans;
         }
 
@@ -105,7 +111,7 @@ namespace nv::sim
         template <template <typename...> typename T>
         using Apply = T<Types...>;
 
-        using Store = Apply<Data>;
+        using Store = Apply<DataStore>;
     };
 
     template<typename T>
