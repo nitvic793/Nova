@@ -135,6 +135,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Simulation;$(SolutionDir)Shared\External\include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

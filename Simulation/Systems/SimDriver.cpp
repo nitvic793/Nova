@@ -15,8 +15,8 @@ namespace nv
 
     ArchetypeStore<AgentArchetype> mAgentData;
 
-    void SimDriver::Init()
-    { 
+    void RunStoreTests()
+    {
         mAgentData.Init();
 
         auto& sats = mAgentData.Get<AgentSatisfaction>();
@@ -28,14 +28,14 @@ namespace nv
         int i = 0;
         for (auto& s : sats)
         {
-            s += i/10.f;
+            s += i / 10.f;
             i = (i + 1) % 10;
         }
 
         i = 0;
         for (auto& age : ages)
         {
-            age.mValue =  (float) i++;
+            age.mValue = (float)i++;
         }
 
         for (auto& state : states)
@@ -48,6 +48,18 @@ namespace nv
 
         instRef.Get<AgentAge>() = (AgentAge)50.f;
         instRef.Get<Position>() = (Position)math::float3(1, 1, 1);
+
+        mAgentData.ForEach<AgentID, AgentState>(
+            [](AgentID& id, AgentState& state)
+            {
+                if(id.mValue == INVALID_AGENT_ID)
+                    state = AgentState::ASTATE_SPAWNED;
+            });
+    }
+
+    void SimDriver::Init()
+    { 
+        RunStoreTests();
         
         jobs::InitJobSystem(4);
         mAgentManager = std::make_unique<AgentManager>();

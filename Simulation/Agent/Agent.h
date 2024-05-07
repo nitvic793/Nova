@@ -40,6 +40,8 @@ namespace nv::sim::agent
     struct Position             : public Float3Property{};
     struct Wealth               : public UIntProperty  {};
 
+    static constexpr uint64_t INVALID_AGENT_ID = 0;
+
     enum class AgentState : uint8_t
     {
         ASTATE_NONE,

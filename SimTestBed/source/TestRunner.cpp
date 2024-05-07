@@ -29,7 +29,8 @@ namespace nv::sim
             mInstance = LoadLibrary(SIM_DLL);
 
             if (!mInstance) {
-                nv::log::Error("Unable to load Simulation DLL");
+                auto error = GetLastError();
+                nv::log::Error("Unable to load Simulation DLL: Error {}", error);
                 return;
             }
 

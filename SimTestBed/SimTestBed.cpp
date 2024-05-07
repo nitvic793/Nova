@@ -9,6 +9,17 @@
 
 int main()
 {
+    {
+        char currentDir[1024] = {};
+        GetModuleFileNameA(0, currentDir, 1024);
+        char* lastSlash = strrchr(currentDir, '\\');
+        if (lastSlash)
+        {
+            *lastSlash = 0;
+            SetCurrentDirectoryA(currentDir);
+        }
+    }
+
     std::cout << "Init\n";
 
     nv::TestRunner testRunner;

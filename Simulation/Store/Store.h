@@ -103,6 +103,18 @@ namespace nv::sim
             return spans;
         }
 
+        template<typename... T, typename TFunc>
+        constexpr void ForEach(TFunc fn, size_t start = 0, size_t end = 0)
+        {
+            const size_t size = GetSize();
+            end = end == 0 ? size : end;
+
+            for (size_t i = start; i < end; ++i)
+            {
+                fn(Get<T>(i)...);
+            }
+        }
+
         Instance GetInstance(size_t idx)
         {
             Instance result;
@@ -125,7 +137,7 @@ namespace nv::sim
         }
 
         template<typename T>
-        T& Get(size_t idx)
+        constexpr T& Get(size_t idx)
         {
             std::vector<T>& v = Get<T>();
             T& val = v[idx];
