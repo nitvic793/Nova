@@ -32,16 +32,18 @@ namespace nv::sim::agent
     using FloatProperty     = Property<float>;
     using Float3Property    = Property<math::float3>;
     using UIntProperty      = Property<uint32_t>;
+    using UInt64Property    = Property<uint64_t>;
 
     struct AgentAge             : public FloatProperty {};
     struct AgentSatisfaction    : public FloatProperty {};
-    struct AgentID              : public UIntProperty  {};
+    struct AgentID              : public UInt64Property{};
     struct Position             : public Float3Property{};
     struct Wealth               : public UIntProperty  {};
 
     enum class AgentState : uint8_t
     {
         ASTATE_NONE,
+        ASTATE_SPAWNED,
         ASTATE_IDLE,
         ASTATE_MOVING_IN,
         ASTATE_WORKING,
@@ -56,6 +58,7 @@ namespace nv::sim::agent
     enum class AgentLocationState : uint8_t
     {
         ALOCSTATE_NONE,
+        ALOCSTATE_TRAVELING,
         ALOCSTATE_HOME,
         ALOCSTATE_WORK,
         ALOCSTATE_OUT_SHOPPING,

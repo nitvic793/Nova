@@ -9,12 +9,17 @@ namespace nv::sim
     {
         static constexpr uint32_t INIT_AGENT_COUNT = 128;
     public:
+        AgentManager();
+        ~AgentManager() {}
+
         void Init();
 
-        template<typename T>
-        std::span<T> Data() const { return mAgentStore.Data<T>(); }
+        agent::AgentID Spawn();
 
     private:
-        sim::Store mAgentStore;
+        std::unique_ptr<IDataStore> mAgentStore;
+        uint32_t                    mActiveAgentCount;
     };
+
+    uint64_t GenerateUUID();
 }

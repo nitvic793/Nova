@@ -8,42 +8,85 @@
 
 namespace nv::sim
 {
+    class IDataStore
+    {
+    public:
+        template<typename T>
+        constexpr T& As() { return *static_cast<T*>(this); }
+
+        virtual void Init() = 0;
+        virtual void Resize(size_t size) = 0;
+        virtual size_t GetSize() = 0;
+    };
+
     template <typename... Types>
-    class DataStore
+    struct Ref
+    {
+        std::tuple<Types&...> mData;
+
+        template<typename T>
+        T& Get()
+        {
+            T& item = std::get<T&>(mData);
+            return item;
+        }
+
+        template<typename T>
+        void Set(const T& val)
+        {
+            std::get<T&>(mData) = val;
+        }
+
+        template<typename T>
+        void Set(T&& val)
+        {
+            std::get<T&>(mData) = val;
+        }
+    };
+
+    template <typename... Types>
+    class DataStore : public IDataStore
     {
         static constexpr uint32_t INIT_SIZE = 32;
 
     public:
         using Instance = std::tuple<Types...>;
         using InstanceRef = std::tuple<Types&...>;
+        using InstRef = Ref<Types...>;
 
     public:
-        void Init()
+        void Init() override
         {
             Resize(INIT_SIZE);
         }
 
-        void Resize(size_t size)
+        void Resize(size_t size) override
         {
             std::apply(
                 [size](auto&&... args)
                 {
                     ((args.resize(size)), ...);
                 },
-                mItems);
+                mDataArrays);
+        }
+
+        size_t GetSize() override
+        {
+            auto& v = std::get<0>(mDataArrays);
+            return v.size();
         }
 
         template<typename T>
         std::vector<T>& Get()
         {
-            std::vector<T>& items = std::get<std::vector<T>>(mItems);
+            std::vector<T>& items = std::get<std::vector<T>>(mDataArrays);
             return items;
         }
 
         template<typename T>
         constexpr std::span<T> GetSpan()
         {
-            std::vector<T>& items = std::get<std::vector<T>>(mItems);
+            std::vector<T>& items = std::get<std::vector<T>>(mDataArrays);
             return std::span<T> { items.data(), items.size() };
         }
 
@@ -68,18 +111,19 @@ namespace nv::sim
                 {
                     ((this->Set(idx, args, result)), ...);
                 },
-                mItems);
+                mDataArrays);
 
             return result;
         }
 
-        InstanceRef GetInstanceRef(size_t idx)
+
+        InstRef GetInstanceRef(size_t idx)
         {
             InstanceRef instRef = { Get<Types>(idx)... };
-            return instRef;
+            InstRef ref = { instRef };
+            return ref;
         }
 
-    private:
         template<typename T>
         T& Get(size_t idx)
         {
@@ -87,6 +131,8 @@ namespace nv::sim
             T& val = v[idx];
             return val;
         }
+
+    private:
 
         template<typename T>
         void Set(size_t idx, T& out)
@@ -101,7 +147,7 @@ namespace nv::sim
         }
 
     private:
-        std::tuple<std::vector<Types>...> mItems;
+        std::tuple<std::vector<Types>...> mDataArrays;
     };
 
 

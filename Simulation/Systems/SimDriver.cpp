@@ -45,12 +45,14 @@ namespace nv
 
         auto inst = mAgentData.GetInstance(2);
         auto instRef = mAgentData.GetInstanceRef(2);
-        std::get<AgentAge&>(instRef) = (AgentAge)50.f;
-        std::get<Position&>(instRef) = (Position)math::float3(1, 1, 1);
+
+        instRef.Get<AgentAge>() = (AgentAge)50.f;
+        instRef.Get<Position>() = (Position)math::float3(1, 1, 1);
         
         jobs::InitJobSystem(4);
         mAgentManager = std::make_unique<AgentManager>();
         mAgentManager->Init();
+        mAgentManager->Spawn();
     }
 
     void SimDriver::Update(float deltaTime, float totalTime)
