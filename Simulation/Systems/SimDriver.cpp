@@ -10,7 +10,7 @@
 
 namespace nv
 {
-    using namespace sim::agent;
+    using namespace sim::agent; 
     using namespace sim;
 
     ArchetypeStore<AgentArchetype> mAgentData;
@@ -21,6 +21,9 @@ namespace nv
 
         auto& sats = mAgentData.Get<AgentSatisfaction>();
         auto ages = mAgentData.GetSpan<AgentAge>();
+
+        auto spans = mAgentData.GetSpans<AgentState, AgentLocationState>();
+        auto states = std::get<std::span<AgentState>>(spans);
 
         int i = 0;
         for (auto& s : sats)
@@ -33,6 +36,11 @@ namespace nv
         for (auto& age : ages)
         {
             age.mValue =  (float) i++;
+        }
+
+        for (auto& state : states)
+        {
+            state = AgentState::ASTATE_MOVING_IN;
         }
 
         auto inst = mAgentData.GetInstance(2);

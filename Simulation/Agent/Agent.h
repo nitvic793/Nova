@@ -49,6 +49,7 @@ namespace nv::sim::agent
         ASTATE_SHOPPING,
         ASTATE_FREE_TIME,
         ASTATE_COMMUTING,
+        ASTATE_SICK,
         ASTATE_DEAD
     };
 
