@@ -68,11 +68,6 @@ namespace nv::sim::agent
         ALOCSTATE_HOMELESS
     };
 
-    struct AgentUID
-    {
-        AgentID mUID;
-    };
-
     using AgentArchetype = Archetype<
         AgentID,
         AgentState,
@@ -82,4 +77,6 @@ namespace nv::sim::agent
         Position,
         Wealth
     >;
+
+
 }

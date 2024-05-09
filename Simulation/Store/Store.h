@@ -44,6 +44,12 @@ namespace nv::sim
         }
     };
 
+    template<typename... T>
+    using TsFunc = void(*)(T...);
+
+    template<typename TProcessor, typename... T>
+    using TProcFunc = void(TProcessor::*)(T...);
+
     template <typename... Types>
     class DataStore : public IDataStore
     {
@@ -112,6 +118,30 @@ namespace nv::sim
             for (size_t i = start; i < end; ++i)
             {
                 fn(Get<T>(i)...);
+            }
+        }
+
+        template<typename... T>
+        constexpr void ForEach(TsFunc<T&...> fn, size_t start = 0, size_t end = 0)
+        {
+            const size_t size = GetSize();
+            end = end == 0 ? size : end;
+
+            for (size_t i = start; i < end; ++i)
+            {
+                fn(Get<T>(i)...);
+            }
+        }
+
+        template<typename... T, typename TProcessor>
+        constexpr void ForEach(TProcFunc<TProcessor, T&...> fn, TProcessor& processor, size_t start = 0, size_t end = 0)
+        {
+            const size_t size = GetSize();
+            end = end == 0 ? size : end;
+
+            for (size_t i = start; i < end; ++i)
+            {
+                (processor.*fn)(Get<T>(i)...);
             }
         }
 

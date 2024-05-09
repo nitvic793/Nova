@@ -15,6 +15,22 @@ namespace nv
 
     ArchetypeStore<AgentArchetype> mAgentData;
 
+    void Process(AgentID& id, AgentState& state)
+    {
+        if (id.mValue == INVALID_AGENT_ID)
+            state = AgentState::ASTATE_SPAWNED;
+    }
+
+    class Processor
+    {
+    public:
+        void Process(AgentID& id, AgentState& state)
+        {
+            if (id.mValue == INVALID_AGENT_ID)
+                state = AgentState::ASTATE_SPAWNED;
+        }
+    };
+
     void RunStoreTests()
     {
         mAgentData.Init();
@@ -55,6 +71,10 @@ namespace nv
                 if(id.mValue == INVALID_AGENT_ID)
                     state = AgentState::ASTATE_SPAWNED;
             });
+
+        Processor processor;
+        mAgentData.ForEach(&Process);
+        mAgentData.ForEach(&Processor::Process, processor);
     }
 
     void SimDriver::Init()

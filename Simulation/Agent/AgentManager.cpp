@@ -25,10 +25,14 @@ namespace nv::sim
 
     AgentID AgentManager::Spawn()
     {
+        auto& store = mAgentStore->As<AgentStoreType>();
         const auto idx = mActiveAgentCount;
         mActiveAgentCount++;
+        if (mActiveAgentCount > store.GetSize())
+        {
+            store.Resize(store.GetSize() * 2);
+        }
 
-        auto& store = mAgentStore->As<AgentStoreType>();
         AgentStoreType::InstRef instance = store.GetInstanceRef(idx);
         AgentID& id = instance.Get<AgentID>();
         id = (AgentID)GenerateUUID();
