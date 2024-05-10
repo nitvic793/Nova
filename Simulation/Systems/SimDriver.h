@@ -4,6 +4,7 @@
 #include <Engine/System.h>
 #include <Store/Store.h>
 #include <Agent/AgentManager.h>
+#include <Lib/SimTimer.h>
 
 namespace nv
 {
@@ -16,5 +17,6 @@ namespace nv
 
     private:
         std::unique_ptr<sim::AgentManager> mAgentManager;
+        sim::SimTimer mTimer;
     };
 }

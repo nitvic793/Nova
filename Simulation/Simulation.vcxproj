@@ -151,6 +151,7 @@
   <ItemGroup>
     <ClInclude Include="Agent\Agent.h" />
     <ClInclude Include="Agent\AgentManager.h" />
+    <ClInclude Include="Lib\SimTimer.h" />
     <ClInclude Include="Simulation.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />

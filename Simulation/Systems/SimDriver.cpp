@@ -24,7 +24,7 @@ namespace nv
     class Processor
     {
     public:
-        void Process(AgentID& id, AgentState& state)
+        constexpr void Process(AgentID& id, AgentState& state)
         {
             if (id.mValue == INVALID_AGENT_ID)
                 state = AgentState::ASTATE_SPAWNED;
@@ -34,6 +34,7 @@ namespace nv
     void RunStoreTests()
     {
         mAgentData.Init();
+        mAgentData.Resize(1'000'000);
 
         auto& sats = mAgentData.Get<AgentSatisfaction>();
         auto ages = mAgentData.GetSpan<AgentAge>();
@@ -79,9 +80,9 @@ namespace nv
 
     void SimDriver::Init()
     { 
-        RunStoreTests();
-        
+        mTimer = sim::SimTimer{ .mDay = 1,  .mMonth = 1, .mYear = 2020, };
         jobs::InitJobSystem(4);
+        RunStoreTests();
         mAgentManager = std::make_unique<AgentManager>();
         mAgentManager->Init();
         mAgentManager->Spawn();
@@ -89,7 +90,7 @@ namespace nv
 
     void SimDriver::Update(float deltaTime, float totalTime)
     {
-
+        mTimer.Tick();
     }
 
     void SimDriver::Destroy()

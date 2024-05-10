@@ -145,7 +145,7 @@ namespace nv::sim
             }
         }
 
-        Instance GetInstance(size_t idx)
+        constexpr Instance GetInstance(size_t idx)
         {
             Instance result;
             std::apply(
@@ -159,7 +159,7 @@ namespace nv::sim
         }
 
 
-        InstRef GetInstanceRef(size_t idx)
+        constexpr InstRef GetInstanceRef(size_t idx)
         {
             InstanceRef instRef = { Get<Types>(idx)... };
             InstRef ref = { instRef };
