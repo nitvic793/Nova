@@ -90,7 +90,7 @@ namespace nv
 
     void SimDriver::Update(float deltaTime, float totalTime)
     {
-        mTimer.Tick();
+        mTimer.Tick(deltaTime);
     }
 
     void SimDriver::Destroy()

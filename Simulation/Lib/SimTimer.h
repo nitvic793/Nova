@@ -55,13 +55,24 @@ namespace nv::sim
 
     struct SimTimer
     {
+        float    mHour = 0;
         uint32_t mDay;
         uint32_t mMonth;
         uint32_t mYear;
+        float    mSecondsAccumulated = 0.f;
 
-        constexpr void Tick()
+        static constexpr float SECONDS_PER_DAY = 60.f;
+
+        constexpr void Tick(float deltaTime)
         {
-            IncrementDate(*this, 1);
+            mSecondsAccumulated += deltaTime;
+            if (mSecondsAccumulated >= SECONDS_PER_DAY)
+            {
+                mSecondsAccumulated = 0;
+                IncrementDate(*this, 1);
+            }
+
+            mHour = (mSecondsAccumulated / SECONDS_PER_DAY) * 24.f;
         }
     };
 

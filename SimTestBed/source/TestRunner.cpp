@@ -62,6 +62,7 @@ namespace nv
 
         while (true)
         {
+            timer.Tick();
             simApi.Tick(timer.DeltaTime, timer.TotalTime);
         }
         
