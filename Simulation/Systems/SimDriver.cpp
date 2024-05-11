@@ -21,7 +21,7 @@ namespace nv
             state = AgentState::ASTATE_SPAWNED;
     }
 
-    class Processor
+    class Processor : public IProcessor<AgentStore, Processor>
     {
     public:
         constexpr void Process(AgentID& id, AgentState& state)
@@ -76,10 +76,12 @@ namespace nv
         Processor processor;
         mAgentData.ForEach(&Process);
         mAgentData.ForEach(&Processor::Process, processor);
+        processor.Invoke(mAgentData);
     }
 
     void SimDriver::Init()
     { 
+        sgDataStoreFactory.Register<AgentStore>();
         mTimer = sim::SimTimer{ .mDay = 1,  .mMonth = 1, .mYear = 2020, };
         jobs::InitJobSystem(4);
         RunStoreTests();
