@@ -31,6 +31,22 @@ namespace nv
         }
     };
 
+    class BatchProcessor : public IBatchProcessor<AgentStore, BatchProcessor>
+    {
+    public:
+        constexpr void Process(std::span<AgentID> ids, std::span<AgentState> states)
+        {
+            for (size_t i = 0; i < ids.size(); ++i)
+            {
+                auto& id = ids[i];
+                auto& state = states[i];
+
+                if (id.mValue == INVALID_AGENT_ID)
+                    state = AgentState::ASTATE_SPAWNED;
+            }
+        }
+    };
+
     void RunStoreTests()
     {
         mAgentData.Init();

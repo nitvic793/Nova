@@ -53,6 +53,12 @@ namespace nv::sim
         virtual void Invoke(IDataStore* dataStore, size_t start = 0, size_t end = 0) = 0;
     };
 
+    class BaseBatchProcessor
+    {
+    public:
+        virtual void Invoke(IDataStore* dataStore) = 0;
+    };
+
     template<typename TStore, typename TProcessor>
     class IProcessor : public BaseProcessor
     {
@@ -65,6 +71,21 @@ namespace nv::sim
         constexpr void Invoke(TStore& dataStore, size_t start = 0, size_t end = 0)
         {
             dataStore.ForEach(&TProcessor::Process, *(TProcessor*)this);
+        }
+    };
+
+    template<typename TStore, typename TProcessor>
+    class IBatchProcessor : public BaseBatchProcessor
+    {
+    public:
+        void Invoke(IDataStore* dataStore) override
+        {
+            Invoke(*(TStore*)dataStore);
+        }
+
+        constexpr void Invoke(TStore& dataStore)
+        {
+            dataStore.OnAll(&TProcessor::Process, *(TProcessor*)this);
         }
     };
 
@@ -192,6 +213,12 @@ namespace nv::sim
             {
                 (processor.*fn)(Get<T>(i)...);
             }
+        }
+
+        template<typename... T, typename TProcessor>
+        constexpr void OnAll(TProcFunc<TProcessor, std::span<T>...> fn, TProcessor& processor)
+        {
+            (processor.*fn)(GetSpan<T>()...);
         }
 
         constexpr Instance GetInstance(size_t idx)
