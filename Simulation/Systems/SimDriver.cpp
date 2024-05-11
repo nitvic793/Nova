@@ -77,12 +77,15 @@ namespace nv
         mAgentData.ForEach(&Process);
         mAgentData.ForEach(&Processor::Process, processor);
         processor.Invoke(mAgentData);
+
+        mAgentData.RegisterProcessor<Processor>();
+        mAgentData.Tick();
     }
 
     void SimDriver::Init()
     { 
         sgDataStoreFactory.Register<AgentStore>();
-        mTimer = sim::SimTimer{ .mDay = 1,  .mMonth = 1, .mYear = 2020, };
+        mTimer = sim::SimTimer{ .mDay = 1,  .mMonth = 1, .mYear = 2020, .mSimSpeed = SimSpeed::SIMSPEED_NORMAL };
         jobs::InitJobSystem(4);
         RunStoreTests();
         mAgentManager = std::make_unique<AgentManager>();

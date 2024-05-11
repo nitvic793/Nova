@@ -45,6 +45,27 @@ namespace nv::sim
         virtual size_t GetSize() = 0;
     };
 
+    class BaseProcessor 
+    {
+    public:
+        virtual void Invoke(IDataStore* dataStore) = 0;
+    };
+
+    template<typename TStore, typename TProcessor>
+    class IProcessor : public BaseProcessor
+    {
+    public:
+        void Invoke(IDataStore* dataStore) override
+        {
+            Invoke(*(TStore*)dataStore);
+        }
+
+        constexpr void Invoke(TStore& dataStore)
+        {
+            dataStore.ForEach(&TProcessor::Process, *(TProcessor*)this);
+        }
+    };
+
     template <typename... Types>
     struct Ref
     {
@@ -200,8 +221,27 @@ namespace nv::sim
             return val;
         }
 
-    private:
+        template<typename TProcessor>
+        constexpr void RegisterProcessor()
+        {
+            constexpr StringID typeHash = nv::TypeNameID<TProcessor>();
+            mProcessors[typeHash] = std::unique_ptr<BaseProcessor>(new TProcessor());
+        }
 
+        template<typename TProcessor>
+        constexpr TProcessor* GetProcessor() const
+        {
+            constexpr StringID typeHash = nv::TypeNameID<TProcessor>();
+            return (TProcessor * )mProcessors.at(typeHash).get();
+        }
+
+        void Tick()
+        {
+            for (auto& processor : mProcessors)
+                processor.second->Invoke(this);
+        }
+
+    private:
         template<typename T>
         void Set(size_t idx, T& out)
         {
@@ -216,6 +256,7 @@ namespace nv::sim
 
     private:
         std::tuple<std::vector<Types>...> mDataArrays;
+        std::unordered_map<StringID, std::unique_ptr<BaseProcessor>> mProcessors;
     };
 
 
@@ -230,16 +271,6 @@ namespace nv::sim
 
     template<typename T>
     using ArchetypeStore = T::Store;
-
-    template<typename TStore, typename TProcessor>
-    class IProcessor
-    {
-    public:
-        constexpr void Invoke(TStore& dataStore)
-        {
-            dataStore.ForEach(&TProcessor::Process, *(TProcessor*)this);
-        }
-    };
 
     class DataStoreFactory
     {

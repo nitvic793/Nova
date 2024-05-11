@@ -53,6 +53,15 @@ namespace nv::sim
 
     constexpr void IncrementDate(SimTimer& timer, uint32_t byNum);
 
+    enum class SimSpeed : uint8_t
+    {
+        SIMSPEED_PAUSED     = 0,
+        SIMSPEED_NORMAL     = 1,
+        SIMSPEED_FAST       = 2,
+        SIMSPEED_SUPERFAST  = 3,
+        SIMSPEED_COUNT
+    };
+
     struct SimTimer
     {
         float    mHour = 0;
@@ -60,12 +69,14 @@ namespace nv::sim
         uint32_t mMonth;
         uint32_t mYear;
         float    mSecondsAccumulated = 0.f;
-
+        SimSpeed mSimSpeed;
+        
         static constexpr float SECONDS_PER_DAY = 60.f;
 
         constexpr void Tick(float deltaTime)
         {
-            mSecondsAccumulated += deltaTime;
+            const float speedFactor = (float)mSimSpeed;
+            mSecondsAccumulated += deltaTime * speedFactor;
             if (mSecondsAccumulated >= SECONDS_PER_DAY)
             {
                 mSecondsAccumulated = 0;
