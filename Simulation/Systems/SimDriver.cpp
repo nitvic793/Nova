@@ -96,6 +96,9 @@ namespace nv
 
         mAgentData.RegisterProcessor<Processor>();
         mAgentData.Tick();
+
+        BatchProcessor batch;
+        batch.Invoke(mAgentData);
     }
 
     void SimDriver::Init()
