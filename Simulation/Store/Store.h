@@ -27,12 +27,14 @@ namespace nv::sim
         constexpr Property(const T& val) : mValue(val) {}
         constexpr Property(T&& val) : mValue(val) {}
         constexpr Property() : mValue() {}
+
+        template<typename Archive> void serialize(Archive& archive) { archive(mValue); }
     };
 
-    using FloatProperty = Property<float>;
-    using Float3Property = Property<math::float3>;
-    using UIntProperty = Property<uint32_t>;
-    using UInt64Property = Property<uint64_t>;
+    using FloatProperty     = Property<float>;
+    using Float3Property    = Property<math::float3>;
+    using UIntProperty      = Property<uint32_t>;
+    using UInt64Property    = Property<uint64_t>;
 
     class IDataStore
     {
@@ -48,19 +50,19 @@ namespace nv::sim
     class BaseProcessor 
     {
     public:
-        virtual void Invoke(IDataStore* dataStore) = 0;
+        virtual void Invoke(IDataStore* dataStore, size_t start = 0, size_t end = 0) = 0;
     };
 
     template<typename TStore, typename TProcessor>
     class IProcessor : public BaseProcessor
     {
     public:
-        void Invoke(IDataStore* dataStore) override
+        void Invoke(IDataStore* dataStore, size_t start = 0, size_t end = 0) override
         {
-            Invoke(*(TStore*)dataStore);
+            Invoke(*(TStore*)dataStore, start, end);
         }
 
-        constexpr void Invoke(TStore& dataStore)
+        constexpr void Invoke(TStore& dataStore, size_t start = 0, size_t end = 0)
         {
             dataStore.ForEach(&TProcessor::Process, *(TProcessor*)this);
         }
