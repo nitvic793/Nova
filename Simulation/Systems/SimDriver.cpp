@@ -13,6 +13,7 @@ namespace nv
     using namespace sim::agent; 
     using namespace sim;
 
+    sim::SimTimer* SimTimer::spTimer = nullptr;
     ArchetypeStore<AgentArchetype> mAgentData;
 
     void Process(AgentID& id, AgentState& state)
@@ -49,8 +50,10 @@ namespace nv
 
     void RunStoreTests()
     {
-        mAgentData.Init();
-        mAgentData.Resize(1'000'000);
+        for (int i = 0; i < 1'000'000; ++i)
+        {
+            mAgentData.Emplace(&GenerateUUID);
+        }
 
         auto& sats = mAgentData.Get<AgentSatisfaction>();
         auto ages = mAgentData.GetSpan<AgentAge>();
@@ -104,13 +107,17 @@ namespace nv
 
     void SimDriver::Init()
     { 
+        SimTimer::spTimer = &mTimer;
         sgDataStoreFactory.Register<AgentStore>();
+
         mTimer = sim::SimTimer{ .mDay = 1,  .mMonth = 1, .mYear = 2020, .mSimSpeed = SimSpeed::SIMSPEED_NORMAL };
+
         jobs::InitJobSystem(4);
         RunStoreTests();
+
         mAgentManager = std::make_unique<AgentManager>();
         mAgentManager->Init();
-        mAgentManager->Spawn();
+        const auto id = mAgentManager->Spawn();
     }
 
     void SimDriver::Update(float deltaTime, float totalTime)

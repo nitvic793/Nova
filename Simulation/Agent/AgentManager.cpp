@@ -20,7 +20,6 @@ namespace nv::sim
     void AgentManager::Init()
     {
         mAgentStore = std::unique_ptr<IDataStore>(new ArchetypeStore<AgentArchetype>());
-        mAgentStore->Resize(INIT_AGENT_COUNT);
     }
 
     AgentID AgentManager::Spawn()
@@ -28,18 +27,10 @@ namespace nv::sim
         auto& store = mAgentStore->As<AgentStoreType>();
         const auto idx = mActiveAgentCount;
         mActiveAgentCount++;
-        if (mActiveAgentCount > store.GetSize())
-        {
-            store.Resize(store.GetSize() * 2);
-        }
 
-        AgentStoreType::InstRef instance = store.GetInstanceRef(idx);
-        AgentID& id = instance.Get<AgentID>();
-        id = (AgentID)GenerateUUID();
+        AgentStoreType::InstRef instance = store.Emplace(&GenerateUUID);
 
-        instance.Get<AgentAge>() = (AgentAge)20;
-        
-        return id;
+        return instance.Get<AgentID>();
     }
 
     uint64_t GenerateUUID()

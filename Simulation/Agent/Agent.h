@@ -5,13 +5,14 @@
 #include <Store/Store.h>
 #include <Math/Math.h>
 
-#define PROP(name) static constexpr uint32_t Hash = ID(#name);
-
 namespace nv::sim::agent
 {
+    // Index Key types should inherit from StoreIndex
+    struct AgentID              : public UInt64Property, 
+                                  public StoreIndex    {};
+
     struct AgentAge             : public FloatProperty {};
     struct AgentSatisfaction    : public FloatProperty {};
-    struct AgentID              : public UInt64Property{};
     struct Position             : public Float3Property{};
     struct Wealth               : public UIntProperty  {};
 
@@ -54,4 +55,6 @@ namespace nv::sim::agent
     >;
 
     using AgentStore = ArchetypeStore<AgentArchetype>;
+
+    // TODO: Residence, Office, Industrial and Commercial Archetypes
 }

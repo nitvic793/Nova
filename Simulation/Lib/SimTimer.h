@@ -85,6 +85,13 @@ namespace nv::sim
 
             mHour = (mSecondsAccumulated / SECONDS_PER_DAY) * 24.f;
         }
+
+        static SimTimer& GetInstance()
+        {
+            return *spTimer;
+        }
+
+        static SimTimer* spTimer;
     };
 
     constexpr void IncrementDate(SimTimer& timer, uint32_t byNum)

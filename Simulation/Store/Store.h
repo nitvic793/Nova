@@ -31,6 +31,11 @@ namespace nv::sim
         template<typename Archive> void serialize(Archive& archive) { archive(mValue); }
     };
 
+    struct StoreIndex
+    {
+        size_t mIndex = 0;
+    };
+
     using FloatProperty     = Property<float>;
     using Float3Property    = Property<math::float3>;
     using UIntProperty      = Property<uint32_t>;
@@ -123,18 +128,20 @@ namespace nv::sim
     template <typename... Types>
     class DataStore : public IDataStore
     {
-        static constexpr uint32_t INIT_SIZE = 32;
-
     public:
         using Instance = std::tuple<Types...>;
         using InstanceRef = std::tuple<Types&...>;
         using InstRef = Ref<Types...>;
 
+        template<int N>
+        using NthType = std::tuple_element<N, Instance>::type;
+        using IndexType = NthType<0>;
+
+        static_assert(std::is_convertible<IndexType*, StoreIndex*>::value, 
+            "Index type (first type) must derive from StoreIndex type.");
+
     public:
-        void Init() override
-        {
-            Resize(INIT_SIZE);
-        }
+        void Init() override {}
 
         void Resize(size_t size) override
         {
@@ -146,6 +153,27 @@ namespace nv::sim
                 mDataArrays);
         }
 
+        template<typename UUIDFn>
+        constexpr InstRef Emplace(UUIDFn uuidFn)
+        {
+            const auto uuid = uuidFn();
+            const auto idx = Get<IndexType>().size();
+
+            std::apply(
+                [uuid](auto&&... args)
+                {
+                    ((args.emplace_back()), ...);
+                },
+                mDataArrays);
+
+            auto instRef = GetInstanceRef(idx);
+            IndexType& key = instRef.Get<IndexType>();
+            key.mValue = uuid;
+            key.mIndex = idx;
+
+            return instRef;
+        }
+
         size_t GetSize() override
         {
             auto& v = std::get<0>(mDataArrays);
@@ -153,7 +181,7 @@ namespace nv::sim
         }
 
         template<typename T>
-        std::vector<T>& Get()
+        constexpr std::vector<T>& Get()
         {
             std::vector<T>& items = std::get<std::vector<T>>(mDataArrays);
             return items;
@@ -240,12 +268,41 @@ namespace nv::sim
             return result;
         }
 
-
         constexpr InstRef GetInstanceRef(size_t idx)
         {
             InstanceRef instRef = { Get<Types>(idx)... };
             InstRef ref = { instRef };
             return ref;
+        }
+
+        constexpr InstRef Find(IndexType key)
+        {
+            return GetInstanceRef(key.mIndex);
+        }
+
+        constexpr void PopBack()
+        {
+            std::apply(
+                [](auto&&... args)
+                {
+                    ((args.pop_back()), ...);
+                },
+                mDataArrays);
+        }
+
+        constexpr void Swap(size_t idxA, size_t idxB)
+        {
+            std::apply(
+                [idxA, idxB](auto&&... args)
+                {
+                    ((std::swap(args[idxA], args[idxB])), ...);
+                },
+                mDataArrays);
+
+            IndexType& aIdx = Get<IndexType>(idxA);
+            IndexType& bIdx = Get<IndexType>(idxB);
+
+            std::swap(aIdx.mIndex, bIdx.mIndex);
         }
 
         template<typename T>
