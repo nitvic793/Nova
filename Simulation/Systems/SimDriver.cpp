@@ -94,11 +94,12 @@ namespace nv
         mAgentData.ForEach(&Processor::Process, processor);
         processor.Invoke(mAgentData);
 
-        mAgentData.RegisterProcessor<Processor>();
-        mAgentData.Tick();
-
         BatchProcessor batch;
         batch.Invoke(mAgentData);
+
+        mAgentData.RegisterProcessor<Processor>();
+        mAgentData.RegisterBatchProcessor<BatchProcessor>();
+        mAgentData.Tick();
     }
 
     void SimDriver::Init()

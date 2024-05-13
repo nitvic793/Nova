@@ -20,9 +20,9 @@ namespace nv::sim
         constexpr operator T() const { return mValue; }
         constexpr operator const T& () const { return mValue; }
 
-        constexpr T& operator=(T& val) { mValue = val; }
-        constexpr T& operator=(T&& val) { mValue = std::move(val); }
-        constexpr T& operator=(const T& val) { mValue = val; }
+        constexpr T& operator=(T& val) { mValue = val; return mValue; }
+        constexpr T& operator=(T&& val) { mValue = std::move(val); return mValue; }
+        constexpr T& operator=(const T& val) { mValue = val; return mValue;}
 
         constexpr Property(const T& val) : mValue(val) {}
         constexpr Property(T&& val) : mValue(val) {}
@@ -78,7 +78,7 @@ namespace nv::sim
     class IBatchProcessor : public BaseBatchProcessor
     {
     public:
-        void Invoke(IDataStore* dataStore) override
+        constexpr void Invoke(IDataStore* dataStore) override
         {
             Invoke(*(TStore*)dataStore);
         }
@@ -216,6 +216,12 @@ namespace nv::sim
         }
 
         template<typename... T, typename TProcessor>
+        constexpr void OnAll(TsFunc<std::span<T>...> fn, TProcessor& processor)
+        {
+            (processor.*fn)(GetSpan<T>()...);
+        }
+
+        template<typename... T, typename TProcessor>
         constexpr void OnAll(TProcFunc<TProcessor, std::span<T>...> fn, TProcessor& processor)
         {
             (processor.*fn)(GetSpan<T>()...);
@@ -257,6 +263,13 @@ namespace nv::sim
             mProcessors[typeHash] = std::unique_ptr<BaseProcessor>(new TProcessor());
         }
 
+        template<typename TBatchProcessor>
+        constexpr void RegisterBatchProcessor()
+        {
+            constexpr StringID typeHash = nv::TypeNameID<TBatchProcessor>();
+            mBatchProcessors[typeHash] = std::unique_ptr<BaseBatchProcessor>(new TBatchProcessor());
+        }
+
         template<typename TProcessor>
         constexpr TProcessor* GetProcessor() const
         {
@@ -264,9 +277,19 @@ namespace nv::sim
             return (TProcessor * )mProcessors.at(typeHash).get();
         }
 
+        template<typename TProcessor>
+        constexpr TProcessor* GetBatchProcessor() const
+        {
+            constexpr StringID typeHash = nv::TypeNameID<TProcessor>();
+            return (TProcessor*)mBatchProcessors.at(typeHash).get();
+        }
+
         void Tick()
         {
             for (auto& processor : mProcessors)
+                processor.second->Invoke(this);
+
+            for (auto& processor : mBatchProcessors)
                 processor.second->Invoke(this);
         }
 
@@ -286,6 +309,7 @@ namespace nv::sim
     private:
         std::tuple<std::vector<Types>...> mDataArrays;
         std::unordered_map<StringID, std::unique_ptr<BaseProcessor>> mProcessors;
+        std::unordered_map<StringID, std::unique_ptr<BaseBatchProcessor>> mBatchProcessors;
     };
 
 
