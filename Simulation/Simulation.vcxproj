@@ -152,6 +152,7 @@
     <ClInclude Include="Agent\Agent.h" />
     <ClInclude Include="Agent\AgentManager.h" />
     <ClInclude Include="City\Zones.h" />
+    <ClInclude Include="Lib\Task.h" />
     <ClInclude Include="Lib\SimTimer.h" />
     <ClInclude Include="Simulation.h" />
     <ClInclude Include="framework.h" />
