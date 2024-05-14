@@ -8,9 +8,7 @@
 namespace nv::sim::agent
 {
     // Index Key types should inherit from StoreIndex
-    struct AgentID              : public UInt64Property, 
-                                  public StoreIndex    {};
-
+    struct AgentID              : public UInt64Property{};
     struct AgentAge             : public FloatProperty {};
     struct AgentSatisfaction    : public FloatProperty {};
     struct Position             : public Float3Property{};

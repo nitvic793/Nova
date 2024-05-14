@@ -137,9 +137,6 @@ namespace nv::sim
         using NthType = std::tuple_element<N, Instance>::type;
         using IndexType = NthType<0>;
 
-        static_assert(std::is_convertible<IndexType*, StoreIndex*>::value, 
-            "Index type (first type) must derive from StoreIndex type.");
-
     public:
         void Init() override {}
 
@@ -167,9 +164,6 @@ namespace nv::sim
                 mDataArrays);
 
             auto instRef = GetInstanceRef(idx);
-            IndexType& key = instRef.Get<IndexType>();
-            key.mValue = uuid;
-            key.mIndex = idx;
 
             return instRef;
         }
@@ -298,11 +292,6 @@ namespace nv::sim
                     ((std::swap(args[idxA], args[idxB])), ...);
                 },
                 mDataArrays);
-
-            IndexType& aIdx = Get<IndexType>(idxA);
-            IndexType& bIdx = Get<IndexType>(idxB);
-
-            std::swap(aIdx.mIndex, bIdx.mIndex);
         }
 
         template<typename T>

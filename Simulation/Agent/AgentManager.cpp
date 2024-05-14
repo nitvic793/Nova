@@ -9,8 +9,6 @@ namespace nv::sim
 
     static std::atomic<uint64_t> sUIDCounter = 0;
 
-    using AgentStoreType = ArchetypeStore<AgentArchetype>;
-
     AgentManager::AgentManager():
         mAgentStore(nullptr),
         mActiveAgentCount(0)
@@ -19,16 +17,16 @@ namespace nv::sim
 
     void AgentManager::Init()
     {
-        mAgentStore = std::unique_ptr<IDataStore>(new ArchetypeStore<AgentArchetype>());
+        mAgentStore = std::unique_ptr<IDataStore>(new AgentStore());
     }
 
     AgentID AgentManager::Spawn()
     {
-        auto& store = mAgentStore->As<AgentStoreType>();
+        auto& store = mAgentStore->As<AgentStore>();
         const auto idx = mActiveAgentCount;
         mActiveAgentCount++;
 
-        AgentStoreType::InstRef instance = store.Emplace(&GenerateUUID);
+        AgentStore::InstRef instance = store.Emplace(&GenerateUUID);
 
         return instance.Get<AgentID>();
     }

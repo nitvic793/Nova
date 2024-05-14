@@ -88,6 +88,7 @@ namespace nv::sim
 
         static SimTimer& GetInstance()
         {
+            assert(spTimer != nullptr);
             return *spTimer;
         }
 
