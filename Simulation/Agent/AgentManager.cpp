@@ -7,8 +7,6 @@ namespace nv::sim
 {
     using namespace agent;
 
-    static std::atomic<uint64_t> sUIDCounter = 0;
-
     AgentManager::AgentManager():
         mAgentStore(nullptr),
         mActiveAgentCount(0)
@@ -29,11 +27,5 @@ namespace nv::sim
         AgentStore::InstRef instance = store.Emplace(&GenerateUUID);
 
         return instance.Get<AgentID>();
-    }
-
-    uint64_t GenerateUUID()
-    {
-        sUIDCounter++;
-        return sUIDCounter;
     }
 }

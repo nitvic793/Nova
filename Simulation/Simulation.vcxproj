@@ -151,6 +151,7 @@
   <ItemGroup>
     <ClInclude Include="Agent\Agent.h" />
     <ClInclude Include="Agent\AgentManager.h" />
+    <ClInclude Include="City\RoadNetwork.h" />
     <ClInclude Include="City\Zones.h" />
     <ClInclude Include="Lib\Task.h" />
     <ClInclude Include="Lib\SimTimer.h" />
@@ -162,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Agent\AgentManager.cpp" />
+    <ClCompile Include="City\RoadNetwork.cpp" />
     <ClCompile Include="Simulation.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="pch.cpp">

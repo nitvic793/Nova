@@ -11,7 +11,5 @@ namespace nv::sim::city
     struct ResidentialID    : public UInt64Property {};
     struct IndustrialID     : public UInt64Property {};
     struct OfficeID         : public UInt64Property {};
-    struct CommercialID     : public UInt64Property {};
-
-    
+    struct CommercialID     : public UInt64Property {};    
 }

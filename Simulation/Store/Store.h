@@ -9,6 +9,8 @@
 
 namespace nv::sim
 {
+    uint64_t GenerateUUID();
+
     template<typename T>
     struct Property
     {
@@ -23,6 +25,8 @@ namespace nv::sim
         constexpr T& operator=(T& val) { mValue = val; return mValue; }
         constexpr T& operator=(T&& val) { mValue = std::move(val); return mValue; }
         constexpr T& operator=(const T& val) { mValue = val; return mValue;}
+
+        constexpr bool operator==(const Property<T>& rhs) const { return mValue == rhs.mValue; }
 
         constexpr Property(const T& val) : mValue(val) {}
         constexpr Property(T&& val) : mValue(val) {}
@@ -100,20 +104,20 @@ namespace nv::sim
         std::tuple<Types&...> mData;
 
         template<typename T>
-        T& Get()
+        constexpr T& Get()
         {
             T& item = std::get<T&>(mData);
             return item;
         }
 
         template<typename T>
-        void Set(const T& val)
+        constexpr void Set(const T& val)
         {
             std::get<T&>(mData) = val;
         }
 
         template<typename T>
-        void Set(T&& val)
+        constexpr void Set(T&& val)
         {
             std::get<T&>(mData) = val;
         }
@@ -271,7 +275,10 @@ namespace nv::sim
 
         constexpr InstRef Find(IndexType key)
         {
-            return GetInstanceRef(key.mIndex);
+            const std::vector<IndexType>& keys = Get<IndexType>();
+            auto it = std::find(keys.begin(), keys.end(), key);
+            const size_t idx = std::distance(keys.begin(), it);
+            return GetInstanceRef(idx);
         }
 
         constexpr void PopBack()
@@ -300,6 +307,37 @@ namespace nv::sim
             std::vector<T>& v = Get<T>();
             T& val = v[idx];
             return val;
+        }
+
+        constexpr void Erase(size_t idx)
+        {
+            std::apply(
+                [idx](auto&&... args)
+                {
+                    ((args.erase(args.begin() + idx)), ...);
+                },
+                mDataArrays);
+        }
+
+        constexpr void Erase(size_t start, size_t end)
+        {
+            std::apply(
+                [start, end](auto&&... args)
+                {
+                    ((args.erase(args.begin() + start, args.begin() + end)), ...);
+                },
+                mDataArrays);
+        }
+
+        constexpr void Erase(IndexType index)
+        {
+            const std::vector<IndexType>& keys = Get<IndexType>();
+            auto it = std::find(keys.begin(), keys.end(), index);
+            if (it == keys.end())
+                return;
+
+            const size_t idx = std::distance(keys.begin(), it);
+            Erase(idx);
         }
 
         template<typename TProcessor>

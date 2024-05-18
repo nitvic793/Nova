@@ -20,6 +20,4 @@ namespace nv::sim
         std::unique_ptr<IDataStore> mAgentStore;
         uint32_t                    mActiveAgentCount;
     };
-
-    uint64_t GenerateUUID();
 }
