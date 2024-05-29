@@ -251,6 +251,7 @@ namespace nv::ecs
             void* buffer = Alloc(size * sizeof(TComp));
             archive(binary_data(buffer, static_cast<std::size_t>(size) * sizeof(TComp)));
             mComponents.CopyToPool((TComp*)buffer, size);
+            Free(buffer);
         }
 
         virtual void Serialize(std::ostream& ostream) override
