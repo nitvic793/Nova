@@ -122,9 +122,9 @@ namespace nv
         auto camTransform = camera->GetTransform();
         auto& camComponent = camera->Get<CameraComponent>()->mCamera;
         camComponent.SetPreviousViewProjection();
-        camTransform.mPosition.x = transform.mPosition.x + 5;
-        camTransform.mPosition.y = transform.mPosition.z;
-        camTransform.mPosition.z = transform.mPosition.z - 15;
+        camTransform.mPosition.x = transform.mPosition.x + 3;
+        camTransform.mPosition.y = transform.mPosition.z + 1;
+        camTransform.mPosition.z = transform.mPosition.z - 10;
 
         camComponent.SetPosition(camTransform.mPosition);
         camComponent.UpdateViewProjection();
