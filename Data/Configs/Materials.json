@@ -20,6 +20,16 @@
                     "Roughness": "Textures/bronze_roughness.png",
                     "Metalness": "Textures/bronze_metal.png"
                 }
+            },
+            {
+                "key": "Male",
+                "value": {
+                  "Type": "MaterialDefinition",
+                  "Albedo": "Textures/Casual_male_Albedo.DDS",
+                  "Normal": "Textures/Casual_Male_Normal.DDS",
+                  "Roughness": "Textures/Casual_Male_Roughness.DDS",
+                  "Metalness": "Textures/Casual_male_Metalness.DDS"
+                }
             }
         ]
     }

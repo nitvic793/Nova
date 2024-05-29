@@ -56,7 +56,7 @@ namespace nv
 
     void PlayerController::Init()
     {
-        mPlayerEntity = CreateEntity(ID("Mesh/male.fbx"), ID("Bronze"), "Player");
+        mPlayerEntity = CreateEntity(ID("Mesh/male.fbx"), ID("Male"), "Player");
         gpPlayerEntity = mPlayerEntity;
         auto playerEntity = gEntityManager.GetEntity(mPlayerEntity);
         gpPlayerComponent = playerEntity->Add<PlayerComponent>();
