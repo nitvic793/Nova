@@ -3,11 +3,30 @@
 #pragma once
 
 #include <string_view>
+#include <unordered_map>
 
 namespace nv
 {
     using StringID = uint32_t;
     constexpr StringID NULL_ID = 0;
+
+    class StringDB
+    {
+    public:
+        void AddString(const char* str, StringID id);
+        void AddString(const std::string& str, StringID id);
+        const std::string& GetString(StringID id) const;
+        static StringDB& Get();
+
+        template<typename Archive>
+        void serialize(Archive& archive)
+        {
+            archive(mStringDB);
+        }
+
+    private:
+        std::unordered_map<StringID, std::string> mStringDB;
+    };
 
     static constexpr uint32_t crc_table[256] =
     {
@@ -147,6 +166,5 @@ namespace nv
     {
         return ID(TypeName<T>().data());
     }
-
 }
 #endif // !NV_STRING_HASH

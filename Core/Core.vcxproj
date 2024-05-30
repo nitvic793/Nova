@@ -205,6 +205,7 @@
     <ClCompile Include="Engine\Transform.cpp" />
     <ClCompile Include="Input\InputSystem.cpp" />
     <ClCompile Include="IO\Utility.cpp" />
+    <ClCompile Include="Lib\StringHash.cpp" />
     <ClCompile Include="Lib\Util.cpp" />
     <ClCompile Include="Memory\Allocator.cpp" />
     <ClCompile Include="Memory\Memory.cpp" />

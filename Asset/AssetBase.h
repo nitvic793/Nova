@@ -9,11 +9,12 @@ namespace nv::asset
 {
     enum AssetType : uint32_t
     {
-        ASSET_INVALID = 0,
-        ASSET_MESH = ID("Mesh"),
-        ASSET_SHADER = ID("Shader"),
-        ASSET_TEXTURE = ID("Texture"),
-        ASSET_CONFIG = ID("Config")
+        ASSET_INVALID   = 0,
+        ASSET_MESH      = ID("Mesh"),
+        ASSET_SHADER    = ID("Shader"),
+        ASSET_TEXTURE   = ID("Texture"),
+        ASSET_CONFIG    = ID("Config"),
+        ASSET_DB        = ID("DB")
     };
 
     struct AssetID

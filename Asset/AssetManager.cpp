@@ -82,6 +82,29 @@ namespace nv::asset
         };
 
     public:
+        void StoreStringDB()
+        {
+            auto handle = mAssets.Create();
+            Asset* asset = mAssets.Get(handle);
+            const AssetID id = { ASSET_DB, ID("DB/Strings") };
+            asset->Set(id, {});
+
+            std::ostringstream sstream;
+            cereal::BinaryOutputArchive archive(sstream);
+            archive(StringDB::Get());
+
+            auto data = sstream.str();
+            auto pBuffer = (Byte*)Alloc(data.size());
+            memcpy(pBuffer, data.c_str(), data.size());
+            asset->SetData({ data.size(), pBuffer });
+            asset->SetState(STATE_LOADED);
+
+            mAssetMap[id.mId] = handle;
+#if NV_ASSET_DEBUG_LOADER
+            mAssetPathMap[id.mId] = "DB/Strings";
+#endif
+        }
+
         virtual void Init(const char* assetPath) override
         {
             mAssets.Init();
@@ -103,6 +126,9 @@ namespace nv::asset
                 }
 
                 const AssetID id = { GetAssetType(relative.c_str()), ID(relative.c_str())};
+
+                StringDB::Get().AddString(relative.c_str(), ID(relative.c_str()));
+
                 auto handle = mAssets.Create();
                 Asset* asset = mAssets.Get(handle);
                 asset->Set(id, {});
@@ -112,6 +138,8 @@ namespace nv::asset
                 mAssetPathMap[id.mId] = entry.path().string();
 #endif
             }
+
+            StoreStringDB();
         }
 
         virtual Asset* GetAsset(AssetID id) const override
@@ -171,6 +199,17 @@ namespace nv::asset
                         default:break;
                         }
                     }
+
+                    if (asset->GetType() == ASSET_DB)
+                    {
+                        if (asset->GetHash() == ID("DB/Strings"))
+                        {
+                            auto data = asset->GetAssetData();
+                            nv::io::MemoryStream stream((const char*)data.mData, data.mSize);
+                            cereal::BinaryInputArchive archive(stream);
+                            archive(StringDB::Get());
+                        }
+                    }
                 }
                 else
                 {
@@ -186,6 +225,9 @@ namespace nv::asset
 
         bool LoadAssetFromFile(Asset* asset, const char* path)
         {
+            if (asset->GetState() == STATE_LOADED)
+                return true;
+
             size_t size = io::GetFileSize(path);
             Byte* pBuffer = (Byte*)Alloc(size);
 
@@ -333,9 +375,11 @@ namespace nv::asset
                 }
             };
 
-            const auto getTimestamp = [](const std::string& path)
+            const auto getTimestamp = [](const std::string& path) -> uint64_t
             {
-                return fs::last_write_time(path).time_since_epoch().count();
+                if (fs::exists(path))
+                    return fs::last_write_time(path).time_since_epoch().count();
+                return 0ui64;
             };
 
             const auto addCacheEntry = [&](const std::string& path, std::vector<CacheEntry>& entries)
@@ -521,6 +565,7 @@ namespace nv::asset
             cereal::BinaryOutputArchive archive(ostream);
             const auto& filePath = mAssetPathMap[asset->GetID()];
             auto path = GetNormalizedBuildPath(fs::relative(filePath, fs::current_path()).string());
+            path = path == "" ? filePath : path;
 
             const auto writeHeader = [asset, &archive, this, &path](size_t size)
             {
@@ -591,6 +636,13 @@ namespace nv::asset
 
                 writeHeader((size_t)sstream.tellp());
                 ostream.write(sstream.str().c_str(), sstream.str().size());
+                break;
+            }
+            case ASSET_DB:
+            {
+                const auto& data = asset->GetAssetData();
+                writeHeader(data.mSize);
+                ostream.write((const char*)data.mData, data.mSize);
                 break;
             }
             }
