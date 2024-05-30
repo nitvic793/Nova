@@ -113,11 +113,13 @@ namespace nv::graphics
             return ImVec2((float)min(wA, wB), (float)min(hA, hB));
         };
 
-        constexpr uint32_t MAX_WIDTH = 256;
-        constexpr uint32_t MAX_HEIGHT = 256;
+        constexpr uint32_t MAX_WIDTH = 128;
+        constexpr uint32_t MAX_HEIGHT = 128;
 
-        if (ImGui::CollapsingHeader(pName, ImGuiTreeNodeFlags_DefaultOpen))
+        if (ImGui::CollapsingHeader(pName))
         {
+            ImGui::Columns(4, "Textures", true); // 4-ways, with border
+            
             uint32_t width;
             uint32_t height;
 
@@ -126,29 +128,36 @@ namespace nv::graphics
             auto metallic = pMaterial->mMetalnessTexture;
             auto roughness = pMaterial->mRoughnessTexture;
 
+            ImGui::SetColumnWidth(0, MAX_WIDTH);
             ImGui::Text("Albedo");
-            ImGui::SameLine();
             auto albedoTex = AllocTexture(albedo.mHash, width, height);
             if (albedoTex)
                 ImGui::Image(albedoTex, getMin(width, height, MAX_WIDTH, MAX_HEIGHT));
-            ImGui::SameLine();
+
+            ImGui::NextColumn();
+
+            ImGui::SetColumnWidth(1, MAX_WIDTH);
             ImGui::Text("Normal");
-            ImGui::SameLine();
             auto normalTex = AllocTexture(normal.mHash, width, height);
             if (normalTex)
                 ImGui::Image(normalTex, getMin(width, height, MAX_WIDTH, MAX_HEIGHT));
 
+            ImGui::NextColumn();
+
+            ImGui::SetColumnWidth(2, MAX_WIDTH);
             ImGui::Text("Metallic");
-            ImGui::SameLine();
             auto metallicTex = AllocTexture(metallic.mHash, width, height);
             if (metallicTex)
                 ImGui::Image(metallicTex, getMin(width, height, MAX_WIDTH, MAX_HEIGHT));
-            ImGui::SameLine();
+
+            ImGui::NextColumn();
+            ImGui::SetColumnWidth(3, MAX_WIDTH);
             ImGui::Text("Roughness");
-            ImGui::SameLine();
             auto roughnessTex = AllocTexture(roughness.mHash, width, height);
             if (roughnessTex)
                 ImGui::Image(roughnessTex, getMin(width, height, MAX_WIDTH, MAX_HEIGHT));
+
+            ImGui::Columns(1, "Textures", true);
         }
     }
 
