@@ -24,4 +24,9 @@ namespace nv
         static StringDB sStringDB;
         return sStringDB;
     }
+
+    std::string_view GetString(StringID id)
+    {
+        return StringDB::Get().GetString(id);
+    }
 }

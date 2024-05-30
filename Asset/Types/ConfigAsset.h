@@ -12,8 +12,6 @@
 #include <cereal/types/string.hpp>
 #include <cereal/types/unordered_map.hpp>
 
-std::string GetTextureName(nv::asset::ResID id);
-
 namespace cereal
 {
     using namespace nv::graphics;

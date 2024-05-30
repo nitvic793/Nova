@@ -166,5 +166,7 @@ namespace nv
     {
         return ID(TypeName<T>().data());
     }
+
+    std::string_view GetString(StringID id);
 }
 #endif // !NV_STRING_HASH
