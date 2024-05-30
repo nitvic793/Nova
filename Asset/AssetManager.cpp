@@ -84,11 +84,24 @@ namespace nv::asset
     public:
         void StoreStringDB()
         {
-            auto handle = mAssets.Create();
-            Asset* asset = mAssets.Get(handle);
             const AssetID id = { ASSET_DB, ID("DB/Strings") };
-            asset->Set(id, {});
+            auto it = mAssetMap.find(id.mId);
+            if (it != mAssetMap.end())
+            {
+                return; // Already loaded
+            }
+        
+            auto handle = mAssets.Create();
+            mAssetMap[id.mId] = handle;
+          
+            Asset* asset = mAssets.Get(handle);
 
+            if (asset->GetData())
+            {
+                return; // Already loaded
+            }
+
+            asset->Set(id, {});
             std::ostringstream sstream;
             cereal::BinaryOutputArchive archive(sstream);
             archive(StringDB::Get());
@@ -139,7 +152,9 @@ namespace nv::asset
 #endif
             }
 
+#if 1
             StoreStringDB();
+#endif
         }
 
         virtual Asset* GetAsset(AssetID id) const override

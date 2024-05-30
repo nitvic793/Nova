@@ -14,6 +14,7 @@
 #include <Engine/EntityComponent.h>
 #include <Engine/Camera.h>
 #include <Math/Collision.h>
+#include <Configs/MaterialDatabase.h>
 
 #include "Imgui/imgui.h"
 
@@ -39,10 +40,45 @@ namespace nv::graphics
     static bool sbEnableDebugUI = true;
     static bool sbEnableDebugDraw = true;
 
+    static uint32_t sgTexAllocIndex = 1; // 0 = render target
+
     Handle<DescriptorHeap> mDescriptorHeapHandle;
 
     void ListEntities(bool& open);
     void ShowAnimationPane(bool& open);
+
+    static ImTextureID AllocTexture(Handle<Texture> tex, uint32_t& width, uint32_t& height)
+    {
+        auto renderer = (RendererDX12*)gRenderer;
+        auto device = (DeviceDX12*)renderer->GetDevice();
+        if (!tex.IsNull())
+        {
+            auto texDX12 = (TextureDX12*)gResourceManager->GetTexture(tex);
+            const auto resourceDesc = texDX12->GetResource()->GetDesc();
+
+            height = resourceDesc.Height ? (uint32_t)resourceDesc.Height : 320;
+            width = resourceDesc.Width ? (uint32_t)resourceDesc.Width : 480;
+
+            auto heap = renderer->GetDescriptorHeap(mDescriptorHeapHandle);
+            device->GetDevice()->CopyDescriptorsSimple(1, heap->HandleCPU(sgTexAllocIndex), texDX12->GetCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            sgTexAllocIndex++;
+            return (ImTextureID)heap->HandleGPU(sgTexAllocIndex - 1).ptr;
+        }
+
+        return nullptr;
+    }
+
+    static ImTextureID AllocTexture(StringID texId, uint32_t& width, uint32_t& height)
+    {
+        auto renderer = (RendererDX12*)gRenderer;
+        auto device = (DeviceDX12*)renderer->GetDevice();
+        if (gResourceTracker.ExistsTexture(texId))
+        {
+            return AllocTexture(gResourceManager->GetTextureHandle(texId), width, height);
+        }
+
+        return nullptr;
+    }
 
     static void ShowTexturePreview(bool& open)
     {
@@ -57,19 +93,75 @@ namespace nv::graphics
         constexpr uint32_t BUFFER_SIZE = 1024;
         static char buffer[BUFFER_SIZE] = "RTPass/OutputBufferTex";
         ImGui::InputText("Texture Name", buffer, BUFFER_SIZE);
+
+        uint32_t height;
+        uint32_t width;
         texId = ID(buffer);
-        if (gResourceTracker.ExistsTexture(texId))
+
+        auto texHandle = AllocTexture(texId, width, height);
+        if(texHandle)
+            ImGui::Image(texHandle, ImVec2((float)width, (float)height));
+
+        ImGui::End();
+    }
+
+    static void ShowMaterialTextures(PBRMaterial* pMaterial, const char* pName)
+    {
+        const auto getMin = [](uint32_t wA, uint32_t hA, uint32_t wB, uint32_t hB)
         {
-            auto tex = (TextureDX12*)gResourceManager->GetTexture(texId);
-            const auto resourceDesc = tex->GetResource()->GetDesc();
+            using namespace std;
+            return ImVec2((float)min(wA, wB), (float)min(hA, hB));
+        };
 
-            uint32_t height = resourceDesc.Height ? (uint32_t)resourceDesc.Height : 320;
-            uint32_t width = resourceDesc.Width ? (uint32_t)resourceDesc.Width : 480;
+        constexpr uint32_t MAX_WIDTH = 256;
+        constexpr uint32_t MAX_HEIGHT = 256;
 
-            auto heap = renderer->GetDescriptorHeap(mDescriptorHeapHandle);
-            device->GetDevice()->CopyDescriptorsSimple(1, heap->HandleCPU(1), tex->GetCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            ImGui::Image((ImTextureID)heap->HandleGPU(1).ptr, ImVec2((float)width, (float)height));
+        if (ImGui::CollapsingHeader(pName, ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            uint32_t width;
+            uint32_t height;
+
+            auto albedo = pMaterial->mAlbedoTexture;
+            auto normal = pMaterial->mNormalTexture;
+            auto metallic = pMaterial->mMetalnessTexture;
+            auto roughness = pMaterial->mRoughnessTexture;
+
+            ImGui::Text("Albedo");
+            ImGui::SameLine();
+            auto albedoTex = AllocTexture(albedo.mHash, width, height);
+            if (albedoTex)
+                ImGui::Image(albedoTex, getMin(width, height, MAX_WIDTH, MAX_HEIGHT));
+            ImGui::SameLine();
+            ImGui::Text("Normal");
+            ImGui::SameLine();
+            auto normalTex = AllocTexture(normal.mHash, width, height);
+            if (normalTex)
+                ImGui::Image(normalTex, getMin(width, height, MAX_WIDTH, MAX_HEIGHT));
+
+            ImGui::Text("Metallic");
+            ImGui::SameLine();
+            auto metallicTex = AllocTexture(metallic.mHash, width, height);
+            if (metallicTex)
+                ImGui::Image(metallicTex, getMin(width, height, MAX_WIDTH, MAX_HEIGHT));
+            ImGui::SameLine();
+            ImGui::Text("Roughness");
+            ImGui::SameLine();
+            auto roughnessTex = AllocTexture(roughness.mHash, width, height);
+            if (roughnessTex)
+                ImGui::Image(roughnessTex, getMin(width, height, MAX_WIDTH, MAX_HEIGHT));
         }
+    }
+
+    static void ShowMaterialsPane(bool& open)
+    {
+        ImGui::Begin("Materials", &open);
+
+        auto& materials = asset::gMaterialDatabase.mMaterials;
+        for (auto& mat : materials)
+        {
+            ShowMaterialTextures(&mat.second, mat.first.data());
+        }
+
         ImGui::End();
     }
 
@@ -90,7 +182,9 @@ namespace nv::graphics
         auto ctx = renderer->GetContext();
         auto device = (DeviceDX12*)renderer->GetDevice();
 
-        DescriptorHeapDX12* heap = renderer->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2, mDescriptorHeapHandle, true);
+        constexpr uint32_t IMGUI_DESCRIPTOR_HEAP_SIZE = 64;
+
+        DescriptorHeapDX12* heap = renderer->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, IMGUI_DESCRIPTOR_HEAP_SIZE, mDescriptorHeapHandle, true);
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
 
@@ -111,9 +205,11 @@ namespace nv::graphics
     static bool showTexturePreview = false;
     static bool showEntityList = false;
     static bool showAnimPane = false;
+    static bool showMaterialPane = false;
 
     void DebugUIPass::Execute(const RenderPassData& renderPassData)
     {
+        sgTexAllocIndex = 1;
         if (!sbEnableDebugUI)
             return;
 
@@ -134,6 +230,7 @@ namespace nv::graphics
             ImGui::Checkbox("Debug Draw", &sbEnableDebugDraw);
             ImGui::Checkbox("Entity Manager", &showEntityList);
             ImGui::Checkbox("Animation", &showAnimPane);
+            ImGui::Checkbox("Materials", &showMaterialPane);
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
             ShowRenderSettings();
             ImGui::End();
@@ -147,6 +244,9 @@ namespace nv::graphics
 
         if (showAnimPane)
             ShowAnimationPane(showAnimPane);
+
+        if (showMaterialPane)
+            ShowMaterialsPane(showMaterialPane);
 
         ImGui::Render();
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), ctx->GetCommandList());
