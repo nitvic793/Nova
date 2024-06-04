@@ -66,6 +66,7 @@ namespace nv::graphics
         uint32_t                    GetBackBufferIndex() const;
         ID3D12CommandAllocator*     GetAllocator() const;
         ID3D12CommandQueue*         GetCommandQueue() const;
+        ID3D12CommandQueue*         GetCopyCommandQueue() const;
         ID3D12Resource*             GetConstBuffer() const;
         D3D12_GPU_DESCRIPTOR_HANDLE GetConstBufferHandle(uint32_t index) const;
         D3D12_GPU_DESCRIPTOR_HANDLE GetTextureHandle(uint32_t index) const;
@@ -97,6 +98,7 @@ namespace nv::graphics
         ComPtr<ID3D12CommandAllocator>              mCommandAllocators[FRAMEBUFFER_COUNT];
         ComPtr<ID3D12CommandAllocator>              mComputeCommandAllocators[FRAMEBUFFER_COUNT];
         ComPtr<ID3D12CommandQueue>                  mCommandQueue;
+        ComPtr<ID3D12CommandQueue>                  mCopyCommandQueue;
         ComPtr<ID3D12RootSignature>                 mRootSignature;
         ComPtr<ID3D12RootSignature>                 mComputeRootSignature;
 

@@ -259,7 +259,7 @@ namespace nv::graphics
         };
 
         {
-            AutoLocalContext localContext(pDevice, ContextType::CONTEXT_GFX, ((RendererDX12*)(gRenderer))->GetCommandQueue());
+            AutoLocalContext localContext(pDevice, ContextType::CONTEXT_GFX, ((RendererDX12*)(gRenderer))->GetCopyCommandQueue());
 
             ibResource->UploadResource(localContext.GetCommandList(), ibData, ibUploadResource->GetResource().Get());
             vbResource->UploadResource(localContext.GetCommandList(), vbData, vbUploadResource->GetResource().Get());
@@ -295,7 +295,7 @@ namespace nv::graphics
             auto boneResource = (GPUResourceDX12*)this->GetGPUResource(boneBuffer);
 
             {
-                AutoLocalContext localContext(pDevice, ContextType::CONTEXT_GFX, ((RendererDX12*)(gRenderer))->GetCommandQueue());
+                AutoLocalContext localContext(pDevice, ContextType::CONTEXT_GFX, ((RendererDX12*)(gRenderer))->GetCopyCommandQueue());
                 boneResource->UploadResource(localContext.GetCommandList(), uploadData, boneUploadResource->GetResource().Get());
 
                 auto ctx = localContext.GetContext();

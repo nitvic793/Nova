@@ -63,17 +63,22 @@ namespace nv::graphics
 
         mCommandQueue = mDevice.As<DeviceDX12>()->GetCommandQueue();
 
+        D3D12_COMMAND_QUEUE_DESC cqDesc = { /*.Type = D3D12_COMMAND_LIST_TYPE_COPY */};
+        auto hr = pDevice->CreateCommandQueue(&cqDesc, IID_PPV_ARGS(mCopyCommandQueue.ReleaseAndGetAddressOf()));
+        if (FAILED(hr))
+            debug::ReportError("Unable to create copy command queue.");
+
         NV_GPU_INIT_D3D12(pDevice, mCommandQueue.GetAddressOf(), 1);
 
         for (int i = 0; i < FRAMEBUFFER_COUNT; i++)
         {
-            auto hr = pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(mFences[i].ReleaseAndGetAddressOf()));
+            hr = pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(mFences[i].ReleaseAndGetAddressOf()));
             mFenceValues[i] = i == 0 ? 1 : 0;
             mFenceEvents[i] = CreateEvent(nullptr, FALSE, FALSE, nullptr);
         }
 
         D3D12_FEATURE_DATA_SHADER_MODEL shaderModelSupport = { D3D_SHADER_MODEL_6_6 };
-        auto hr = pDevice->CheckFeatureSupport((D3D12_FEATURE)D3D12_FEATURE_SHADER_MODEL, &shaderModelSupport, sizeof(shaderModelSupport));
+        hr = pDevice->CheckFeatureSupport((D3D12_FEATURE)D3D12_FEATURE_SHADER_MODEL, &shaderModelSupport, sizeof(shaderModelSupport));
         if (FAILED(hr))
             debug::ReportError("Required shader model (SM 6.6) not supported.");
 
@@ -346,6 +351,11 @@ namespace nv::graphics
     ID3D12CommandQueue* RendererDX12::GetCommandQueue() const
     {
         return mCommandQueue.Get();
+    }
+
+    ID3D12CommandQueue* RendererDX12::GetCopyCommandQueue() const
+    {
+        return mCopyCommandQueue.Get();
     }
 
     ID3D12Resource* RendererDX12::GetConstBuffer() const
