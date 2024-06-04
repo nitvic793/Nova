@@ -174,7 +174,7 @@ namespace nv::graphics
 
     uint32_t ResourceManager::GetAsyncLoadQueueSize() const
     {
-        return mMeshQueue.size() + mTextureQueue.size();
+        return (uint32_t)mMeshQueue.size() + (uint32_t)mTextureQueue.size();
     }
 
     void ResourceManager::DestroyTexture(ResID id)
