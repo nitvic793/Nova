@@ -13,7 +13,7 @@ namespace nv::graphics
     {
     public:
         MeshDX12() :
-            Mesh({}),
+            Mesh(MeshDesc{}),
             mVertexBuffer(),
             mIndexBuffer(),
             mIndexBufferView(),

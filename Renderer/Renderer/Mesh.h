@@ -5,6 +5,7 @@
 #include <vector>
 #include <BVH/BVH.h>
 #include <Math/Collision.h>
+#include <Renderer/Resource.h>
 
 namespace nv::graphics
 {
@@ -63,9 +64,16 @@ namespace nv::graphics
     class Mesh : public ecs::IComponent
     {
     public:
-        Mesh() {};
+        Mesh() : 
+            mDesc({}),
+            mLoadState(ResourceLoadStateEnum::Unloaded)
+        {};
+
         Mesh(const MeshDesc& desc) :
-            mDesc(desc) {}
+            mDesc(desc),
+            mLoadState(ResourceLoadStateEnum::Unloaded)
+        {}
+
         virtual ~Mesh() {}
         constexpr const MeshDesc& GetDesc() const { return mDesc; }
         constexpr size_t GetVertexCount() const { return mDesc.mVertices.size(); }
@@ -73,6 +81,9 @@ namespace nv::graphics
         constexpr bool   HasBones() const { return !mDesc.mBoneDesc.mBoneInfoList.empty(); }
         constexpr const MeshBoneDesc& GetBoneData() const { return mDesc.mBoneDesc; }
         inline bvh::BVHData& GetBVH() { return mBVH; }
+
+        ResourceLoadStateEnum GetLoadState() const { return mLoadState.load(); }
+        void SetLoadState(ResourceLoadStateEnum state) { mLoadState.store(state); }
 
         void            CreateBoundingBox();
         const math::BoundingBox& GetBoundingBox() const { return mBoundingBox; }
@@ -86,5 +97,6 @@ namespace nv::graphics
         MeshDesc            mDesc;
         bvh::BVHData        mBVH;
         math::BoundingBox   mBoundingBox;
+        ResourceLoadState   mLoadState;
     };
 }

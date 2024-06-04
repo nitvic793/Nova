@@ -39,6 +39,8 @@ namespace nv::graphics
             mBoneBufferView.StrideInBytes = sizeof(VertexBoneData);
             mBoneBufferView.SizeInBytes = boneBufferSize;
         }
+
+        mLoadState = ResourceLoadStateEnum::Loaded;
     }
 
     void MeshDX12::GenerateBufferSRVs() 

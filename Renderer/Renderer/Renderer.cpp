@@ -2,6 +2,7 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/Device.h>
 #include <Renderer/RenderSystem.h>
+#include <Renderer/ResourceSystem.h>
 #include <Engine/System.h>
 #include <Renderer/ResourceManager.h>
 #include <Renderer/Format.h>
@@ -55,6 +56,7 @@ namespace nv::graphics
         gRenderer->InitFrameBuffers(*gWindow, format::R8G8B8A8_UNORM); // Dependent on resource manager. 
 
         gSystemManager.CreateSystem<RenderSystem>(width, height);
+        gSystemManager.CreateSystem<ResourceSystem>();
 #endif
         gSystemManager.CreateSystem<animation::AnimationSystem>();
         InitRenderSettings();

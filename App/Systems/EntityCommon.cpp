@@ -19,6 +19,11 @@ namespace nv
     {
         Handle<Material> matHandle = gResourceManager->GetMaterialHandle(mat);
         Handle<Mesh> meshHandle = gResourceManager->GetMeshHandle(mesh);
+        if (meshHandle.IsNull() && mesh != RES_ID_NULL)
+        {
+            meshHandle = gResourceManager->CreateMeshAsync(mesh);
+        }
+
         Mesh* pMesh = gResourceManager->GetMesh(meshHandle);
 
         Handle<Entity> e = ecs::gEntityManager.Create(Null<Entity>(), pDebugName);

@@ -8,6 +8,7 @@
 
 #include <AssetManager.h>
 #include <Types/TextureAsset.h>
+#include <Types/MeshAsset.h>
 
 namespace nv::graphics
 {
@@ -147,6 +148,35 @@ namespace nv::graphics
         mMaterialPool.Destroy();
     }
 
+    void ResourceManager::ProcessAsyncLoadQueue()
+    {
+        using namespace asset;
+
+        std::unique_lock<std::mutex> lock(mMutex);
+
+        for (auto& mesh : mMeshQueue)
+        {
+            // TODO: Need new command queue when creating new Mesh. 
+            auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_MESH, mesh.mResID });
+            auto meshAsset = asset->DeserializeTo<asset::MeshAsset>();
+            CreateMesh(mesh.mHandle, meshAsset.GetData());
+            meshAsset.Register(mesh.mHandle);
+        }
+
+        for (auto& tex : mTextureQueue)
+        {
+           
+        }
+
+        mMeshQueue.clear();
+        mTextureQueue.clear();
+    }
+
+    uint32_t ResourceManager::GetAsyncLoadQueueSize() const
+    {
+        return mMeshQueue.size() + mTextureQueue.size();
+    }
+
     void ResourceManager::DestroyTexture(ResID id)
     {
         auto handle = gResourceTracker.GetTextureHandle(id);
@@ -157,6 +187,23 @@ namespace nv::graphics
     void ResourceManager::QueueDestroy(Handle<GPUResource> handle, uint32_t frameDelay)
     {
         gRenderer->QueueDestroy(handle, frameDelay);
+    }
+
+    Handle<Mesh> ResourceManager::CreateMeshAsync(ResID id)
+    {
+        std::unique_lock<std::mutex> lock(mMutex);
+        auto handle = EmplaceMesh();
+        mMeshQueue.push_back({ handle, id });
+        gResourceTracker.Track(id, handle);
+        return handle;
+    }
+
+    Handle<Texture> ResourceManager::CreateTextureAsync(ResID id)
+    {
+        std::unique_lock<std::mutex> lock(mMutex);
+        auto handle = EmplaceTexture();
+        mTextureQueue.push_back({ handle, id });
+        return handle;
     }
 
 }

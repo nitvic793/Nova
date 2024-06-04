@@ -194,11 +194,134 @@ namespace nv::graphics
 
     Handle<Texture> ResourceManagerDX12::CreateTexture(const TextureDesc& desc)
     {
+        Handle<Texture> handle = mTextures.Create();
+        CreateTexture(handle, desc);
+        return handle;
+    }
+
+    Handle<Mesh> ResourceManagerDX12::CreateMesh(const MeshDesc& desc)
+    {
+        Handle<Mesh> handle;
+        if (desc.mVertices.empty() || desc.mIndices.empty()) 
+        {
+            nv::log::Warn("[ResourceManager] MeshDesc is empty. Cannot create mesh");
+            return handle;
+        }
+
+        handle = mMeshes.Create();
+        CreateMesh(handle, desc);
+        return handle;
+    }
+
+    Handle<Context> ResourceManagerDX12::CreateContext(const ContextDesc& desc)
+    {
+        Handle<Context> handle;
+        auto context = (ContextDX12*)mContexts.CreateInstance(handle, desc);
+        return handle;
+    }
+
+    void ResourceManagerDX12::CreateMesh(Handle<Mesh> handle, const MeshDesc& desc)
+    {
+        if (desc.mVertices.empty() || desc.mIndices.empty())
+        {
+            nv::log::Warn("[ResourceManager] MeshDesc is empty. Cannot create mesh");
+            return;
+        }
+
+        const uint32_t indexBufferSize = sizeof(uint32_t) * (uint32_t)desc.mIndices.size();
+        const uint32_t vertexBufferSize = sizeof(Vertex) * (uint32_t)desc.mVertices.size();
+
+        Handle<GPUResource> indexBuffer = CreateResource({ .mSize = indexBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_COPY_DEST });
+        Handle<GPUResource> indexBufferUpload = CreateResource({ .mSize = indexBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_GENERIC_READ, .mBufferMode = buffer::BUFFER_MODE_UPLOAD });
+
+        Handle<GPUResource> vertexBuffer = CreateResource({ .mSize = vertexBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_COPY_DEST });
+        Handle<GPUResource> vertexBufferUpload = CreateResource({ .mSize = vertexBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_GENERIC_READ, .mBufferMode = buffer::BUFFER_MODE_UPLOAD });
+
+        auto ibResource = (GPUResourceDX12*)this->GetGPUResource(indexBuffer);
+        auto vbResource = (GPUResourceDX12*)this->GetGPUResource(vertexBuffer);
+
+        auto ibUploadResource = (GPUResourceDX12*)this->GetGPUResource(indexBufferUpload);
+        auto vbUploadResource = (GPUResourceDX12*)this->GetGPUResource(vertexBufferUpload);
+
+        auto pDevice = ((DeviceDX12*)gRenderer->GetDevice())->GetDevice();
+        UploadData ibData =
+        {
+            .mpData = reinterpret_cast<const BYTE*>(desc.mIndices.data()),
+            .mRowPitch = indexBufferSize,
+            .mSlicePitch = indexBufferSize
+        };
+
+        UploadData vbData =
+        {
+            .mpData = reinterpret_cast<const BYTE*>(desc.mVertices.data()),
+            .mRowPitch = vertexBufferSize,
+            .mSlicePitch = vertexBufferSize
+        };
+
+        {
+            AutoLocalContext localContext(pDevice, ContextType::CONTEXT_GFX, ((RendererDX12*)(gRenderer))->GetCommandQueue());
+
+            ibResource->UploadResource(localContext.GetCommandList(), ibData, ibUploadResource->GetResource().Get());
+            vbResource->UploadResource(localContext.GetCommandList(), vbData, vbUploadResource->GetResource().Get());
+
+            auto ctx = localContext.GetContext();
+            TransitionBarrier barriers[] =
+            {
+                {.mFrom = buffer::STATE_COPY_DEST, .mTo = buffer::STATE_INDEX_BUFFER, .mResource = indexBuffer },
+                {.mFrom = buffer::STATE_COPY_DEST, .mTo = buffer::STATE_VERTEX_BUFFER, .mResource = vertexBuffer }
+            };
+
+            ctx->ResourceBarrier({ barriers, _countof(barriers) });
+        }
+
+        mGpuResources.Remove(vertexBufferUpload);
+        mGpuResources.Remove(indexBufferUpload);
+
+        Handle<GPUResource> boneBuffer = Null<GPUResource>();
+        if (!desc.mBoneDesc.mBones.empty())
+        {
+            auto& bDesc = desc.mBoneDesc;
+            const uint32_t boneBufferSize = (uint32_t)(sizeof(VertexBoneData) * bDesc.mBones.size());
+            Handle<GPUResource> boneBufferUpload = CreateResource({ .mSize = boneBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_GENERIC_READ, .mBufferMode = buffer::BUFFER_MODE_UPLOAD });
+            boneBuffer = CreateResource({ .mSize = boneBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_COPY_DEST });
+            UploadData uploadData =
+            {
+                .mpData = reinterpret_cast<const BYTE*>(bDesc.mBones.data()),
+                .mRowPitch = boneBufferSize,
+                .mSlicePitch = boneBufferSize
+            };
+
+            auto boneUploadResource = (GPUResourceDX12*)this->GetGPUResource(boneBufferUpload);
+            auto boneResource = (GPUResourceDX12*)this->GetGPUResource(boneBuffer);
+
+            {
+                AutoLocalContext localContext(pDevice, ContextType::CONTEXT_GFX, ((RendererDX12*)(gRenderer))->GetCommandQueue());
+                boneResource->UploadResource(localContext.GetCommandList(), uploadData, boneUploadResource->GetResource().Get());
+
+                auto ctx = localContext.GetContext();
+                TransitionBarrier barriers[] =
+                {
+                    {.mFrom = buffer::STATE_COPY_DEST, .mTo = buffer::STATE_VERTEX_BUFFER, .mResource = boneBuffer },
+                };
+
+                ctx->ResourceBarrier({ barriers, _countof(barriers) });
+            }
+
+            mGpuResources.Remove(boneBufferUpload);
+        }
+
+        MeshDX12* pMesh = mMeshes.GetAsDerived(handle);
+        pMesh->~MeshDX12();
+        pMesh = new(pMesh) MeshDX12(desc, vertexBuffer, indexBuffer, boneBuffer);
+        pMesh->CreateBoundingBox();
+    }
+
+    void ResourceManagerDX12::CreateTexture(Handle<Texture> handle, const TextureDesc& desc)
+    {
         assert(mGpuResources.IsValid(desc.mBuffer));
         assert(gRenderer);
         assert(mDevice);
 
-        Handle<Texture> handle;
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = {};
         DescriptorViews view = VIEW_NONE;
         DescriptorHeapDX12* heap = nullptr;
@@ -208,13 +331,13 @@ namespace nv::graphics
         const auto resourceDesc = resource->GetDesc();
 
         const auto isDepthFormat = [](const format::SurfaceFormat format)
-        {
-			return format == format::D32_FLOAT || format == format::D24_UNORM_S8_UINT || format == format::D16_UNORM || format == format::D32_FLOAT_S8X24_UINT;
-		};
+            {
+                return format == format::D32_FLOAT || format == format::D24_UNORM_S8_UINT || format == format::D16_UNORM || format == format::D32_FLOAT_S8X24_UINT;
+            };
 
         DXGI_FORMAT dxgiFormat = GetFormat(resourceDesc.mFormat == format::UNKNOWN ? desc.mFormat : resourceDesc.mFormat);
-        if(isDepthFormat(resourceDesc.mFormat))
-			dxgiFormat = GetFormat(desc.mFormat); // Override the format if it's a depth format
+        if (isDepthFormat(resourceDesc.mFormat))
+            dxgiFormat = GetFormat(desc.mFormat); // Override the format if it's a depth format
 
         switch (desc.mUsage)
         {
@@ -228,17 +351,17 @@ namespace nv::graphics
             if (isDepthFormat(resourceDesc.mFormat))
             {
                 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-                
-				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-				srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-				srvDesc.Format = dxgiFormat;
-				srvDesc.Texture2D.MipLevels = 1;
+
+                srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+                srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                srvDesc.Format = dxgiFormat;
+                srvDesc.Texture2D.MipLevels = 1;
                 srvDesc.Texture2D.MostDetailedMip = 0;
-				device->CreateShaderResourceView(resource->GetResource().Get(), &srvDesc, cpuHandle);
+                device->CreateShaderResourceView(resource->GetResource().Get(), &srvDesc, cpuHandle);
             }
             else if (desc.mType != tex::BUFFER)
             {
-               DirectX::CreateShaderResourceView(device, resource->GetResource().Get(), cpuHandle, tex::TEXTURE_CUBE == desc.mType);
+                DirectX::CreateShaderResourceView(device, resource->GetResource().Get(), cpuHandle, tex::TEXTURE_CUBE == desc.mType);
             }
             else
             {
@@ -316,112 +439,11 @@ namespace nv::graphics
         DescriptorHandle descHandle(cpuHandle);
         descHandle.mView = view;
         descHandle.mType = DescriptorHandle::CPU;
-        if(heap)
+        if (heap)
             descHandle.mHeapIndex = heap->GetCurrentIndex();
-        auto texture = mTextures.CreateInstance(handle, desc, descHandle);
-        
-        return handle;
-    }
 
-    Handle<Mesh> ResourceManagerDX12::CreateMesh(const MeshDesc& desc)
-    {
-        Handle<Mesh> handle;
-
-        if (desc.mVertices.empty() || desc.mIndices.empty())
-            return handle;
-
-        const uint32_t indexBufferSize = sizeof(uint32_t) * (uint32_t)desc.mIndices.size();
-        const uint32_t vertexBufferSize = sizeof(Vertex) * (uint32_t)desc.mVertices.size();
-
-        Handle<GPUResource> indexBuffer = CreateResource({ .mSize = indexBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_COPY_DEST});
-        Handle<GPUResource> indexBufferUpload = CreateResource({ .mSize = indexBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_GENERIC_READ, .mBufferMode = buffer::BUFFER_MODE_UPLOAD });
-
-        Handle<GPUResource> vertexBuffer = CreateResource({ .mSize = vertexBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_COPY_DEST });
-        Handle<GPUResource> vertexBufferUpload = CreateResource({ .mSize = vertexBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_GENERIC_READ, .mBufferMode = buffer::BUFFER_MODE_UPLOAD });
-
-        auto ibResource = (GPUResourceDX12*)this->GetGPUResource(indexBuffer);
-        auto vbResource = (GPUResourceDX12*)this->GetGPUResource(vertexBuffer);
-
-        auto ibUploadResource = (GPUResourceDX12*)this->GetGPUResource(indexBufferUpload);
-        auto vbUploadResource = (GPUResourceDX12*)this->GetGPUResource(vertexBufferUpload);
-
-        auto pDevice = ((DeviceDX12*)gRenderer->GetDevice())->GetDevice();
-        UploadData ibData = 
-        {
-            .mpData = reinterpret_cast<const BYTE*>(desc.mIndices.data()),
-            .mRowPitch = indexBufferSize,
-            .mSlicePitch = indexBufferSize
-        };
-
-        UploadData vbData =
-        {
-            .mpData = reinterpret_cast<const BYTE*>(desc.mVertices.data()),
-            .mRowPitch = vertexBufferSize,
-            .mSlicePitch = vertexBufferSize
-        };
-        
-        {
-            AutoLocalContext localContext(pDevice, ContextType::CONTEXT_GFX, ((RendererDX12*)(gRenderer))->GetCommandQueue());
-            
-            ibResource->UploadResource(localContext.GetCommandList(), ibData, ibUploadResource->GetResource().Get());
-            vbResource->UploadResource(localContext.GetCommandList(), vbData, vbUploadResource->GetResource().Get());
-
-            auto ctx = localContext.GetContext();
-            TransitionBarrier barriers[] = 
-            {
-                {.mFrom = buffer::STATE_COPY_DEST, .mTo = buffer::STATE_INDEX_BUFFER, .mResource = indexBuffer },
-                {.mFrom = buffer::STATE_COPY_DEST, .mTo = buffer::STATE_VERTEX_BUFFER, .mResource = vertexBuffer }
-            };
-
-            ctx->ResourceBarrier({ barriers, _countof(barriers) });
-        }
-
-        mGpuResources.Remove(vertexBufferUpload);
-        mGpuResources.Remove(indexBufferUpload);
-
-        Handle<GPUResource> boneBuffer = Null<GPUResource>();
-        if (!desc.mBoneDesc.mBones.empty())
-        {
-            auto& bDesc = desc.mBoneDesc;
-            const uint32_t boneBufferSize = (uint32_t)(sizeof(VertexBoneData) * bDesc.mBones.size());
-            Handle<GPUResource> boneBufferUpload = CreateResource({ .mSize = boneBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_GENERIC_READ, .mBufferMode = buffer::BUFFER_MODE_UPLOAD });
-            boneBuffer = CreateResource({ .mSize = boneBufferSize, .mType = buffer::TYPE_BUFFER, .mInitialState = buffer::STATE_COPY_DEST });
-            UploadData uploadData =
-            {
-                .mpData = reinterpret_cast<const BYTE*>(bDesc.mBones.data()),
-                .mRowPitch = boneBufferSize,
-                .mSlicePitch = boneBufferSize
-            };
-
-            auto boneUploadResource = (GPUResourceDX12*)this->GetGPUResource(boneBufferUpload);
-            auto boneResource = (GPUResourceDX12*)this->GetGPUResource(boneBuffer);
-
-            {
-                AutoLocalContext localContext(pDevice, ContextType::CONTEXT_GFX, ((RendererDX12*)(gRenderer))->GetCommandQueue());
-                boneResource->UploadResource(localContext.GetCommandList(), uploadData, boneUploadResource->GetResource().Get());
-
-                auto ctx = localContext.GetContext();
-                TransitionBarrier barriers[] =
-                {
-                    {.mFrom = buffer::STATE_COPY_DEST, .mTo = buffer::STATE_VERTEX_BUFFER, .mResource = boneBuffer },
-                };
-
-                ctx->ResourceBarrier({ barriers, _countof(barriers) });
-            }
-
-            mGpuResources.Remove(boneBufferUpload);
-        }
-
-        MeshDX12* mesh = mMeshes.CreateInstance(handle, desc, vertexBuffer, indexBuffer, boneBuffer);
-        mesh->CreateBoundingBox();
-        return handle;
-    }
-
-    Handle<Context> ResourceManagerDX12::CreateContext(const ContextDesc& desc)
-    {
-        Handle<Context> handle;
-        auto context = (ContextDX12*)mContexts.CreateInstance(handle, desc);
-        return handle;
+        auto texture = mTextures.GetAsDerived(handle);
+        *texture = TextureDX12(desc, descHandle);
     }
 
     void ResourceManagerDX12::CreatePipelineState(const PipelineStateDesc& desc, PipelineState* pPSO)
@@ -514,7 +536,12 @@ namespace nv::graphics
 
     Mesh* ResourceManagerDX12::GetMesh(Handle<Mesh> handle)
     {
-        return mMeshes.Get(handle);
+        auto pMesh = mMeshes.Get(handle);
+
+        if (!pMesh || pMesh->GetLoadState() != ResourceLoadStateEnum::Loaded)
+            return nullptr;
+
+        return pMesh;
     }
 
     Context* ResourceManagerDX12::GetContext(Handle<Context> handle)
@@ -568,5 +595,15 @@ namespace nv::graphics
         mShaders.Destroy();
         mTextures.Destroy();
         mContexts.Destroy();
+    }
+
+    Handle<Mesh> ResourceManagerDX12::EmplaceMesh()
+    {
+        return mMeshes.Create();
+    }
+
+    Handle<Texture> ResourceManagerDX12::EmplaceTexture()
+    {
+        return mTextures.Create();
     }
 }

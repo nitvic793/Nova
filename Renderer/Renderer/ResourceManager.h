@@ -5,6 +5,7 @@
 #include <Renderer/CommonDefines.h>
 #include <AssetBase.h>
 #include <Renderer/ResourceTracker.h>
+#include <mutex>
 
 namespace nv::graphics
 {
@@ -24,6 +25,16 @@ namespace nv::graphics
     class Mesh;
     class Context;
 
+    template<typename THandle>
+    struct ResourceAsyncLoadRequest
+    {
+        Handle<THandle> mHandle;
+        ResID           mResID;
+    };
+
+    template<typename THandle>
+    using HandleQueue = std::vector<ResourceAsyncLoadRequest<THandle>>;
+
     class ResourceManager
     {
     public:
@@ -38,6 +49,13 @@ namespace nv::graphics
         virtual Handle<Mesh>            CreateMesh(const MeshDesc& desc) = 0;
         virtual Handle<Mesh>            CreateMesh(const MeshDesc& desc, ResID id);
         virtual Handle<Context>         CreateContext(const ContextDesc& desc) = 0;
+
+        virtual void                    CreateMesh(Handle<Mesh> handle, const MeshDesc& desc) = 0;
+        virtual void                    CreateTexture(Handle<Texture> handle, const TextureDesc& desc) = 0;
+
+        // Async Functions
+        Handle<Mesh>                    CreateMeshAsync(ResID id);
+        Handle<Texture>                 CreateTextureAsync(ResID id);
 
         virtual void                    CreatePipelineState(const PipelineStateDesc& desc, PipelineState* pPSO) = 0;
 
@@ -68,6 +86,18 @@ namespace nv::graphics
         virtual void                    DestroyTexture(Handle<Texture> texture) = 0;
 
         virtual ~ResourceManager();
+
+    public:
+        virtual Handle<Mesh>            EmplaceMesh() = 0;
+        virtual Handle<Texture>         EmplaceTexture() = 0;
+
+        void                            ProcessAsyncLoadQueue();
+        uint32_t                        GetAsyncLoadQueueSize() const;
+
+    private:
+        HandleQueue<Mesh>               mMeshQueue;
+        HandleQueue<Texture>            mTextureQueue;
+        std::mutex                      mMutex;
 
     private:
         Pool<Material> mMaterialPool;

@@ -203,7 +203,9 @@
     <ClInclude Include="Renderer\Renderer.h" />
     <ClInclude Include="Renderer\RenderPass.h" />
     <ClInclude Include="Renderer\RenderSystem.h" />
+    <ClInclude Include="Renderer\Resource.h" />
     <ClInclude Include="Renderer\ResourceManager.h" />
+    <ClInclude Include="Renderer\ResourceSystem.h" />
     <ClInclude Include="Renderer\ResourceTracker.h" />
     <ClInclude Include="Renderer\Shader.h" />
     <ClInclude Include="Renderer\SwapChain.h" />
@@ -259,6 +261,7 @@
     <ClCompile Include="Renderer\RenderPass.cpp" />
     <ClCompile Include="Renderer\RenderSystem.cpp" />
     <ClCompile Include="Renderer\ResourceManager.cpp" />
+    <ClCompile Include="Renderer\ResourceSystem.cpp" />
     <ClCompile Include="Renderer\ResourceTracker.cpp" />
     <ClCompile Include="RenderPasses\DebugDrawPass.cpp" />
     <ClCompile Include="RenderPasses\ForwardPass.cpp" />
