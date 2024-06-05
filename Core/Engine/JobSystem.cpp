@@ -99,7 +99,9 @@ namespace nv::jobs
                 NV_THREAD(jobThreadName.c_str());
                 while (mIsRunning)
                 {
+                    NV_EVENT("Job");
                     {
+                        NV_EVENT("Job/Wait");
                         std::unique_lock<std::mutex> lock(mMutex);
                         if (!mIsRunning)
                             break;

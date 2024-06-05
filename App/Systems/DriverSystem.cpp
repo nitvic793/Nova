@@ -7,6 +7,8 @@
 #include <Engine/EntityComponent.h>
 #include <Engine/Component.h>
 #include <Engine/EventSystem.h>
+#include <Engine/JobSystem.h>
+#include <Debug/Profiler.h>
 
 #include <Input/Input.h>
 #include <Engine/Log.h>
@@ -79,6 +81,14 @@ namespace nv
         gEntityManager.GetEntity(floor)->GetTransform().mScale = nv::float3(floorScale, floorScale, floorScale);
     }
 
+    void TestJob(void* data)
+    {
+        //NV_EVENT("Test Job");
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
+
+    Handle<jobs::Job> sJobHandle = Null<jobs::Job>();
+
     void DriverSystem::Update(float deltaTime, float totalTime)
     {
         using namespace input;
@@ -104,6 +114,16 @@ namespace nv
                 }
             }
         });
+
+        if (sJobHandle.IsNull())
+        {
+            //jobs::Execute(TestJob);
+        }
+
+        if (jobs::IsFinished(sJobHandle))
+        {
+            sJobHandle = Null<jobs::Job>();
+        }
 
         auto pPool = gComponentManager.GetPool<math::BoundingBox>();
         EntityComponents<math::BoundingBox> comps;

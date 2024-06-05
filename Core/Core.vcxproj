@@ -195,6 +195,7 @@
   <ItemGroup>
     <ClCompile Include="Context.cpp" />
     <ClCompile Include="Debug\Error.cpp" />
+    <ClCompile Include="Debug\Profiler.cpp" />
     <ClCompile Include="Engine\Camera.cpp" />
     <ClCompile Include="Engine\EntityComponent.cpp" />
     <ClCompile Include="Engine\EventSystem.cpp" />

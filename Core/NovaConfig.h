@@ -25,6 +25,6 @@
 
 #ifndef NV_ENABLE_VLD
 #define NV_ENABLE_VLD 0 // Enables Visual Leak Detector. Affects performance, only use for debugging.
-#endif NV_ENABLE_VLD
+#endif 
 
 #endif // !NV_NOVACONFIG

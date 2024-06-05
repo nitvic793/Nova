@@ -188,6 +188,9 @@
     <ClCompile Include="Lib\StringHash.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Debug\Profiler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Natvis\Lib.natvis" />

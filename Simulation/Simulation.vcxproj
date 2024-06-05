@@ -114,7 +114,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Simulation;$(SolutionDir)Shared\External\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Simulation;$(SolutionDir)Shared\External\include;$(SolutionDir)Shared\External\tracy</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -134,7 +134,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Simulation;$(SolutionDir)Shared\External\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Simulation;$(SolutionDir)Shared\External\include;$(SolutionDir)Shared\External\tracy</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -162,6 +162,7 @@
     <ClInclude Include="Systems\SimDriver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Shared\External\tracy\TracyClient.cpp" />
     <ClCompile Include="Agent\AgentManager.cpp" />
     <ClCompile Include="City\RoadNetwork.cpp" />
     <ClCompile Include="Simulation.cpp" />

@@ -105,7 +105,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NV_PIPELINE;_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include;$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\include;$(SolutionDir)Shared\External\assimp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include;$(SolutionDir)Shared\External\tracy;$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\include;$(SolutionDir)Shared\External\assimp\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -124,7 +124,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NV_PIPELINE;_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include;$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include;$(SolutionDir)Shared\External\tracy;$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\include;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
