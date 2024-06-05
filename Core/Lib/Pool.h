@@ -163,6 +163,19 @@ namespace nv
             return (TDerived*)((Byte*)mBuffer + index * sizeof(TDerived));
         }
 
+        template<typename TFunc>
+        void ForEach(TFunc&& func)
+        {
+            for (uint32_t i = 0; i < mSize; ++i)
+            {
+                const Handle<T> handle(i, mGenerations[i]);
+                if (IsValid(handle))
+                {
+                    func(GetIndex(handle));
+                }
+            }
+        }
+
         constexpr bool      IsEmpty() const { return mFreeIndices.size() == mSize; }
         constexpr size_t    GetStrideSize() const { return sizeof(TDerived); }
         constexpr uint32_t  Size() const { return mSize; }

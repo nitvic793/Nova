@@ -479,6 +479,12 @@ namespace nv::ecs
         void Serialize(std::ostream& o);
         void Deserialize(std::istream& i);
 
+        template<typename TFunc>
+        void ForEachEntity(TFunc&& func)
+        {
+            mEntities.ForEach(func);
+        }
+
     private:
         Pool<Entity>            mEntities;
         Handle<Entity>          mRoot;

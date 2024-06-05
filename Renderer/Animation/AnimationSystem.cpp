@@ -36,18 +36,21 @@ namespace nv::graphics::animation
 				continue;
 
 			auto mpMesh = gResourceManager->GetMesh(data.mpComponent->mMesh);
+            if (!mpMesh)
+                continue;
+
 			if (mpMesh->HasBones() && !data.mpEntity->Has<AnimationComponent>())
 			{
 				data.mpEntity->Add<AnimationComponent>();
 				gAnimManager.Register(renderables.mEntities[i], mpMesh);
+                data.mpComponent->mFlags = (RenderableFlags)(data.mpComponent->mFlags | RENDERABLE_FLAG_ANIMATED);
 			}
 			else if (!mpMesh->HasBones() && data.mpEntity->Has<AnimationComponent>())
 			{
 				data.mpEntity->Remove<AnimationComponent>();
+                gAnimManager.Unregister(renderables.mEntities[i]);
+                data.mpComponent->mFlags = (RenderableFlags)(data.mpComponent->mFlags & ~RENDERABLE_FLAG_ANIMATED);
 			}
-
-			math::BoundingBox* pBbox = data.mpEntity->Get<math::BoundingBox>();
-
 		}
 
 		nv::Vector<Handle<jobs::Job>> jobHandles;

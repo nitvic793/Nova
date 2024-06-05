@@ -155,6 +155,11 @@ namespace nv::graphics::animation
 		}
 	}
 
+	void AnimationManager::Unregister(uint64_t handle)
+	{
+        mAnimInstanceMap.erase(handle);
+	}
+
 	AnimationInstanceData& AnimationManager::GetInstance(uint64_t handle)
 	{
 		return *mAnimInstanceMap.at(handle);

@@ -10,6 +10,8 @@
 #include <Types/TextureAsset.h>
 #include <Types/MeshAsset.h>
 
+#include <Engine/Log.h>
+
 namespace nv::graphics
 {
     ResourceTracker gResourceTracker;
@@ -156,7 +158,7 @@ namespace nv::graphics
 
         for (auto& mesh : mMeshQueue)
         {
-            // TODO: Need new command queue when creating new Mesh. 
+            log::Info("[ResourceManager] Async Loading mesh: {}", StringDB::Get().GetString(mesh.mResID).c_str());
             auto asset = asset::gpAssetManager->GetAsset(asset::AssetID{ asset::ASSET_MESH, mesh.mResID });
             auto meshAsset = asset->DeserializeTo<asset::MeshAsset>();
             CreateMesh(mesh.mHandle, meshAsset.GetData());

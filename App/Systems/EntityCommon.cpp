@@ -35,10 +35,11 @@ namespace nv
         auto renderable = entity->Add<components::Renderable>();
         renderable->mMaterial = matHandle;
         renderable->mMesh = meshHandle;
-        if (!meshHandle.IsNull())
+
+        if (!meshHandle.IsNull() && pMesh)
         {
             const bool bHasBones = pMesh->HasBones();
-            renderable->mFlags = bHasBones ? components::RENDERABLE_FLAG_ANIMATED : components::RENDERABLE_FLAG_DYNAMIC;
+            renderable->mFlags = (components::RenderableFlags) (bHasBones ? components::RENDERABLE_FLAG_ANIMATED | components::RENDERABLE_FLAG_DYNAMIC : components::RENDERABLE_FLAG_DYNAMIC);
             if (bHasBones)
             {
                 entity->Add<components::AnimationComponent>();

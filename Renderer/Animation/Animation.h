@@ -88,6 +88,7 @@ namespace nv::graphics::animation
 		void Register(Handle<Mesh> meshHandle, const MeshAnimNodeData& data);
 		void Register(uint64_t handle, Mesh* pMesh);
 		void Register(const AnimationStore& store);
+        void Unregister(uint64_t handle);
 
 		AnimationInstanceData&		GetInstance(uint64_t handle);
 		MeshAnimNodeData&			GetMeshAnimNodeData(Handle<Mesh> meshHandle);

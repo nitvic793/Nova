@@ -55,10 +55,13 @@ namespace nv::graphics
             ctx->BindTexture(1, skybox);
             ctx->BindConstantBuffer(3, (uint32_t)renderPassData.mFrameDataCBV.mHeapIndex);
 
-            ctx->SetMesh(mesh);
-            for (auto entry : mesh->GetDesc().mMeshEntries)
+            if (mesh)
             {
-                ctx->DrawIndexedInstanced(entry.mNumIndices, 1, entry.mBaseIndex, entry.mBaseVertex, 0);
+                ctx->SetMesh(mesh);
+                for (auto entry : mesh->GetDesc().mMeshEntries)
+                {
+                    ctx->DrawIndexedInstanced(entry.mNumIndices, 1, entry.mBaseIndex, entry.mBaseVertex, 0);
+                }
             }
         }
     }

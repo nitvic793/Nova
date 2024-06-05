@@ -120,7 +120,7 @@ namespace nv::graphics
             asset::gpAssetManager->UnloadAsset(material.mMetalnessTexture);
         };
 
-        loadMesh(ID("Mesh/cube.obj"));
+        //loadMesh(ID("Mesh/cube.obj"));
         loadMesh(ID("Mesh/torus.obj"));
         loadMesh(ID("Mesh/cone.obj"));
         loadMesh(ID("Mesh/plane.obj"));

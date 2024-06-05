@@ -83,6 +83,28 @@ namespace nv
     {
         using namespace input;
 
+        gEntityManager.ForEachEntity([](Entity* entity)
+        {
+            using namespace graphics;
+            using namespace graphics::components;
+
+            // Create bounding box for entities that have renderable component
+            // if they don't have one
+            if(entity->Has<Renderable>() && !entity->Has<BoundingBox>())
+            {
+                auto renderable = entity->Get<Renderable>();
+                if (renderable->mMesh.IsNull())
+                    return;
+
+                auto pMesh = gResourceManager->GetMesh(renderable->mMesh);
+                if (pMesh)
+                {
+                    auto pBox = entity->Add<math::BoundingBox>();
+                    *pBox = pMesh->GetBoundingBox();
+                }
+            }
+        });
+
         auto pPool = gComponentManager.GetPool<math::BoundingBox>();
         EntityComponents<math::BoundingBox> comps;
         pPool->GetEntityComponents(comps);
