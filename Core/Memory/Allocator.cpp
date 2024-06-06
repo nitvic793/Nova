@@ -1,7 +1,17 @@
+#include "pch.h"
+
 #include "Allocator.h"
 #include "Memory/Memory.h"
 #include <cstdint>
 #include <cstdlib>
+
+
+#include <Debug/Profiler.h>
+
+#if NV_TEST_BED
+#define NV_MEM_ALLOC(ptr, size) ((void)0)
+#define NV_MEM_FREE(ptr)        ((void)0)
+#endif
 
 namespace nv
 {
@@ -11,6 +21,7 @@ namespace nv
     void* SystemAllocator::Allocate(size_t size)
     {
         void* ptr = malloc(size);
+        NV_MEM_ALLOC(ptr, size);
         if(nv::MemTracker::gPtr)
             nv::MemTracker::gPtr->TrackSysAlloc(ptr, size);
         return ptr;
@@ -18,6 +29,7 @@ namespace nv
 
     void SystemAllocator::Free(void* ptr)
     {
+        NV_MEM_FREE(ptr);
         if (nv::MemTracker::gPtr)
             nv::MemTracker::gPtr->TrackSysFree(ptr);
         free(ptr);

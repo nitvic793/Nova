@@ -1,4 +1,6 @@
 #include "pch.h"
+
+#include <Debug/Profiler.h>
 #include "DriverSystem.h"
 
 #include <Renderer/ResourceManager.h>
@@ -8,7 +10,7 @@
 #include <Engine/Component.h>
 #include <Engine/EventSystem.h>
 #include <Engine/JobSystem.h>
-#include <Debug/Profiler.h>
+
 
 #include <Input/Input.h>
 #include <Engine/Log.h>
@@ -83,7 +85,7 @@ namespace nv
 
     void TestJob(void* data)
     {
-        //NV_EVENT("Test Job");
+        static constexpr tracy::SourceLocationData __tracy_source_location88{ "Test Job", __FUNCTION__, "C:\\Work\\Nova\\App\\Systems\\DriverSystem.cpp", (uint32_t)88, 0 }; tracy::ScopedZone nvZone(&__tracy_source_location88, true);
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
@@ -117,7 +119,7 @@ namespace nv
 
         if (sJobHandle.IsNull())
         {
-            //jobs::Execute(TestJob);
+            sJobHandle = jobs::Execute(TestJob);
         }
 
         if (jobs::IsFinished(sJobHandle))

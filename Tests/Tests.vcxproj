@@ -37,6 +37,7 @@
     <ClInclude Include="TestCommon.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Shared\External\tracy\TracyClient.cpp" />
     <ClCompile Include="CoreTests.cpp" />
     <ClCompile Include="EntityComponentTests.cpp" />
     <ClCompile Include="pch.cpp">
@@ -84,7 +85,7 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(MSBuildThisFileDirectory)include;%(AdditionalIncludeDirectories);$(SolutionDir)Asset\;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer\;$(SolutionDir)Data\Shaders</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(MSBuildThisFileDirectory)include;%(AdditionalIncludeDirectories);$(SolutionDir)Asset\;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer\;$(SolutionDir)Data\Shaders;$(SolutionDir)Shared\External\tracy</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -117,7 +118,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(MSBuildThisFileDirectory)include;%(AdditionalIncludeDirectories);$(SolutionDir)Asset\;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer\;$(SolutionDir)Data\Shaders</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Core;$(MSBuildThisFileDirectory)include;%(AdditionalIncludeDirectories);$(SolutionDir)Asset\;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer\;$(SolutionDir)Data\Shaders;$(SolutionDir)Shared\External\tracy</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>

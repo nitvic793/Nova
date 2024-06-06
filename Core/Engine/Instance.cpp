@@ -29,7 +29,7 @@ namespace nv
 
     bool Instance::Init()
     {
-        //NV_APP(mAppName);
+        NV_APP(mAppName);
         NV_EVENT("App/Init");
         log::Info("Init Nova App: {}", mAppName);
         nv::InitContext(this);
@@ -61,8 +61,8 @@ namespace nv
     
     bool Instance::Destroy()
     {
-        gSystemManager.DestroySystems();
         NV_SHUTDOWN();
+        gSystemManager.DestroySystems();
         graphics::DestroyGraphics();
         nv::DestroyContext();
         return true;

@@ -108,6 +108,8 @@
       <AdditionalIncludeDirectories>$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\include;$(SolutionDir)Shared\External\tracy;$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\include;$(SolutionDir)Shared\External\assimp\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <SupportJustMyCode>false</SupportJustMyCode>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

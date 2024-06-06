@@ -15,6 +15,17 @@ namespace nv::jobs
 {
     IJobSystem* gJobSystem = nullptr;
 
+#if NV_PLATFORM_WINDOWS
+    static void SetThreadAffinity_Win32(const wchar_t* name, HANDLE handle, uint32_t coreIndex)
+    {
+        DWORD_PTR affinityMask = 1ull << coreIndex;
+        DWORD_PTR affinity_result = SetThreadAffinityMask(handle, affinityMask);
+
+        HRESULT hr = SetThreadDescription(handle, name);
+        SetThreadPriority(handle, THREAD_PRIORITY_ABOVE_NORMAL);
+    }
+#endif
+
     class JobSystem : public IJobSystem
     {
     public:
@@ -73,7 +84,18 @@ namespace nv::jobs
 
         virtual bool IsFinished(Handle<Job> handle) override
         {
-            return !mJobs.IsValid(handle);
+            const bool bIsValid = mJobs.IsValid(handle);
+            if (!bIsValid)
+                return true;
+
+            Job* pJob = mJobs.GetAsDerived(handle);
+            if (!pJob || pJob->IsFinished())
+            {
+                mJobs.Remove(handle);
+                return true;
+            }
+
+            return false;
         }
 
         void Stop()
@@ -90,6 +112,7 @@ namespace nv::jobs
 
         void Start()
         {
+            SetThreadAffinity_Win32(L"NVMainThread", GetCurrentThread(), 0);
             mIsRunning = true;
 
             auto worker = [&]()
@@ -99,9 +122,9 @@ namespace nv::jobs
                 NV_THREAD(jobThreadName.c_str());
                 while (mIsRunning)
                 {
-                    NV_EVENT("Job");
+                    NV_FRAME("NovaJobThread");
                     {
-                        NV_EVENT("Job/Wait");
+                        NV_EVENT("JobSys/WaitForNewJob");
                         std::unique_lock<std::mutex> lock(mMutex);
                         if (!mIsRunning)
                             break;
@@ -132,12 +155,7 @@ namespace nv::jobs
 #ifdef _WIN32 // Credits: https://wickedengine.net/2018/11/24/simple-job-system-using-standard-c/#comments
                 // Do Windows-specific thread setup:
                 HANDLE handle = (HANDLE)mThreads[i].native_handle();
-
-                // Put each thread on to dedicated core:
-                DWORD_PTR affinityMask = 1ull << i;
-                DWORD_PTR affinity_result = SetThreadAffinityMask(handle, affinityMask);
-
-                HRESULT hr = SetThreadDescription(handle, L"Nova-Worker");
+                SetThreadAffinity_Win32(L"Nova-Worker", handle, i);
 #endif // _WIN32
             }
         }

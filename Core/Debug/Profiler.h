@@ -3,6 +3,8 @@
 
 #pragma once
 
+#if _DEBUG || NV_ENABLE_PROFILING
+
 #define NV_PROFILING_USE_OPTICK 0
 #define NV_PROFILING_USE_TRACY 1
 
@@ -11,13 +13,14 @@
 #endif
 
 #if NV_PROFILING_USE_TRACY
-#define TRACY_ON_DEMAND 1
-#define TRACY_ENABLE 1
+
+#define TRACY_ENABLE 0
+#define TRACY_CALLSTACK 0
+#define TRACY_ON_DEMAND 0
+
 #include <tracy/Tracy.hpp>
 #include <tracy/TracyD3D12.hpp>
 #endif
-
-#if _DEBUG || NV_ENABLE_PROFILING
 
 #if NV_PROFILING_USE_OPTICK
 #define NV_APP(APP_NAME)    OPTICK_APP(APP_NAME)
@@ -36,6 +39,12 @@
 #define NV_STOP_CAPTURE()       OPTICK_STOP_CAPTURE()
 #define NV_SAVE_CAPTURE(file)   OPTICK_SAVE_CAPTURE(file)
 #define NV_SHUTDOWN()           OPTICK_SHUTDOWN() 
+
+#define NV_MEM_ALLOC(ptr, size)             ((void)0)
+#define NV_MEM_ALLOCN(ptr, size, name)      ((void)0)
+#define NV_MEM_FREE(ptr)                    ((void)0)
+#define NV_MEM_FREEN(ptr, name)             ((void)0)
+
 #endif // NV_PROFILING_USE_OPTICK
 
 #if NV_PROFILING_USE_TRACY
@@ -52,18 +61,23 @@ namespace nv
 #define NV_EVENT(scope)     ZoneNamedN(nvZone, scope, true)
 #define NV_FRAME(name)      FrameMarkNamed(name)
 #define NV_FRAME_MARK()     FrameMark
-#define NV_THREAD(name)     tracy::SetThreadName(name)
+#define NV_THREAD(name)     tracy::SetThreadName(name) 
 #define NV_TAG(name, value) TracyPlot(name, value)
 
 #define NV_GPU_INIT_D3D12(DEVICE, CMD_QUEUES, NUM_CMD_QUEUS)    nv::TracyGlobalInfo::mD3D12Ctx = TracyD3D12Context(DEVICE, *CMD_QUEUES)
 #define NV_GPU_CONTEXT(COMMAND_LIST)                            ((void)0)
 #define NV_GPU_EVENT(NAME)                                      ((void)0)
-#define NV_GPU_FLIP(SWAP_CHAIN)                                 ((void)0)
+#define NV_GPU_FLIP(SWAP_CHAIN)                                 TracyD3D12Collect(nv::TracyGlobalInfo::mD3D12Ctx)
 
 #define NV_START_CAPTURE()      ((void)0)
 #define NV_STOP_CAPTURE()       ((void)0)
 #define NV_SAVE_CAPTURE(file)   ((void)0)
 #define NV_SHUTDOWN()           TracyD3D12Destroy(nv::TracyGlobalInfo::mD3D12Ctx)
+
+#define NV_MEM_ALLOC(ptr, size)             TracyAlloc(ptr, size)
+#define NV_MEM_ALLOCN(ptr, size, name)      TracyAllocN(ptr, size, name)
+#define NV_MEM_FREE(ptr)                    TracyFree(ptr)
+#define NV_MEM_FREEN(ptr, name)             TracyFreeN(ptr, name)
 #endif // NV_PROFILING_USE_TRACY
 
 #else // _DEBUG || NV_ENABLE_PROFILING
@@ -83,7 +97,12 @@ namespace nv
 #define NV_START_CAPTURE()   
 #define NV_STOP_CAPTURE()   
 #define NV_SAVE_CAPTURE()   
-#define NV_SAVE_CAPTURE(file)   
+#define NV_SAVE_CAPTURE(file) 
+
+#define NV_MEM_ALLOC(ptr, size)             ((void)0)
+#define NV_MEM_ALLOCN(ptr, size, name)      ((void)0)
+#define NV_MEM_FREE(ptr)                    ((void)0)
+#define NV_MEM_FREEN(ptr, name)             ((void)0)
 
 #endif // _DEBUG || NV_ENABLE_PROFILING
 

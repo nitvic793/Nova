@@ -113,6 +113,8 @@
       <AdditionalIncludeDirectories>$(SolutionDir)packages\VisualLeakDetector.2.5.0.0\lib\native\include;$(SolutionDir)Shared\External\Optick\include;$(SolutionDir)Asset;$(SolutionDir)Core;$(SolutionDir)Shared\External\assimp\include;$(SolutionDir)Shared\;$(SolutionDir)Shared\External\include;$(SolutionDir)Renderer;$(SolutionDir)Shared\External\dxc\inc;$(SolutionDir)Renderer\DX12\D3D12MemoryAllocator\include;$(SolutionDir)Data\Shaders;$(SolutionDir)App;$(SolutionDir)Shared\External\tracy</AdditionalIncludeDirectories>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <SupportJustMyCode>false</SupportJustMyCode>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

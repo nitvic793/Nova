@@ -13,7 +13,9 @@
 
 #include "pch.h"
 
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 
 #include "Debug/Profiler.h"
 #include "common/TracySystem.cpp"
