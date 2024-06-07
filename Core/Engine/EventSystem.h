@@ -8,6 +8,8 @@
 #include <vector>
 #include <mutex>
 
+#include <Debug/Profiler.h>
+
 namespace nv
 {
 	struct IEvent {};
@@ -50,7 +52,7 @@ namespace nv
 
 	private:
 		SubscriberMap	mSubscribers;
-		std::mutex		mMutex;
+		NV_MUTEX(std::mutex, mMutex);
 	};
 
 	template<typename EventType>
@@ -75,7 +77,7 @@ namespace nv
 		ScopedPtr<EventHandlerBase, true> eventHandler = ScopedPtr<EventHandlerBase, true>((EventHandlerBase*)handler);
 
 		{
-			std::unique_lock<std::mutex> lock(mMutex);
+			std::unique_lock<NV_LOCKABLE(std::mutex)> lock(mMutex);
 			std::vector<ScopedPtr<EventHandlerBase, true>>& handlers = mSubscribers[typeName];
 			handlers.push_back(std::move(eventHandler));
 		}

@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include <Engine/System.h>
 #include <Engine/EntityComponent.h>
 

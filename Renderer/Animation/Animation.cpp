@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include <Animation/Animation.h>
+#include <Debug/Profiler.h>
 #include <mutex>
 
 namespace nv::graphics::animation
@@ -241,7 +242,7 @@ namespace nv::graphics::animation
 		return (animationIndex <= mAnimStore.Animations.size() - 1 && animationIndex >= 0);
 	}
 
-	std::mutex gMutex;
+	NV_MUTEX(std::mutex, gMutex);
 
 	void AnimationManager::Lock()
 	{

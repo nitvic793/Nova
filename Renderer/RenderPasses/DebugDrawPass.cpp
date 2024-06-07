@@ -12,6 +12,7 @@
 #include <DX12/Interop.h>
 #include <DX12/ContextDX12.h>
 #include <DebugUI/DebugUIPass.h>
+#include <Debug/Profiler.h>
 
 #include <EffectPipelineStateDescription.h>
 #include <CommonStates.h>
@@ -61,6 +62,8 @@ void DebugDrawPass::Execute(const RenderPassData& renderPassData)
 	auto pool = ecs::gComponentManager.GetPool<math::BoundingBox>();
 	ecs::EntityComponents<math::BoundingBox> comps;
 	pool->GetEntityComponents(comps);
+
+    NV_GPU_EVENT("DebugDrawPass", ctx->GetCommandList());
 
 	auto camHandle = GetActiveCamera();
 	if (camHandle.IsNull())

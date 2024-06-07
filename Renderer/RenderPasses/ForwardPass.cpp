@@ -9,6 +9,11 @@
 #include <Renderer/Mesh.h>
 #include <Renderer/Device.h>
 
+#include <Debug/Profiler.h>
+#if NV_PLATFORM_WINDOWS
+#include <DX12/ContextDX12.h>
+#endif
+
 namespace nv::graphics
 {
     void ForwardPass::Init()
@@ -35,6 +40,7 @@ namespace nv::graphics
     {
         uint32_t bonesCbIdx = 0;
         auto ctx = gRenderer->GetContext();
+        NV_GPU_EVENT("ForwardPass", ((ContextDX12*)ctx)->GetCommandList());
         const auto bindAndDrawObject = [&](ConstantBufferView objCb, ConstantBufferView matCb, Mesh* mesh, ConstantBufferView* bonesCb)
         {
             ctx->BindConstantBuffer(0, (uint32_t)objCb.mHeapIndex);

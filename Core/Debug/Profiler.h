@@ -16,7 +16,7 @@
 
 #if NV_PROFILING_USE_TRACY
 
-#define TRACY_ENABLE 0
+#define TRACY_ENABLE 1
 #define TRACY_CALLSTACK 1
 #define TRACY_ON_DEMAND 0
 
@@ -60,7 +60,7 @@ namespace nv
 }
 
 #define NV_APP(APP_NAME)    TracyAppInfo(APP_NAME, sizeof(APP_NAME))
-#define NV_EVENT(scope)     ZoneNamedN(nvZone, scope, true)
+#define NV_EVENT(scope)     ZoneScopedN(scope)
 #define NV_FRAME(name)      FrameMarkNamed(name)
 #define NV_FRAME_MARK()     FrameMark
 #define NV_THREAD(name)     tracy::SetThreadName(name) 
@@ -68,8 +68,8 @@ namespace nv
 
 #define NV_GPU_INIT_D3D12(DEVICE, CMD_QUEUES, NUM_CMD_QUEUS)    nv::TracyGlobalInfo::mD3D12Ctx = TracyD3D12Context(DEVICE, *CMD_QUEUES)
 #define NV_GPU_CONTEXT(COMMAND_LIST)                            ((void)0)
-#define NV_GPU_EVENT(NAME)                                      ((void)0)
-#define NV_GPU_FLIP(SWAP_CHAIN)                                 TracyD3D12Collect(nv::TracyGlobalInfo::mD3D12Ctx)
+#define NV_GPU_EVENT(NAME, COMMAND_LIST)                        ((void)0)//TracyD3D12Zone(nv::TracyGlobalInfo::mD3D12Ctx, COMMAND_LIST, NAME)
+#define NV_GPU_FLIP(SWAP_CHAIN)                                 ((void)0)//TracyD3D12Collect(nv::TracyGlobalInfo::mD3D12Ctx)
 
 #define NV_START_CAPTURE()      ((void)0)
 #define NV_STOP_CAPTURE()       ((void)0)
@@ -80,6 +80,10 @@ namespace nv
 #define NV_MEM_ALLOCN(ptr, size, name)      TracyAllocNS(ptr, size, NV_MAX_CALLSTACK_DEPTH, name)
 #define NV_MEM_FREE(ptr)                    TracyFreeS(ptr, NV_MAX_CALLSTACK_DEPTH)
 #define NV_MEM_FREEN(ptr, name)             TracyFreeNS(ptr, NV_MAX_CALLSTACK_DEPTH, name)
+
+#define NV_MUTEX(type, name)                TracyLockable(type, name)
+#define NV_LOCKABLE(type)                   LockableBase(type)
+
 #endif // NV_PROFILING_USE_TRACY
 
 #else // _DEBUG || NV_ENABLE_PROFILING

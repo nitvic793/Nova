@@ -8,6 +8,10 @@
 #define PCH_H
 
 // add headers that you want to pre-compile here
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include <NovaCore.h>
 #include <Debug/Profiler.h>
 

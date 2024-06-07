@@ -11,6 +11,11 @@
 #include <Renderer/GPUResource.h>
 #include <Renderer/Mesh.h>
 
+#include <Debug/Profiler.h>
+#if NV_PLATFORM_WINDOWS
+#include <DX12/ContextDX12.h>
+#endif
+
 namespace nv::graphics
 {
     using namespace buffer;
@@ -97,6 +102,8 @@ namespace nv::graphics
                 ctx->DrawIndexedInstanced(entry.mNumIndices, 1, entry.mBaseIndex, entry.mBaseVertex, 0);
             }
         };
+
+        NV_GPU_EVENT("GBuffer", ((ContextDX12*)ctx)->GetCommandList());
 
         // Transition buffers to render target state
         TransitionBarrier barriers[] = {
