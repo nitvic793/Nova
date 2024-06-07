@@ -5,6 +5,8 @@
 
 #if _DEBUG || NV_ENABLE_PROFILING
 
+#define NV_MAX_CALLSTACK_DEPTH 32
+
 #define NV_PROFILING_USE_OPTICK 0
 #define NV_PROFILING_USE_TRACY 1
 
@@ -15,7 +17,7 @@
 #if NV_PROFILING_USE_TRACY
 
 #define TRACY_ENABLE 0
-#define TRACY_CALLSTACK 0
+#define TRACY_CALLSTACK 1
 #define TRACY_ON_DEMAND 0
 
 #include <tracy/Tracy.hpp>
@@ -74,10 +76,10 @@ namespace nv
 #define NV_SAVE_CAPTURE(file)   ((void)0)
 #define NV_SHUTDOWN()           TracyD3D12Destroy(nv::TracyGlobalInfo::mD3D12Ctx)
 
-#define NV_MEM_ALLOC(ptr, size)             TracyAlloc(ptr, size)
-#define NV_MEM_ALLOCN(ptr, size, name)      TracyAllocN(ptr, size, name)
-#define NV_MEM_FREE(ptr)                    TracyFree(ptr)
-#define NV_MEM_FREEN(ptr, name)             TracyFreeN(ptr, name)
+#define NV_MEM_ALLOC(ptr, size)             TracyAllocS(ptr, size, NV_MAX_CALLSTACK_DEPTH)
+#define NV_MEM_ALLOCN(ptr, size, name)      TracyAllocNS(ptr, size, NV_MAX_CALLSTACK_DEPTH, name)
+#define NV_MEM_FREE(ptr)                    TracyFreeS(ptr, NV_MAX_CALLSTACK_DEPTH)
+#define NV_MEM_FREEN(ptr, name)             TracyFreeNS(ptr, NV_MAX_CALLSTACK_DEPTH, name)
 #endif // NV_PROFILING_USE_TRACY
 
 #else // _DEBUG || NV_ENABLE_PROFILING
