@@ -117,6 +117,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)Core;$(SolutionDir)Simulation;$(SolutionDir)Shared\External\include;$(SolutionDir)Shared\External\tracy</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <SupportJustMyCode>false</SupportJustMyCode>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

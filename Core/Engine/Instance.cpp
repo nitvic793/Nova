@@ -57,13 +57,13 @@ namespace nv
             Notify(); // Notify end of frame to other threads
         }
 
-        NV_SHUTDOWN();
         return true;
     }
     
     bool Instance::Destroy()
     {
         gSystemManager.DestroySystems();
+        NV_SHUTDOWN();
         graphics::DestroyGraphics();
         nv::DestroyContext();
         return true;
