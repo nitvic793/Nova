@@ -325,6 +325,8 @@ namespace nv::graphics
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = {};
         DescriptorViews view = VIEW_NONE;
         DescriptorHeapDX12* heap = nullptr;
+        uint32_t heapIndex = -1;
+
         auto renderer = (RendererDX12*)gRenderer;
         auto resource = mGpuResources.GetAsDerived(desc.mBuffer);
         auto device = mDevice->GetDevice();
@@ -347,7 +349,7 @@ namespace nv::graphics
             view = VIEW_SHADER_RESOURCE;
             heapHandle = desc.mUseRayTracingHeap ? renderer->mRayTracingHeap : renderer->mTextureHeap;
             heap = renderer->mDescriptorHeapPool.GetAsDerived(heapHandle);
-            cpuHandle = heap->PushCPU();
+            cpuHandle = heap->PushCPU(&heapIndex);
 
             if (isDepthFormat(resourceDesc.mFormat))
             {
@@ -381,7 +383,7 @@ namespace nv::graphics
             view = VIEW_UNORDERED_ACCESS;
             heapHandle = desc.mUseRayTracingHeap ? renderer->mRayTracingHeap : renderer->mTextureHeap;
             heap = renderer->mDescriptorHeapPool.GetAsDerived(heapHandle);
-            cpuHandle = heap->PushCPU();
+            cpuHandle = heap->PushCPU(&heapIndex);
 
             D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
             uavDesc.ViewDimension = GetUAVDimension(desc.mType);
@@ -394,7 +396,7 @@ namespace nv::graphics
             view = VIEW_DEPTH_STENCIL;
             heapHandle = renderer->mDsvHeap;
             heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mDsvHeap);
-            cpuHandle = heap->PushCPU();
+            cpuHandle = heap->PushCPU(&heapIndex);
 
             D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
             dsvDesc.Texture2D.MipSlice = 0;
@@ -409,7 +411,7 @@ namespace nv::graphics
             view = VIEW_RENDER_TARGET;
             heapHandle = renderer->mRtvHeap;
             heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mRtvHeap);
-            cpuHandle = heap->PushCPU();
+            cpuHandle = heap->PushCPU(&heapIndex);
 
             const D3D12_RENDER_TARGET_VIEW_DESC rtvDesc =
             {
@@ -431,7 +433,7 @@ namespace nv::graphics
 
             heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mTextureHeap);
             heapHandle = renderer->mTextureHeap;
-            cpuHandle = heap->PushCPU();
+            cpuHandle = heap->PushCPU(&heapIndex);
             device->CreateShaderResourceView(nullptr, &srvDesc, cpuHandle);
             break;
         }
@@ -440,11 +442,13 @@ namespace nv::graphics
         }
 
         assert(heap);
+        assert(heapIndex != -1);
+
         DescriptorHandle descHandle(cpuHandle);
         descHandle.mView = view;
         descHandle.mType = DescriptorHandle::CPU;
-        if (heap)
-            descHandle.mHeapIndex = heap->GetCurrentIndex();
+        if (heapIndex != -1)
+            descHandle.mHeapIndex = heapIndex;
 
         auto texture = mTextures.GetAsDerived(handle);
         *texture = TextureDX12(desc, descHandle);

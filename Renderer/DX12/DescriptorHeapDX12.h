@@ -79,12 +79,27 @@ namespace nv::graphics
 
 		constexpr uint32_t GetSize() const { return mSize; }
 
-		D3D12_CPU_DESCRIPTOR_HANDLE PushCPU()
+		D3D12_CPU_DESCRIPTOR_HANDLE PushCPU(uint32_t* outIndex = nullptr)
 		{
+			uint32_t index;
+			D3D12_CPU_DESCRIPTOR_HANDLE result;
+
 			if (mFreeIndices.IsEmpty())
-				return HandleCPU(mSize++);
+			{
+				index = mSize;
+				result = HandleCPU(index);
+				mSize++;
+			}
 			else
-				return HandleCPU(mFreeIndices.Pop());
+			{
+				index = mFreeIndices.Pop();
+				result = HandleCPU(index);
+			}
+
+			if (outIndex)
+				*outIndex = index;
+
+			return result;
 		}
 
 #pragma optimize ("", off)
