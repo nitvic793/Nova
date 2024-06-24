@@ -7,6 +7,7 @@
 #include <DebugUI/DebugUIPass.h>
 #include <Math/Collision.h>
 #include <Engine/Transform.h>
+#include <Engine/Instance.h>
 
 namespace nv
 {
@@ -60,6 +61,7 @@ namespace nv
 
     void FramePreSystem::Init()
     {
+        gContext.mpInstance->Wait(); // Wait for renderer to initialize.
     }
 
     void FramePreSystem::Update(float deltaTime, float totalTime)

@@ -8,6 +8,7 @@
 #include <Lib/StringHash.h>
 #include <Lib/Pool.h>
 #include <Lib/ScopedPtr.h>
+#include <mutex>
 
 namespace nv
 {
@@ -47,6 +48,7 @@ namespace nv
         template<typename TSystem>
         constexpr TSystem* GetSystem() const
         {
+            std::unique_lock<std::mutex> lock(mSysMutex);
             constexpr StringID id = TypeNameID<TSystem>();
             return static_cast<TSystem*>(mSystems.at(id).Get());
         }
@@ -55,12 +57,14 @@ namespace nv
 
         void RemoveSystem(StringID id)
         {
+            std::unique_lock<std::mutex> lock(mSysMutex);
             mSystems.erase(id);
         }
 
         template<typename TSystem>
         constexpr void RemoveSystem()
         {
+            std::unique_lock<std::mutex> lock(mSysMutex);
             constexpr StringID id = TypeNameID<TSystem>();
             mSystems.erase(id);
         }
@@ -72,12 +76,14 @@ namespace nv
 
         void SetSystemName(StringID id, const std::string_view& name)
         {
+            std::unique_lock<std::mutex> lock(mSysMutex);
             if constexpr (ENABLE_SYSTEM_NAMES)
                 mSystemNames[id] = name;
         }
 
         const char* GetSystemName(StringID id)
         {
+            std::unique_lock<std::mutex> lock(mSysMutex);
             if constexpr (ENABLE_SYSTEM_NAMES)
                 return mSystemNames[id].c_str();
         }
@@ -92,6 +98,7 @@ namespace nv
     private:
         nv::Vector<StringID>                        mInsertOrder;
         HashMap<StringID, ScopedPtr<ISystem, true>> mSystems;
+        mutable std::mutex                          mSysMutex; // Committing a grave sin, but const functions need mutex lock for safety
 #if NV_ENABLE_SYSTEM_NAMES
         HashMap<StringID, std::string> mSystemNames;
 #endif

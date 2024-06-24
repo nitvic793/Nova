@@ -99,11 +99,12 @@ namespace nv
         sError = isError;
         spErrorReason = pReason;
         gInstanceState = INSTANCE_STATE_ERROR;
+        log::Error("Error: {}", pReason);
     }
 
     bool Instance::UpdateSystemState() const
     {
-        bool result = graphics::gWindow->ProcessMessages() != graphics::Window::kNvQuit;
+        bool result = graphics::gWindow->GetExecResult() != graphics::Window::kNvQuit;
         result = result || sError;
 
         if (!result) 

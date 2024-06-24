@@ -404,6 +404,7 @@ namespace nv::graphics
         auto dxDevice = mDevice.As<DeviceDX12>();
         auto pSwapChain = dxDevice->mSwapChain.Get();
         auto pDevice = dxDevice->GetDevice();
+        auto rtHeap = mDescriptorHeapPool.GetAsDerived(mRtvHeap);
 
         // Wait for all frames to finish
         WaitForAllFrames();
@@ -413,7 +414,7 @@ namespace nv::graphics
             for (int32_t i = 0; i < FRAMEBUFFER_COUNT; ++i)
             {
                 auto backBuffer = gResourceManager->GetGPUResource(mpBackBuffers[i])->As<GPUResourceDX12>();
-                backBuffer->GetResource()->Release();   
+                backBuffer->GetResource()->Release();  
             }
 
             auto hr = pSwapChain->ResizeBuffers(FRAMEBUFFER_COUNT, window.GetWidth(), window.GetHeight(), GetFormat(mBackbufferFormat), 0);

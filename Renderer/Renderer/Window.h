@@ -20,6 +20,7 @@ namespace nv::graphics
 
         virtual bool Init(uint32_t width, uint32_t height, bool fullscreen = false) = 0;
         virtual ExecResult ProcessMessages() { return kNvNone; }
+        virtual ExecResult GetExecResult() const = 0;
         virtual ~Window() {}
     protected:
         uint32_t    mWidth = 0;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Renderer/Window.h>
+#include <atomic>
 
 struct HWND__;
 using HWND = HWND__*;
@@ -19,10 +20,12 @@ namespace nv::graphics
     {
     public:
         WindowDX12(HWND hwnd) :
-            mHwnd(hwnd) {}
+            mHwnd(hwnd),
+            mExecResult(kNvNone){}
 
         WindowDX12() :
-            mHwnd(NULL) {}
+            mHwnd(NULL),
+            mExecResult(kNvNone) {}
 
         constexpr HWND GetWindowHandle() const { return mHwnd; }
 
@@ -34,8 +37,10 @@ namespace nv::graphics
         void OnResize();
 
         void SetInputWindow(void* pKeyboard, void* pMouse);
+        virtual ExecResult GetExecResult() const override { return mExecResult; }
 
     private:
         HWND mHwnd;
+        std::atomic<ExecResult> mExecResult;
     };
 }

@@ -7,7 +7,7 @@
 namespace nv::graphics
 {
     class GPUResource;
-
+    class DescriptorHeap;
 
 
     struct TextureDesc
@@ -18,6 +18,7 @@ namespace nv::graphics
         tex::Type               mType = tex::TEXTURE_2D;
         bool                    mUseRayTracingHeap = false;
         tex::Buffer             mBufferData = {};
+        Handle<DescriptorHeap>  mHeap;
     };
 
     class Texture
@@ -34,6 +35,8 @@ namespace nv::graphics
 
         virtual uint32_t GetHeapIndex() const = 0;
         virtual uint32_t GetHeapOffset() const = 0;
+
+        constexpr void SetHeap(Handle<DescriptorHeap> heap) { mDesc.mHeap = heap; }
 
     protected:
         TextureDesc mDesc;

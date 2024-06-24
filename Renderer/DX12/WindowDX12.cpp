@@ -9,6 +9,8 @@
 #include <DebugUI/Imgui/imgui_impl_dx12.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/Device.h>
+#include <Engine/Log.h>
+#include <Debug/Profiler.h>
 
 // Forward declare message handler from imgui_impl_win32.cpp
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -90,8 +92,10 @@ namespace nv::graphics
 
     Window::ExecResult WindowDX12::ProcessMessages()
     {
-        MSG msg = {};
+        NV_FRAME("Window/MessagePump");
 
+        MSG msg = {};
+        mExecResult = kNvNone;
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
@@ -99,9 +103,9 @@ namespace nv::graphics
         }
 
         if (msg.message == WM_QUIT)
-            return kNvQuit;
+            mExecResult = kNvQuit;
 
-        return kNvNone;
+        return mExecResult;
     }
 
     LRESULT WindowDX12::WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -177,6 +181,8 @@ namespace nv::graphics
         GetClientRect(mHwnd, &rc);
         mWidth = rc.right - rc.left;
         mHeight = rc.bottom - rc.top;
+
+        log::Info("Resizing window to {} x {}", mWidth, mHeight);
 
         if(gRenderer)
             gRenderer->OnResize(*this);

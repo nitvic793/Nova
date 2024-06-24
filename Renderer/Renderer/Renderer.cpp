@@ -39,14 +39,14 @@ namespace nv::graphics
         gRenderSettings.mbEnableVSync = true;
     }
 
-    void InitGraphics(void* context)
-    {
-        uint32_t width = 1920;
-        uint32_t height = 1080;
-        const bool isFullscreen = false;
+    uint32_t width = 1920;
+    uint32_t height = 1080;
+    const bool isFullscreen = false;
 
+    void InitOnRenderThread()
+    {
 #if NV_PLATFORM_WINDOWS && NV_RENDERER_DX12
-        gWindow = Alloc<WindowDX12>(SystemAllocator::gPtr, (HWND)context);
+        gWindow = Alloc<WindowDX12>(SystemAllocator::gPtr, (HWND)nullptr);
         gWindow->Init(width, height, isFullscreen);
 
         gRenderer = Alloc<RendererDX12>();
@@ -54,10 +54,15 @@ namespace nv::graphics
 
         gResourceManager = Alloc<ResourceManagerDX12>();
         gRenderer->InitFrameBuffers(*gWindow, format::R8G8B8A8_UNORM); // Dependent on resource manager. 
-
-        gSystemManager.CreateSystem<RenderSystem>(width, height);
-        gSystemManager.CreateSystem<ResourceSystem>();
 #endif
+    }
+
+    void InitGraphics(void* context)
+    {
+        auto pRenderSystem = (RenderSystem*)gSystemManager.CreateSystem<RenderSystem>(width, height);
+        pRenderSystem->EnqueueInitFunction(&InitOnRenderThread);
+
+        gSystemManager.CreateSystem<ResourceSystem>();
         gSystemManager.CreateSystem<animation::AnimationSystem>();
         InitRenderSettings();
     }

@@ -36,6 +36,9 @@ namespace nv::graphics
     class RenderSystem : public ISystem
     {
     public:
+        using RenderThreadInitFn = void(*)();
+
+    public:
         RenderSystem(uint32_t width, uint32_t height);
 
         void Init() override;
@@ -47,6 +50,8 @@ namespace nv::graphics
         void Reload(Handle<PipelineState> pso);
 
         void RenderThreadJob(void* ctx);
+        void InitOnRenderThread();
+        void EnqueueInitFunction(RenderThreadInitFn fn);
 
     private:
         void UploadDrawData();
@@ -74,6 +79,7 @@ namespace nv::graphics
         RenderDataArray         mRenderData;
         RenderData              mCurrentRenderData;
         nv::Vector<ScopedPtr<RenderPass, true>> mRenderPasses;
+        nv::Vector<RenderThreadInitFn, true> mInitFunctions;
     };
 }
 

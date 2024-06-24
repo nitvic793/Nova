@@ -11,6 +11,7 @@ namespace nv
     void SystemManager::InitSystems()
     {
         NV_EVENT("Systems/Init");
+        std::unique_lock<std::mutex> lock(mSysMutex);
         for (auto id : mInsertOrder)
         {
             auto& system = mSystems.at(id);
@@ -21,6 +22,7 @@ namespace nv
     void SystemManager::UpdateSystems(float deltaTime, float totalTime)
     {
         NV_EVENT("Systems/Update");
+        std::unique_lock<std::mutex> lock(mSysMutex);
         for (auto id : mInsertOrder)
         {
             auto& system = mSystems.at(id);
@@ -31,6 +33,7 @@ namespace nv
     void SystemManager::DestroySystems()
     {
         NV_EVENT("Systems/Destroy");
+        std::unique_lock<std::mutex> lock(mSysMutex);
         for (auto id : mInsertOrder)
         {
             auto& system = mSystems.at(id);
@@ -41,6 +44,7 @@ namespace nv
     void SystemManager::ReloadSystems()
     {
         NV_EVENT("Systems/Reload");
+        std::unique_lock<std::mutex> lock(mSysMutex);
         for (auto id : mInsertOrder)
         {
             auto& system = mSystems.at(id);

@@ -49,6 +49,15 @@ namespace nv::input
         return gpInputState->mMouse.GetLastState().scrollWheelValue;
     }
 
+    void SetInputWindow(Keyboard* pKb, Mouse* pMouse)
+    {
+#if NV_PLATFORM_WINDOWS
+        auto window = (graphics::WindowDX12*)graphics::gWindow;
+        if(window)
+            window->SetInputWindow(pKb, pMouse);
+#endif
+    }
+
     void InputSystem::Init()
     {
         mKeyboard = MakeScoped<Keyboard, true>();
@@ -58,10 +67,7 @@ namespace nv::input
         gpInputState->mpKeyboardInstance = mKeyboard.Get();
         gpInputState->mpMouseInstance = mMouse.Get();
 
-#if NV_PLATFORM_WINDOWS
-        auto window = (graphics::WindowDX12*)graphics::gWindow;
-        window->SetInputWindow(mKeyboard.Get(), mMouse.Get());
-#endif
+        SetInputWindow(mKeyboard.Get(), mMouse.Get());
     }
 
     void InputSystem::Update(float deltaTime, float totalTime)

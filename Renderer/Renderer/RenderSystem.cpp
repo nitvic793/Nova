@@ -138,8 +138,11 @@ namespace nv::graphics
             unloadMaterialAssets(mat);
     }
 
-    void RenderSystem::Init()
+    void RenderSystem::InitOnRenderThread()
     {
+        for (auto& initFn : mInitFunctions)
+            initFn();
+
         mpConstantBufferPool = Alloc<ConstantBufferPool>();
         gpConstantBufferPool = mpConstantBufferPool;
 
@@ -164,14 +167,18 @@ namespace nv::graphics
         {
             pass->Init();
         }
+    }
 
-        //mReloadManager->RegisterPSO(psoDesc, &mPso);
-
+    void RenderSystem::Init()
+    {
         mRenderJobHandle = nv::jobs::Execute([this](void* ctx) 
         { 
             NV_THREAD("RenderThread");
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             log::Info("[Renderer] Start Render Job");
+
+            InitOnRenderThread();
+            gContext.mpInstance->Notify();
             RenderThreadJob(ctx); 
         });
     }
@@ -215,9 +222,14 @@ namespace nv::graphics
 
     void RenderSystem::RenderThreadJob(void* ctx)
     {
+        gContext.mpInstance->Wait(); // Wait for main thread to run at least once.
+
         while (Instance::GetInstanceState() == INSTANCE_STATE_RUNNING)
         {
             NV_FRAME("RenderThread");
+
+            graphics::gWindow->ProcessMessages();
+
             if (!mPsoReloadQueue.IsEmpty())
             {
                 gRenderer->WaitForAllFrames();
@@ -263,9 +275,14 @@ namespace nv::graphics
             gRenderer->ExecuteQueuedDestroy();
             if (mRenderData.GetRenderDataQueueSize() > 1 && gContext.mpInstance->GetInstanceState() == INSTANCE_STATE_RUNNING)
             {
-                gContext.mpInstance->Wait(); // Wait until main thread notifies us it's done
+                //gContext.mpInstance->Wait(); // Wait until main thread notifies us it's done
             }
         }
+    }
+
+    void RenderSystem::EnqueueInitFunction(RenderThreadInitFn fn)
+    {
+        mInitFunctions.Push(fn);
     }
 
     void RenderSystem::UploadDrawData()

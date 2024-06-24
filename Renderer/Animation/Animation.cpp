@@ -13,83 +13,89 @@ namespace nv::graphics::animation
 
 	constexpr bool ENABLE_ANIM_ASSERT = false;
 
+#if __AVX2__
+#define ENABLE_SIMD 0
+#else
+#define ENABLE_SIMD 0
+#endif
+
 #define ANIM_ASSERT(expression) if constexpr(ENABLE_ANIM_ASSERT) assert(expression);
-
-	uint32_t FindPosition(float AnimationTime, const AnimationChannel* channel)
+	template<typename T>
+	concept KeyType = requires(T a)
 	{
-		const auto keySize = channel->PositionKeys.size();
-		for (uint32_t i = 0; i < keySize - 1; i++) {
-			if (AnimationTime < (float)channel->PositionKeys.at(i + 1).Time) {
-				return i;
-			}
-		}
+		{ T::Time } -> std::convertible_to<double>;
+	};
 
-		ANIM_ASSERT(0);
-		return 0;
-	}
-
-	uint32_t FindScaling(float AnimationTime, const AnimationChannel* channel)
+    template<KeyType T>
+	static uint32_t FindIndex(float animTime, std::vector<T> keys)
 	{
-#if 0
-		const auto size = channel->ScalingKeys.size();
-		for (uint32_t i = 0; i < size - 1; i++) {
-			if (AnimationTime < (float)channel->ScalingKeys.at(i + 1).Time) {
-				return i;
-			}
-		}
-#elif defined(__AVX2__)
-		// SIMD Version
-        const auto size = channel->ScalingKeys.size();
+#if !ENABLE_SIMD
+        const auto size = keys.size();
+        for (uint32_t i = 0; i < size - 1; i++) 
+		{
+            if (animTime < (float)keys.at(i + 1).Time) 
+			{
+                return i;
+            }
+        }
+#else // WIP SIMD
+        const auto size = keys.size();
         const auto simdSize = size - 1;
-        const auto simdSize8 = simdSize / 8;
+        const auto simdSize8 = (uint32_t)simdSize / 8;
 
-        for (uint32_t i = 0; i < simdSize8; i++) {
+        for (uint32_t i = 0; i < simdSize8; i++) 
+		{
             const auto index = i * 8;
-            const auto time0 = (float)channel->ScalingKeys.at(index + 0).Time;
-            const auto time1 = (float)channel->ScalingKeys.at(index + 1).Time;
-            const auto time2 = (float)channel->ScalingKeys.at(index + 2).Time;
-            const auto time3 = (float)channel->ScalingKeys.at(index + 3).Time;
-			const auto time4 = (float)channel->ScalingKeys.at(index + 4).Time;
-			const auto time5 = (float)channel->ScalingKeys.at(index + 5).Time;
-			const auto time6 = (float)channel->ScalingKeys.at(index + 6).Time;
-			const auto time7 = (float)channel->ScalingKeys.at(index + 7).Time;
+            const auto time0 = (float)keys.at(index + 1).Time;
+            const auto time1 = (float)keys.at(index + 2).Time;
+            const auto time2 = (float)keys.at(index + 3).Time;
+            const auto time3 = (float)keys.at(index + 4).Time;
+            const auto time4 = (float)keys.at(index + 5).Time;
+            const auto time5 = (float)keys.at(index + 6).Time;
+            const auto time6 = (float)keys.at(index + 7).Time;
+            const auto time7 = (float)keys.at(index + 8).Time;
 
-
-			const float times[8] = { time0, time1, time2, time3, time4, time5, time6, time7 };
+            const float times[8] = { time0, time1, time2, time3, time4, time5, time6, time7 };
 
             __m256 time = _mm256_load_ps(&times[0]);
-			// less than simd op
-            __m256 mask = _mm256_cmp_ps(time, _mm256_broadcast_ss(&AnimationTime), _CMP_LT_OQ);
+            // less than simd op
+            __m256 mask = _mm256_cmp_ps(time, _mm256_broadcast_ss(&animTime), _CMP_LT_OQ);
+			
             uint32_t maskInt = _mm256_movemask_ps(mask);
-            if (maskInt != 0) {
-				uint32_t result = index + _tzcnt_u32(maskInt);
-				return result;
+            if (maskInt != 0) 
+			{
+				uint32_t result = index + 8 - (32u - _lzcnt_u32(maskInt));
+                assert(result < size);
+                return result;
             }
         }
 
-		for (uint32_t i = simdSize8 * 8; i < size - 1; i++) {
-			if (AnimationTime < (float)channel->ScalingKeys.at(i + 1).Time) {
+        for (uint32_t i = simdSize8 * 8; i < size - 1; i++) 
+		{
+            if (animTime < (float)keys.at(i + 1).Time) 
+			{
                 return i;
             }
         }
 #endif
-        
 
 		ANIM_ASSERT(0);
 		return 0;
 	}
 
+	uint32_t FindPosition(float AnimationTime, const AnimationChannel* channel)
+	{
+        return FindIndex(AnimationTime, channel->PositionKeys);
+	}
+
+	uint32_t FindScaling(float AnimationTime, const AnimationChannel* channel)
+	{
+        return FindIndex(AnimationTime, channel->ScalingKeys);
+	}
+
 	uint32_t FindRotation(float AnimationTime, const AnimationChannel* channel)
 	{
-		const auto size = channel->RotationKeys.size();
-		for (uint32_t i = 0; i < size - 1; i++) {
-			if (AnimationTime < (float)channel->RotationKeys.at(i + 1).Time) {
-				return i;
-			}
-		}
-
-		ANIM_ASSERT(0);
-		return 0;
+        return FindIndex(AnimationTime, channel->RotationKeys);
 	}
 
 	XMVECTOR InterpolatePosition(float animTime, const AnimationChannel* channel)

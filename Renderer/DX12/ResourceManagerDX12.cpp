@@ -329,6 +329,7 @@ namespace nv::graphics
         auto resource = mGpuResources.GetAsDerived(desc.mBuffer);
         auto device = mDevice->GetDevice();
         const auto resourceDesc = resource->GetDesc();
+        auto heapHandle = renderer->mTextureHeap;
 
         const auto isDepthFormat = [](const format::SurfaceFormat format)
             {
@@ -344,7 +345,7 @@ namespace nv::graphics
         case tex::USAGE_SHADER:
         {
             view = VIEW_SHADER_RESOURCE;
-            auto heapHandle = desc.mUseRayTracingHeap ? renderer->mRayTracingHeap : renderer->mTextureHeap;
+            heapHandle = desc.mUseRayTracingHeap ? renderer->mRayTracingHeap : renderer->mTextureHeap;
             heap = renderer->mDescriptorHeapPool.GetAsDerived(heapHandle);
             cpuHandle = heap->PushCPU();
 
@@ -378,7 +379,7 @@ namespace nv::graphics
         case tex::USAGE_UNORDERED:
         {
             view = VIEW_UNORDERED_ACCESS;
-            auto heapHandle = desc.mUseRayTracingHeap ? renderer->mRayTracingHeap : renderer->mTextureHeap;
+            heapHandle = desc.mUseRayTracingHeap ? renderer->mRayTracingHeap : renderer->mTextureHeap;
             heap = renderer->mDescriptorHeapPool.GetAsDerived(heapHandle);
             cpuHandle = heap->PushCPU();
 
@@ -391,6 +392,7 @@ namespace nv::graphics
         case tex::USAGE_DEPTH_STENCIL:
         {
             view = VIEW_DEPTH_STENCIL;
+            heapHandle = renderer->mDsvHeap;
             heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mDsvHeap);
             cpuHandle = heap->PushCPU();
 
@@ -405,6 +407,7 @@ namespace nv::graphics
         case tex::USAGE_RENDER_TARGET:
         {
             view = VIEW_RENDER_TARGET;
+            heapHandle = renderer->mRtvHeap;
             heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mRtvHeap);
             cpuHandle = heap->PushCPU();
 
@@ -427,6 +430,7 @@ namespace nv::graphics
             srvDesc.RaytracingAccelerationStructure.Location = resource->GetResource()->GetGPUVirtualAddress();
 
             heap = renderer->mDescriptorHeapPool.GetAsDerived(renderer->mTextureHeap);
+            heapHandle = renderer->mTextureHeap;
             cpuHandle = heap->PushCPU();
             device->CreateShaderResourceView(nullptr, &srvDesc, cpuHandle);
             break;
@@ -444,6 +448,7 @@ namespace nv::graphics
 
         auto texture = mTextures.GetAsDerived(handle);
         *texture = TextureDX12(desc, descHandle);
+        texture->SetHeap(heapHandle);
     }
 
     void ResourceManagerDX12::CreatePipelineState(const PipelineStateDesc& desc, PipelineState* pPSO)
@@ -580,8 +585,8 @@ namespace nv::graphics
     void ResourceManagerDX12::DestroyTexture(Handle<Texture> resource)
     {
         auto pRenderer = (RendererDX12*)gRenderer;
-        DescriptorHeapDX12* pTextureHeap = pRenderer->mDescriptorHeapPool.GetAsDerived(pRenderer->mTextureHeap);
         TextureDX12* pTex = mTextures.GetAsDerived(resource);
+        DescriptorHeapDX12* pTextureHeap = pRenderer->mDescriptorHeapPool.GetAsDerived(pTex->GetDesc().mHeap);
         pTextureHeap->Remove(pTex->GetHeapOffset());
         mTextures.Remove(resource);
         gResourceTracker.Remove(resource);
