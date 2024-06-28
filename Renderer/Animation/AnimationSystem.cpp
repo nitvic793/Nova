@@ -14,13 +14,22 @@ namespace nv::graphics::animation
 	void ReadNodeHeirarchy(const AnimationComponent& animComponent, const Animation& animation, const MeshAnimNodeData& nodeData, AnimationInstanceData& instanceData, const MeshBoneDesc& boneDesc, float animationTime);
 	void BoneTransform(const AnimationComponent& animComponent, AnimationInstanceData& instanceData, const Animation& animation, const MeshAnimNodeData& nodeData, const MeshBoneDesc& boneDesc);
 
+	using AnimInstanceVector = nv::Vector<AnimationInstanceData, true, 1>;
+	using AnimInstancePoolType = Pool<AnimInstanceVector>;
+	std::unique_ptr<AnimInstancePoolType> gAnimationInstancePool = nullptr;
+
 	void AnimationSystem::Init()
 	{
+		NV_EVENT("AnimationSystem/Init");
+        gAnimationInstancePool = std::make_unique<AnimInstancePoolType>();
+		gAnimationInstancePool->Init();
 	}
 
 	void AnimationSystem::Update(float deltaTime, float totalTime)
 	{
 		NV_EVENT("AnimationSystem/Update");
+		ScopedPoolAllocator animInstanceAllocator(*gAnimationInstancePool);
+
 		auto pComponentPool = ecs::gComponentManager.GetPool<AnimationComponent>();
 		if (!pComponentPool)
 			return;
@@ -54,7 +63,7 @@ namespace nv::graphics::animation
 		}
 
 		nv::Vector<Handle<jobs::Job>> jobHandles;
-		nv::Vector<AnimationInstanceData> animInstances;
+		AnimInstanceVector& animInstances = *animInstanceAllocator.CreateInstance();
         ecs::EntityComponents<AnimationComponent> components;
         pComponentPool->GetEntityComponents(components);
 
@@ -167,14 +176,16 @@ namespace nv::graphics::animation
 			const AnimationChannel* anim = gAnimManager.GetChannel(animationIndex, *node);
 			if (anim != nullptr)
 			{
-				auto s = InterpolateScaling(animationTime, anim);
+				uint32_t cursor = 0;
+
+				auto s = InterpolateScaling(animationTime, anim, cursor);
 				auto scaling = XMMatrixScalingFromVector(s);
 
-				auto r = InterpolateRotation(animationTime, anim);
+				auto r = InterpolateRotation(animationTime, anim, cursor);
 				auto rotation = XMMatrixRotationQuaternion(XMVectorSet(r.y, r.z, r.w, r.x));
 				//auto rotation = XMMatrixRotationQuaternion(XMLoadFloat4(&r));
 
-				auto t = InterpolatePosition(animationTime, anim);
+				auto t = InterpolatePosition(animationTime, anim, cursor);
 				auto translation = XMMatrixTranslationFromVector(t);
 
 				nodeTransformation = XMMatrixAffineTransformation(s, XMVectorSet(r.y, r.z, r.w, r.x), XMVectorSet(r.y, r.z, r.w, r.x), t);

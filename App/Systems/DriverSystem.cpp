@@ -85,8 +85,8 @@ namespace nv
 
     void TestJob(void* data)
     {
-        static constexpr tracy::SourceLocationData __tracy_source_location88{ "Test Job", __FUNCTION__, "C:\\Work\\Nova\\App\\Systems\\DriverSystem.cpp", (uint32_t)88, 0 }; tracy::ScopedZone nvZone(&__tracy_source_location88, true);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        NV_EVENT("Test Job");
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
     Handle<jobs::Job> sJobHandle = Null<jobs::Job>();
@@ -117,14 +117,14 @@ namespace nv
             }
         });
 
-        if (sJobHandle.IsNull())
-        {
-            sJobHandle = jobs::Execute(TestJob);
-        }
-
         if (jobs::IsFinished(sJobHandle))
         {
             sJobHandle = Null<jobs::Job>();
+        }
+
+        if (sJobHandle.IsNull())
+        {
+            sJobHandle = jobs::Execute(TestJob);
         }
 
         auto pPool = gComponentManager.GetPool<math::BoundingBox>();

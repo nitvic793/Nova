@@ -173,13 +173,16 @@ namespace nv::graphics
     {
         mRenderJobHandle = nv::jobs::Execute([this](void* ctx) 
         { 
-            NV_THREAD("RenderThread");
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             log::Info("[Renderer] Start Render Job");
 
             InitOnRenderThread();
             gContext.mpInstance->Notify();
-            RenderThreadJob(ctx); 
+
+            {
+                NV_THREAD("RenderThread");
+                RenderThreadJob(ctx);
+            }
         });
     }
 

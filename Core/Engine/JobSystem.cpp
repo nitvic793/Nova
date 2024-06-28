@@ -47,12 +47,42 @@ namespace nv::jobs
             std::this_thread::yield();
         }
 
-        virtual Handle<Job> Enqueue(Job&& job) override
+        Handle<Job> AllocateJob(Job&& job)
         {
+            std::unique_lock<NV_LOCKABLE(std::mutex)> lock(mJobPoolMutex);
             Handle<Job> handle = mJobs.Create();
             auto mInstance = mJobs.Get(handle);
             *mInstance = std::move(job);
+            mCurrentJobs.push_back(handle);
+            return handle;
+        }
 
+        void RemoveJob(Handle<Job> handle)
+        {
+            std::unique_lock<NV_LOCKABLE(std::mutex)> lock(mJobPoolMutex);
+            mJobs.Remove(handle);
+        }
+
+        void GarbageCollect() override
+        {
+            std::unique_lock<NV_LOCKABLE(std::mutex)> lock(mJobPoolMutex);
+            auto it = mCurrentJobs.begin();
+            while (it != mCurrentJobs.end())
+            {
+                auto* pJob = mJobs.Get(*it);
+                if (!pJob || pJob->IsFinished())
+                {
+                    mJobs.Remove(*it);
+                    it = mCurrentJobs.erase(it);
+                }
+                else
+                    ++it;
+            }
+        }
+
+        virtual Handle<Job> Enqueue(Job&& job) override
+        {
+            Handle<Job> handle = AllocateJob(std::move(job));
             mQueue.Push(handle);
             mConditionVar.notify_one();
             return handle;
@@ -68,8 +98,6 @@ namespace nv::jobs
             {
                 Poll();
             }
-
-            Remove(handle);
         }
 
         virtual void Wait() override
@@ -88,12 +116,9 @@ namespace nv::jobs
             if (!bIsValid)
                 return true;
 
-            Job* pJob = mJobs.GetAsDerived(handle);
+            const Job* const pJob = mJobs.GetAsDerived(handle);
             if (!pJob || pJob->IsFinished())
-            {
-                mJobs.Remove(handle);
                 return true;
-            }
 
             return false;
         }
@@ -102,12 +127,6 @@ namespace nv::jobs
         {
             mIsRunning = false;
             mConditionVar.notify_all(); // Unblock all threads and stop
-        }
-
-        void Remove(Handle<Job> handle)
-        {
-            std::unique_lock<std::mutex> lock(mMutex);
-            mJobs.Remove(handle);
         }
 
         void Start()
@@ -176,7 +195,9 @@ namespace nv::jobs
         ConcurrentQueue<Handle<Job>>    mQueue;
         std::condition_variable         mConditionVar;
         std::mutex                      mMutex;
+        NV_MUTEX(std::mutex,            mJobPoolMutex);
         std::vector<std::jthread>       mThreads;
+        std::vector<Handle<Job>>        mCurrentJobs;
     };
 
     void InitJobSystem(uint32_t threads)
@@ -222,4 +243,8 @@ namespace nv::jobs
         return gJobSystem->IsFinished(handle);
     }
 
+    void GarbageCollect()
+    {
+        gJobSystem->GarbageCollect();
+    }
 }

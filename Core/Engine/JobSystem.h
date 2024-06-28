@@ -14,6 +14,7 @@ namespace nv::jobs
         virtual void        Wait(Handle<Job> job) = 0;
         virtual void        Wait() = 0;
         virtual bool        IsFinished(Handle<Job> job) = 0;
+        virtual void        GarbageCollect() = 0;
 
         virtual ~IJobSystem() {}
     };
@@ -22,6 +23,7 @@ namespace nv::jobs
 
     void InitJobSystem(uint32_t threads);
     void DestroyJobSystem();
+    void GarbageCollect();
 
     Handle<Job> Execute(Job::Fn&& job);
     Handle<Job> Execute(Job::Fn&& job, void* context);

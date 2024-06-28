@@ -27,14 +27,29 @@ namespace nv::graphics::animation
 	};
 
     template<KeyType T>
-	static uint32_t FindIndex(float animTime, std::vector<T> keys)
+	static uint32_t FindIndex(float animTime, std::vector<T> keys, uint32_t& cursor)
 	{
 #if !ENABLE_SIMD
         const auto size = keys.size();
-        for (uint32_t i = 0; i < size - 1; i++) 
+		if(cursor < size - 1 && animTime >= (float)keys.at(cursor).Time && animTime < (float)keys.at(cursor + 1).Time)
+		{
+			return cursor;
+		}
+
+		if(cursor < size - 1 && animTime >= (float)keys.at(cursor + 1).Time)
+		{
+			cursor++;
+		}
+		else
+		{
+			cursor = 0;
+		}
+
+        for (uint32_t i = cursor; i < size - 1; i++) 
 		{
             if (animTime < (float)keys.at(i + 1).Time) 
 			{
+				cursor = i;
                 return i;
             }
         }
@@ -83,22 +98,22 @@ namespace nv::graphics::animation
 		return 0;
 	}
 
-	uint32_t FindPosition(float AnimationTime, const AnimationChannel* channel)
+	uint32_t FindPosition(float AnimationTime, const AnimationChannel* channel, uint32_t& cursor)
 	{
-        return FindIndex(AnimationTime, channel->PositionKeys);
+        return FindIndex(AnimationTime, channel->PositionKeys, cursor);
 	}
 
-	uint32_t FindScaling(float AnimationTime, const AnimationChannel* channel)
+	uint32_t FindScaling(float AnimationTime, const AnimationChannel* channel, uint32_t& cursor)
 	{
-        return FindIndex(AnimationTime, channel->ScalingKeys);
+        return FindIndex(AnimationTime, channel->ScalingKeys, cursor);
 	}
 
-	uint32_t FindRotation(float AnimationTime, const AnimationChannel* channel)
+	uint32_t FindRotation(float AnimationTime, const AnimationChannel* channel, uint32_t& cursor)
 	{
-        return FindIndex(AnimationTime, channel->RotationKeys);
+        return FindIndex(AnimationTime, channel->RotationKeys, cursor);
 	}
 
-	XMVECTOR InterpolatePosition(float animTime, const AnimationChannel* channel)
+	XMVECTOR InterpolatePosition(float animTime, const AnimationChannel* channel, uint32_t& cursor)
 	{
 		auto outFloat3 = XMFLOAT3();
 		auto Out = XMVectorSet(0, 0, 0, 0);
@@ -107,7 +122,7 @@ namespace nv::graphics::animation
 			return Out;
 		}
 
-		uint32_t PositionIndex = FindPosition(animTime, channel);
+		uint32_t PositionIndex = FindPosition(animTime, channel, cursor);
 		uint32_t NextPositionIndex = (PositionIndex + 1);
 		ANIM_ASSERT(NextPositionIndex < channel->PositionKeys.size());
 
@@ -123,7 +138,7 @@ namespace nv::graphics::animation
 	}
 
 
-	XMVECTOR InterpolateScaling(float animTime, const AnimationChannel* channel)
+	XMVECTOR InterpolateScaling(float animTime, const AnimationChannel* channel, uint32_t& cursor)
 	{
 		auto outFloat3 = XMFLOAT3();
 		auto Out = XMVectorSet(0, 0, 0, 0);
@@ -132,7 +147,7 @@ namespace nv::graphics::animation
 			return Out;
 		}
 
-		uint32_t ScaleIndex = FindScaling(animTime, channel);
+		uint32_t ScaleIndex = FindScaling(animTime, channel, cursor);
 		uint32_t NextScaleIndex = (ScaleIndex + 1);
 		ANIM_ASSERT(NextScaleIndex < channel->ScalingKeys.size());
 
@@ -148,7 +163,7 @@ namespace nv::graphics::animation
 		return Out;
 	}
 
-	XMFLOAT4 InterpolateRotation(float animTime, const AnimationChannel* channel)
+	XMFLOAT4 InterpolateRotation(float animTime, const AnimationChannel* channel, uint32_t& cursor)
 	{
 		auto outFloat4 = XMFLOAT4();
 		auto Out = XMVectorSet(0, 0, 0, 0);
@@ -157,7 +172,7 @@ namespace nv::graphics::animation
 			return channel->RotationKeys[0].Value;
 		}
 
-		uint32_t RotationIndex = FindRotation(animTime, channel);
+		uint32_t RotationIndex = FindRotation(animTime, channel, cursor);
 		uint32_t NextRotationIndex = (RotationIndex + 1);
 		ANIM_ASSERT(NextRotationIndex < channel->RotationKeys.size());
 

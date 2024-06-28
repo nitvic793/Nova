@@ -50,11 +50,11 @@ namespace nv
             gTimer.Tick();
             {
                 NV_EVENT("App/Update");
-                //std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 gSystemManager.UpdateSystems(gTimer.DeltaTime, gTimer.TotalTime);
             }
 
             Notify(); // Notify end of frame to other threads
+            jobs::GarbageCollect();
         }
 
         return true;

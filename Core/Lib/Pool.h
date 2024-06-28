@@ -15,6 +15,9 @@ namespace nv
     public:
         static constexpr uint32_t kDefaultPoolCount = InitPoolCount;
 
+        using BaseType      = T;
+        using DerivedType   = TDerived;
+
     public:
         Pool() :
             mBuffer(nullptr),
@@ -358,5 +361,47 @@ namespace nv
         UnorderedMap<uint64_t, uint32_t> mHandleIndexMap;
 
         friend class Serializer;
+    };
+
+    template<typename TPool>
+    class ScopedPoolAllocator
+    {
+    public:
+
+        using BaseType = TPool::BaseType;
+        using DerivedType = TPool::DerivedType;
+
+    public:
+        ScopedPoolAllocator(TPool& pool) :
+            mPool(pool)
+        {
+        }
+
+        ~ScopedPoolAllocator()
+        {
+            for (auto& handle : mHandles)
+            {
+                mPool.Remove(handle);
+            }
+        }
+
+        template<typename ...Args>
+        Handle<BaseType> Create(Args&&... args)
+        {
+            Handle<BaseType> handle = mPool.Create(nv::Forward<Args>(args)...);
+            mHandles.push_back(handle);
+            return handle;
+        }
+
+        template<typename ...Args>
+        DerivedType* CreateInstance(Args&&... args)
+        {
+            auto outHandle = Create(nv::Forward<Args>(args)...);
+            return mPool.GetAsDerived(outHandle);
+        }
+
+    private:
+        TPool& mPool;
+        std::vector<Handle<BaseType>> mHandles;
     };
 }
