@@ -190,7 +190,7 @@ namespace nv::graphics
         constexpr uint32_t BVH_REBUILD_THRESHOLD_FRAMES = 512;
 
         if (sFrameCounter > BVH_REBUILD_THRESHOLD_FRAMES)
-            sbBuildAccelerationStructure = false; // DISABLED
+            sbBuildAccelerationStructure = true; // DISABLED
 
         sFrameCounter++;
         auto ctx = gRenderer->GetContext();
@@ -328,7 +328,7 @@ namespace nv::graphics
         ctx->ResourceBarrier({ UAVBarrier{.mResource = sRTComputeObjects.mAccumBuffer } });
 
         UploadToConstantBuffer<BlurParams>(sRTComputeObjects.mBlurParamsCBV, {
-            .BlurRadius = 2,
+            .BlurRadius = 4,
             .BlurDepthThreshold = 0.1f,
             .InputTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mAccumUAV)->GetHeapIndex()
         });

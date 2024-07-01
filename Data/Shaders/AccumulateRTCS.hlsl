@@ -24,76 +24,221 @@ float4 WorldPosFromDepth(float depth, float2 uv)
     return worldSpacePosition;
 }
 
+float3 ClipAABB(float3 aabb_min, float3 aabb_max, float3 color)
+{
+    // Note: only clips towards aabb center
+    float3 aabb_center = 0.5f * (aabb_max + aabb_min);
+    float3 extent_clip = 0.5f * (aabb_max - aabb_min) + 0.001f;
+
+    // Find color vector
+    float3 color_vector = color - aabb_center;
+    // Transform into clip space
+    float3 color_vector_clip = color_vector / extent_clip;
+    // Find max absolute component
+    color_vector_clip  = abs(color_vector_clip);
+    float max_abs_unit = max(max(color_vector_clip.x, color_vector_clip.y), color_vector_clip.z);
+
+    if (max_abs_unit > 1.0)
+        return aabb_center + color_vector / max_abs_unit; // clip towards color vector
+    else
+        return color; // point is inside aabb
+}
+
+void NeighbourhoodStdDev(uint2 px, out float3 mean, out float3 stdDev)
+{
+    float3 m1 = 0.f;
+    float3 m2 = 0.f;
+
+    const int radius = 8;
+    const float weight = (float(radius) * 2.0f + 1.0f) * (float(radius) * 2.0f + 1.0f);
+
+    for (int dx = -radius; dx <= radius; dx++)
+    {
+        for (int dy = -radius; dy <= radius; dy++)
+        {
+            int2 coord = px + int2(dx, dy);
+            float3 color = RawRTTex[coord].rgb;
+
+            m1 += color;
+            m2 += color * color;
+        }
+    }
+
+    mean = m1 / weight;
+    float3 variance = (m2 / weight) - (mean * mean);
+
+    stdDev = sqrt(max(variance, 0.0f));
+}
+
+#define PLANE_DISTANCE 5.0f
+bool PlaneDistanceOcclusion(float3 pos, float3 prevPos, float3 currentNormal)
+{
+    float3 toCurrent = pos - prevPos;
+    float dist = abs(dot(toCurrent, currentNormal));
+    return dist > PLANE_DISTANCE;
+}
+
 bool NormalDisocclusion(float3 normal, float3 prevNormal)
 {
     const float NORMAL_DISTANCE_THRESHOLD = 0.1f;
     float result = pow(abs(dot(normal, prevNormal)), 2.0f);
     if(result > NORMAL_DISTANCE_THRESHOLD)
-        return true;
+        return false;
 
-    return false;
+    return true;
 }
 
 bool IsReprojectCoordValid(uint2 px, uint2 pxLastFrame, float3 normal, float3 prevNormal, uint2 dims)
 {
     bool result = pxLastFrame.x >= 0 && pxLastFrame.y >= 0 && pxLastFrame.x < dims.x && pxLastFrame.y < dims.y;
-    result = result && NormalDisocclusion(normal, prevNormal);
-    return result;
+    if(!result)
+        return false;
+
+    float3 curPos = WorldPosFromDepth(DepthTexture[px], px / float2(dims)).xyz;
+    float3 prevPos = WorldPosFromDepth(DepthTexture[pxLastFrame], pxLastFrame / float2(dims)).xyz;
+
+    if(PlaneDistanceOcclusion(curPos, prevPos, normal))
+        return false;
+
+    if(NormalDisocclusion(normal, prevNormal))
+        return false;
+    
+    return true;
 }
 
-#define ENABLE_ACCUMULATION 1
-#define TEMPORAL_FILTER 0
+#define ENABLE_ACCUMULATION 0
+#define TEMPORAL_FILTER 1
 
-// WIP Not working
 void TemporalFilter(uint2 px, uint2 dims)
 {
     RWTexture2D<float3> AccumTex = ResourceDescriptorHeap[Params.AccumulationTexIdx];
     RWTexture2D<float3> PrevAccumTex = ResourceDescriptorHeap[Params.PrevFrameTexIdx];
-    RWTexture2D<float>   HistoryLengthTex = ResourceDescriptorHeap[Params.HistoryTexIdx];
+    RWTexture2D<float>  HistoryLengthTex = ResourceDescriptorHeap[Params.HistoryTexIdx];
     RWTexture2D<float4> PrevNormalsTex = ResourceDescriptorHeap[Params.PrevNormalTexIdx];
-    
-    
-    float3 currentNormals = GetGBuffersNormal(px, Frame);
 
-    float2 uv = px / float2(dims);
-
-    float3 curSample = RawRTTex[px];
-    float2 motionVec = GetGBufferMotionVector(px, Frame);
-    float2 pxLastFrameUV = uv - motionVec;
-    uint2 pxLastFrame = pxLastFrameUV * float2(dims);
-    float3 prevNormals = UnpackNormal(PrevNormalsTex[pxLastFrame].xyz);
+    float2 uv               = px / float2(dims);
+    float2 motionVec        = GetGBufferMotionVector(px, Frame);
+    uint2  pxLastFrame      = uint2(px + motionVec * float2(dims) + float2(0.5f, 0.5f));
+    float3 curSample        = RawRTTex[px];
+    float3 currentNormals   = GetGBuffersNormal(px, Frame);
+    float3 prevNormals      = UnpackNormal(PrevNormalsTex[pxLastFrame].xyz);
+        
+    const float2 pxLastFrameFloor = floor(px.xy) + motionVec.xy * dims;
 
     float3 output = curSample;
-    float historyLength = 1.0f;
-    float v = 0.f;
-    if(IsReprojectCoordValid(px, pxLastFrame, currentNormals, prevNormals, dims) && Params.FrameIndex != 0)
+
+    const uint2 offsets[4] = { uint2(0, 0), uint2(1, 0), uint2(0, 1), uint2(1, 1) };
+    bool v[4];
+    bool valid = false;
+
+    for(int idx = 0; idx < 4; ++idx)
     {
-        v = 1.f;
-        float3 prevSample = PrevAccumTex[pxLastFrame];
-        historyLength = HistoryLengthTex[pxLastFrame].r + 1.0f;
-        float alpha = 1.0f / historyLength;
-        output = float3(1,0,0);//lerp(prevSample, curSample, alpha);
+        uint2 offset = offsets[idx];
+        uint2 pxOffset = px + offset;
+        uint2 pxLastFrameOffset = pxLastFrameFloor + offset;
+        float3 normalOffset = GetGBuffersNormal(pxOffset, Frame);
+        float3 prevNormalOffset = UnpackNormal(PrevNormalsTex[pxLastFrameOffset].xyz);
+
+        v[idx] = IsReprojectCoordValid(pxOffset, pxLastFrameOffset, normalOffset, prevNormalOffset, dims);
+        valid = valid || v[idx];
+    }
+
+    float3 accumColor = 0.f;
+
+    if(valid)
+    {
+        float sumw = 0;
+        float x    = frac(pxLastFrameFloor.x);
+        float y    = frac(pxLastFrameFloor.y);
+
+        // bilinear weights
+        float w[4] = { (1 - x) * (1 - y),
+                       x * (1 - y),
+                       (1 - x) * y,
+                       x * y };
+        
+        for(int idx = 0; idx < 4; ++idx)
+        {
+            if(v[idx])
+            {
+                uint2 coord = pxLastFrameFloor + offsets[idx];
+                accumColor += w[idx] * PrevAccumTex[coord].xyz;
+                sumw += w[idx];
+            }
+        }
+
+        valid = sumw > 0.01f;
+        accumColor = valid ? accumColor / sumw : 0.f;
+    }
+
+    if(!valid)
+    {
+        float count = 0.f;
+        const int radius = 1;
+        for (int yy = -radius; yy <= radius; yy++)
+        {
+            for (int xx = -radius; xx <= radius; xx++)
+            {
+                int2 offset = int2(xx, yy);
+                uint2 pxOffset = pxLastFrame + offset;
+
+                float3 prevNormalOffset = UnpackNormal(PrevNormalsTex[pxOffset].xyz);
+                if(IsReprojectCoordValid(px, pxOffset, currentNormals, prevNormalOffset, dims))
+                {
+                    accumColor += PrevAccumTex[pxOffset].xyz;
+                    count += 1.f;
+                }
+            }
+        }
+
+        if(count > 0)
+        {
+            accumColor /= count;
+            valid = true;
+        }
+    }
+
+    float historyLength = 0.0f;
+    float accumAlpha = (Params.FrameIndex == 0) ? 1.0f : Params.AccumulationAlpha;
+
+    if(valid)
+    {
+        float3 stdDev;
+        float3 mean;
+        NeighbourhoodStdDev(px, mean, stdDev);
+        float3 color = RawRTTex[px].rgb;
+        // Clamp to 2 standard deviations
+        accumColor = ClipAABB(mean - 2.0f * stdDev, mean + 2.0f * stdDev, accumColor);
+    }
+
+    if(valid)
+    {
+        historyLength = HistoryLengthTex[pxLastFrame];
+        accumAlpha = max(Params.AccumulationAlpha, 1.f / historyLength); 
+        output = lerp(accumColor, curSample, accumAlpha);
     }
 
     AccumTex[px] = output;
-    HistoryLengthTex[px] = historyLength;
+    HistoryLengthTex[px] = min(32.f, historyLength + 1.f);
 }
 
 [numthreads(8, 8, 1)]
 void main(uint3 DTid: SV_DispatchThreadID)
 {
+    RWTexture2D<float3> AccumTex = ResourceDescriptorHeap[Params.AccumulationTexIdx];
+    uint2 px = DTid.xy;
+    uint2 dims = uint2(1920, 1080);
+
 #if TEMPORAL_FILTER
         TemporalFilter(DTid.xy, dims);
+        return;
 #else
 
 #if !ENABLE_ACCUMULATION
     AccumTex[px] = RawRTTex[px];
     return;
 #endif
-
-    uint2 dims = uint2(1920, 1080);
-    uint2 px = DTid.xy;
-    RWTexture2D<float3> AccumTex = ResourceDescriptorHeap[Params.AccumulationTexIdx];
+    
     RWTexture2D<float3> PrevAccumTex = ResourceDescriptorHeap[Params.PrevFrameTexIdx];
     RWTexture2D<float4> PrevNormalsTex = ResourceDescriptorHeap[Params.PrevNormalTexIdx];
     RWTexture2D<uint>   HistoryLengthTex = ResourceDescriptorHeap[Params.HistoryTexIdx];

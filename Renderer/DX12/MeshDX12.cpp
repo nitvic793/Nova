@@ -73,6 +73,12 @@ namespace nv::graphics
             outTex = gResourceManager->CreateTexture(desc);
         };
 
+        if(!mIndexBufferSRV.IsNull())
+            gResourceManager->DestroyTexture(mIndexBufferSRV);
+
+        if(!mVertexBufferSRV.IsNull())
+            gResourceManager->DestroyTexture(mVertexBufferSRV);
+
         createBufferSrv(mIndexBufferSRV, mIndexBuffer, (uint32_t)mDesc.mIndices.size(), sizeof(uint32_t));
         createBufferSrv(mVertexBufferSRV, mVertexBuffer, (uint32_t)mDesc.mVertices.size(), sizeof(Vertex));
     }
