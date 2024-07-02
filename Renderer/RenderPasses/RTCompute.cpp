@@ -186,11 +186,27 @@ namespace nv::graphics
         static std::vector<MeshInstanceData> rtMeshData = {};
         static uint32_t sFrameCounter = 0;
         static bool sbBuildAccelerationStructure = true;
+        static uint32_t sMeshCount = 0;
+
+        // Rebuild only when mesh count changes
+        if(sMeshCount != meshIds.size())
+            sbBuildAccelerationStructure = true;
+
+        sMeshCount = 0;
+        for (uint32_t i = 0; i < renderPassData.mRenderData.mSize; ++i)
+        {
+            Mesh* pMesh = renderPassData.mRenderData.mppMeshes[i];
+            if (pMesh)
+            {
+				if (pMesh->HasBones()) continue; // Animated Mesh not supported yet.
+				sMeshCount++;
+			}
+        }
 
         constexpr uint32_t BVH_REBUILD_THRESHOLD_FRAMES = 512;
 
-        if (sFrameCounter > BVH_REBUILD_THRESHOLD_FRAMES)
-            sbBuildAccelerationStructure = true; // DISABLED
+        //if (sFrameCounter > BVH_REBUILD_THRESHOLD_FRAMES)
+        //    sbBuildAccelerationStructure = true; // DISABLED
 
         sFrameCounter++;
         auto ctx = gRenderer->GetContext();
