@@ -88,6 +88,17 @@ bool NormalDisocclusion(float3 normal, float3 prevNormal)
     return true;
 }
 
+bool MeshIDDisocclusion(uint2 px, uint2 pxLastFrame, uint2 dims)
+{
+    RWTexture2D<uint> MeshIDTexture = ResourceDescriptorHeap[Params.MeshIDTex];
+    RWTexture2D<uint> PrevMeshIDTexture = ResourceDescriptorHeap[Params.PrevMeshIDTex];
+    
+    const uint meshID = MeshIDTexture[px];
+    const uint meshIDLastFrame = MeshIDTexture[pxLastFrame];
+
+    return meshID != meshIDLastFrame;
+}
+
 bool IsReprojectCoordValid(uint2 px, uint2 pxLastFrame, float3 normal, float3 prevNormal, uint2 dims)
 {
     bool result = pxLastFrame.x >= 0 && pxLastFrame.y >= 0 && pxLastFrame.x < dims.x && pxLastFrame.y < dims.y;
@@ -96,6 +107,9 @@ bool IsReprojectCoordValid(uint2 px, uint2 pxLastFrame, float3 normal, float3 pr
 
     float3 curPos = WorldPosFromDepth(DepthTexture[px], px / float2(dims)).xyz;
     float3 prevPos = WorldPosFromDepth(DepthTexture[pxLastFrame], pxLastFrame / float2(dims)).xyz;
+
+    if(MeshIDDisocclusion(px, pxLastFrame, dims))
+        return false;
 
     if(PlaneDistanceOcclusion(curPos, prevPos, normal))
         return false;
@@ -228,6 +242,12 @@ void main(uint3 DTid: SV_DispatchThreadID)
     RWTexture2D<float3> AccumTex = ResourceDescriptorHeap[Params.AccumulationTexIdx];
     uint2 px = DTid.xy;
     uint2 dims = uint2(1920, 1080);
+
+    if(Params.FrameIndex == 0)
+    {
+        AccumTex[px] = RawRTTex[px];
+        return;
+    }
 
 #if TEMPORAL_FILTER
         TemporalFilter(DTid.xy, dims);

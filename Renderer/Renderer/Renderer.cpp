@@ -24,6 +24,43 @@
 #include <DebugUI/Imgui/imgui.h>
 #endif
 
+#define NV_PIX_CAPTURE_ATTACH 0
+
+#if NV_PIX_CAPTURE_ATTACH
+#include <filesystem>
+#include <shlobj.h>
+
+static std::wstring GetLatestWinPixGpuCapturerPath()
+{
+    LPWSTR programFilesPath = nullptr;
+    SHGetKnownFolderPath(FOLDERID_ProgramFiles, KF_FLAG_DEFAULT, NULL, &programFilesPath);
+
+    std::filesystem::path pixInstallationPath = programFilesPath;
+    pixInstallationPath /= "Microsoft PIX";
+
+    std::wstring newestVersionFound;
+
+    for (auto const& directory_entry : std::filesystem::directory_iterator(pixInstallationPath))
+    {
+        if (directory_entry.is_directory())
+        {
+            if (newestVersionFound.empty() || newestVersionFound < directory_entry.path().filename().c_str())
+            {
+                newestVersionFound = directory_entry.path().filename().c_str();
+            }
+        }
+    }
+
+    if (newestVersionFound.empty())
+    {
+        // TODO: Error, no PIX installation found
+    }
+
+    return pixInstallationPath / newestVersionFound / L"WinPixGpuCapturer.dll";
+}
+
+#endif
+
 namespace nv::graphics
 {
     IRenderer*          gRenderer           = nullptr;
@@ -45,6 +82,13 @@ namespace nv::graphics
 
     void InitOnRenderThread()
     {
+#if NV_PIX_CAPTURE_ATTACH
+        if (GetModuleHandle(L"WinPixGpuCapturer.dll") == 0)
+        {
+            LoadLibrary(GetLatestWinPixGpuCapturerPath().c_str());
+        }
+#endif
+
 #if NV_PLATFORM_WINDOWS && NV_RENDERER_DX12
         gWindow = Alloc<WindowDX12>(SystemAllocator::gPtr, (HWND)nullptr);
         gWindow->Init(width, height, isFullscreen);

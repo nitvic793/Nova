@@ -32,12 +32,13 @@ float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
     uint randSeed = InitRand(DTid.x * Params.FrameCount, DTid.y * Params.FrameCount, 16);
     DefaultRayQueryT rayQuery = ShootRay(ray);
 
+    uint instanceId = 20000000;
     float3 resultColor = MISS_COLOR.xyz;
 	if (rayQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
 	{
         HitContext ctx;
         ShadeContext shadeCtx;
-        uint instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
+        instanceId = rayQuery.CommittedInstanceID(); // Used to index into array of structs to get data needed to calculate light
         
 #define USE_GGX 1
 #if USE_GGX
@@ -52,6 +53,8 @@ float4 DoInlineRayTracing(RayDesc ray, uint3 DTid)
         return float4(resultColor, 0.f);
     }
 
+    RWTexture2D<uint> MeshIDTexture = ResourceDescriptorHeap[Params.MeshIDTex];
+    MeshIDTexture[DTid.xy] = instanceId;
     result = float4(resultColor, 1.f);
     return result;
 } 
@@ -62,5 +65,5 @@ void main(uint3 DTid: SV_DispatchThreadID)
     RayDesc rayDesc;
     GetRayDesc(DTid.xy, rayDesc);
     float4 GIColor = DirectGITexture[DTid.xy];
-    OutputTexture[DTid.xy] = DoInlineRayTracing(rayDesc, DTid).xyz + GIColor.xyz * 0.5f;
+    OutputTexture[DTid.xy] = DoInlineRayTracing(rayDesc, DTid).xyz + GIColor.xyz * 0.7f;
 }

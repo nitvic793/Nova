@@ -166,6 +166,8 @@ namespace nv::graphics
         uint32_t    SkyBoxHandle;
         int32_t	    EnableShadows;
         int32_t	    EnableIndirectGI;
+        uint32_t    MeshIDTex;
+        float       _Padding;
     };
 
     struct TraceAccumParams
@@ -176,7 +178,8 @@ namespace nv::graphics
         uint32_t    FrameIndex;
         uint32_t    PrevNormalTexIdx;
         uint32_t    HistoryTexIdx;
-        float	   _Padding[2];
+        uint32_t    MeshIDTex;
+        uint32_t    PrevMeshIDTex;
     };
 
     struct MeshInstanceData

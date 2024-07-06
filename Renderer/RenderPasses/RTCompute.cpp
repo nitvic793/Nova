@@ -95,6 +95,8 @@ namespace nv::graphics
         Handle<GPUResource> mDirectLightBuffer;
         Handle<GPUResource> mPrevNormalsBuffer;
         Handle<GPUResource> mHistoryLengthBuffer;
+        Handle<GPUResource> mMeshIDBuffer;
+        Handle<GPUResource> mPrevMeshIDBuffer;
         Handle<Texture>     mOutputUAV;
         Handle<Texture>	    mAccumUAV;
         Handle<Texture>     mPrevAccumUAV;
@@ -102,6 +104,8 @@ namespace nv::graphics
         Handle<Texture>     mDepthTexture;
         Handle<Texture>     mPrevNormalsTex;
         Handle<Texture>     mHistoryLengthTex;
+        Handle<Texture>     mMeshIDTex;
+        Handle<Texture>     mPrevMeshIDTex;
         ConstantBufferView  mTraceParamsCBV;
         ConstantBufferView  mTraceAccumCBV;
         ConstantBufferView  mBlurParamsCBV;
@@ -161,6 +165,14 @@ namespace nv::graphics
         sRTComputeObjects.mHistoryLengthBuffer = gResourceManager->CreateResource(desc, ID("RTPass/HistoryLengthBuffer"));
         texDesc.mBuffer = sRTComputeObjects.mHistoryLengthBuffer;
         sRTComputeObjects.mHistoryLengthTex = gResourceManager->CreateTexture(texDesc, ID("RTPass/HistoryLengthTex"));
+
+        desc.mFormat = format::R16_UINT;
+        sRTComputeObjects.mMeshIDBuffer = gResourceManager->CreateResource(desc, ID("RTPass/MeshID"));
+        sRTComputeObjects.mPrevMeshIDBuffer = gResourceManager->CreateResource(desc, ID("RTPass/PrevMeshID"));
+        texDesc.mBuffer = sRTComputeObjects.mMeshIDBuffer;
+        sRTComputeObjects.mMeshIDTex = gResourceManager->CreateTexture(texDesc, ID("RTPass/MeshIDTex"));
+        texDesc.mBuffer = sRTComputeObjects.mPrevMeshIDBuffer;
+        sRTComputeObjects.mPrevMeshIDTex = gResourceManager->CreateTexture(texDesc, ID("RTPass/PrevMeshIDTex"));
 
         TextureDesc lightAccumSrvDesc = 
         {
@@ -287,7 +299,7 @@ namespace nv::graphics
        
         static uint32_t frameCount = 0;
         frameCount++;
-        TraceParams params = 
+        TraceParams params =
         {
             .Resolution = float2((float)gWindow->GetWidth(), (float)gWindow->GetHeight()),
             .NoiseTexIdx = gResourceManager->GetTexture(ID("Textures/bluenoise256.png"))->GetHeapIndex(),
@@ -295,7 +307,8 @@ namespace nv::graphics
             .RTSceneIdx = gResourceManager->GetTexture(tlasHandle)->GetHeapIndex(),
             .SkyBoxHandle = gResourceManager->GetTexture(skyHandle)->GetHeapIndex(),
             .EnableShadows = gRenderSettings.mbEnableRTShadows,
-            .EnableIndirectGI = gRenderSettings.mbEnableRTDiffuseGI
+            .EnableIndirectGI = gRenderSettings.mbEnableRTDiffuseGI,
+            .MeshIDTex = gResourceManager->GetTexture(sRTComputeObjects.mMeshIDTex)->GetHeapIndex()
         }; 
         
         gRenderer->UploadToConstantBuffer(sRTComputeObjects.mTraceParamsCBV, (uint8_t*)&params, (uint32_t)sizeof(params));
@@ -307,7 +320,9 @@ namespace nv::graphics
             .AccumulationTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mAccumUAV)->GetHeapIndex(), // GI Accum Step outputs to this texture
             .FrameIndex = frameCount,
             .PrevNormalTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mPrevNormalsTex)->GetHeapIndex(),
-            .HistoryTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mHistoryLengthTex)->GetHeapIndex()
+            .HistoryTexIdx = gResourceManager->GetTexture(sRTComputeObjects.mHistoryLengthTex)->GetHeapIndex(),
+            .MeshIDTex = gResourceManager->GetTexture(sRTComputeObjects.mMeshIDTex)->GetHeapIndex(),
+            .PrevMeshIDTex = gResourceManager->GetTexture(sRTComputeObjects.mPrevMeshIDTex)->GetHeapIndex()
         };
 
         gRenderer->UploadToConstantBuffer(sRTComputeObjects.mTraceAccumCBV, (uint8_t*)&accumParams, (uint32_t)sizeof(accumParams));
@@ -315,7 +330,9 @@ namespace nv::graphics
         TransitionBarrier initBarriers[] = { 
             {.mTo = STATE_UNORDERED_ACCESS, .mResource = sRTComputeObjects.mOutputBuffer },
 			{.mTo = STATE_UNORDERED_ACCESS, .mResource = sRTComputeObjects.mAccumBuffer },
-            {.mTo = STATE_UNORDERED_ACCESS, .mResource = sRTComputeObjects.mPrevNormalsBuffer}
+            {.mTo = STATE_UNORDERED_ACCESS, .mResource = sRTComputeObjects.mPrevNormalsBuffer},
+            {.mTo = STATE_UNORDERED_ACCESS, .mResource = sRTComputeObjects.mMeshIDBuffer },
+            {.mTo = STATE_UNORDERED_ACCESS, .mResource = sRTComputeObjects.mPrevMeshIDBuffer }
         };
 
         ctx->ResourceBarrier({ &initBarriers[0] , ArrayCountOf(initBarriers) });
@@ -390,13 +407,16 @@ namespace nv::graphics
             TransitionBarrier endBarriers[] = {
                 {.mTo = STATE_PIXEL_SHADER_RESOURCE, .mResource = sRTComputeObjects.mOutputBuffer } ,
                 {.mTo = STATE_COPY_DEST, .mResource = sRTComputeObjects.mPrevNormalsBuffer },
-                {.mTo = STATE_COPY_SOURCE, .mResource = curNormalsBuffer }
+                {.mTo = STATE_COPY_SOURCE, .mResource = curNormalsBuffer },
+                {.mTo = STATE_COPY_DEST, .mResource = sRTComputeObjects.mPrevMeshIDBuffer },
+                {.mTo = STATE_COPY_SOURCE, .mResource = sRTComputeObjects.mMeshIDBuffer },
             };
             ctx->ResourceBarrier({ &endBarriers[0] , ArrayCountOf(endBarriers) });
         }
 
         // Copy current normals to previous normals buffer
         ctx->CopyResource(sRTComputeObjects.mPrevNormalsBuffer, curNormalsBuffer);
+        ctx->CopyResource(sRTComputeObjects.mPrevMeshIDBuffer, sRTComputeObjects.mMeshIDBuffer);
     }
 
     void RTCompute::Destroy()
