@@ -4,6 +4,7 @@
 #include "MeshAsset.h"
 #include <Animation/Animation.h>
 #include <Renderer/ResourceManager.h>
+#include <Components/Material.h>
 
 #include <assimp/PostProcess.h>
 #include <assimp/Importer.hpp>
@@ -139,7 +140,7 @@ namespace nv::asset
 		static Assimp::Importer importer;
 		const aiScene* pScene = importer.ReadFile(pFilename,
 			aiProcess_Triangulate |
-			aiProcess_ConvertToLeftHanded | aiProcess_ValidateDataStructure | aiProcess_JoinIdenticalVertices);
+			aiProcess_ConvertToLeftHanded | aiProcess_ValidateDataStructure | aiProcess_JoinIdenticalVertices | aiProcess_RemoveRedundantMaterials);
 
 		if (!pScene)
 		{
@@ -152,7 +153,9 @@ namespace nv::asset
 
 	void MeshAsset::ExportScene(const aiScene* pScene, std::ostream& ostream)
 	{
-		uint32_t numMeshes = pScene->mNumMeshes;
+		const uint32_t numMeshes = pScene->mNumMeshes;
+		const uint32_t numMaterials = pScene->mNumMaterials;
+
 		uint32_t numVertices = 0;
 		uint32_t numIndices = 0;
 		bool bHasBones = false;
@@ -196,6 +199,42 @@ namespace nv::asset
 		{
 			animStore.Animations[0].AnimationName = animStore.Animations[0].AnimationName + "|" + mFilePath;
 			animStore.AnimationIndexMap[animStore.Animations[0].AnimationName] = 0;
+		}
+
+		std::vector<Material> materials;
+		if (pScene->HasMaterials())
+		{
+			for (uint32_t i = 0; i < numMaterials; ++i)
+			{
+				aiMaterial* material = pScene->mMaterials[i];
+				aiString materialName;
+				aiReturn ret;
+				
+				Material& mat = materials.emplace_back(Material{});
+
+				aiColor3D diffuse;
+				ret = material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse);
+
+				if (ret == aiReturn_SUCCESS)
+				{
+					mat.mSimple = {};
+					mat.mType = MATERIAL_SIMPLE;
+					mat.mSimple.mDiffuseColor = math::float3(diffuse.r, diffuse.g, diffuse.b);
+				}
+
+				aiString textureName;
+				ret = material->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), textureName);
+				if (ret == aiReturn_SUCCESS)
+				{
+					mat.mType = MATERIAL_PBR;
+
+					auto texture = pScene->GetEmbeddedTexture(textureName.C_Str());
+					if (texture)
+					{
+						textureName = texture->mFilename;
+					}
+				}
+			}
 		}
 
 		cereal::BinaryOutputArchive archive(ostream);

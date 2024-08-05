@@ -69,7 +69,7 @@ namespace nv::graphics
             return CreateTexture(asset);
         };
 
-        MaterialInstance mat;
+        MaterialInstance mat = {};
         mat.mType = MATERIAL_PBR;
 
         mat.mTextures[0] = getOrCreateTexture(matDesc.mAlbedoTexture);

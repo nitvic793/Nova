@@ -16,14 +16,17 @@ namespace nv::graphics
     };
 
     constexpr uint32_t MAX_MATERIAL_TEXTURES = 4;
+    constexpr float DEFAULT_ROUGHNESS = 0.1f;
+    constexpr float DEFAULT_METALNESS = 0.01f;
+    constexpr math::float3 DEFAULT_DIFFUSE = { 0.f, 0.f, 0.f };
 
     struct SimpleMaterial
     {
         using float3 = nv::math::float3;
 
-        float3 mDiffuseColor;
-        float  mRoughness;
-        float  mMetalness;
+        float3 mDiffuseColor    = DEFAULT_DIFFUSE;
+        float  mRoughness       = DEFAULT_ROUGHNESS;
+        float  mMetalness       = DEFAULT_METALNESS;
         float3 _Padding;
     };
 
@@ -44,7 +47,7 @@ namespace nv::graphics
     };
 
     // TODO : Material Database should use this
-    struct BaseMaterial
+    struct Material
     {
         MaterialType mType;
         union
@@ -52,12 +55,12 @@ namespace nv::graphics
             PBRMaterial     mPBR;
             DiffuseMaterial mDiffuse;
             SimpleMaterial  mSimple;
-        } mMat;
+        };
     };
 
     struct MaterialInstance
     {
-        enum Offset
+        enum PBROffset
         {
             ALBEDO = 0,
             NORMAL,
@@ -66,6 +69,9 @@ namespace nv::graphics
         };
 
         MaterialType mType = MATERIAL_PBR;
-        Handle<Texture> mTextures[MAX_MATERIAL_TEXTURES];
+        union
+        {
+            Handle<Texture> mTextures[MAX_MATERIAL_TEXTURES];
+        };
     };
 }
