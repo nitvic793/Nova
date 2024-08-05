@@ -12,7 +12,7 @@ namespace nv::graphics
 {
     class Mesh;
     class ConstantBufferPool;
-    struct Material;
+    struct MaterialInstance;
 
     struct RenderDescriptors
     {
@@ -25,7 +25,7 @@ namespace nv::graphics
     struct RenderObject
     {
         Mesh*&          mpMesh;
-        Material*&      mpMaterial;
+        MaterialInstance*&      mpMaterial;
         ObjectData& mObjectData;
         PerArmature*&   mpBones;
     };
@@ -34,7 +34,7 @@ namespace nv::graphics
     {
         size_t          mSize;
         Mesh**          mppMeshes;
-        Material**      mppMaterials;
+        MaterialInstance**      mppMaterials;
         ObjectData*     mpObjectData;
         PerArmature**   mppBones;
 
@@ -104,12 +104,12 @@ namespace nv::graphics
         {
             mSize = size;
             mppMeshes = (Mesh**)Alloc(sizeof(Mesh*) * size);
-            mppMaterials = (Material**)Alloc(sizeof(Material*) * size);
+            mppMaterials = (MaterialInstance**)Alloc(sizeof(MaterialInstance*) * size);
             mpObjectData = (ObjectData*)Alloc(sizeof(ObjectData) * size);
             mppBones = (PerArmature**)Alloc(sizeof(PerArmature*) * size);
 
             memset(mppMeshes, 0, sizeof(Mesh*) * size);
-            memset(mppMaterials, 0, sizeof(Material*) * size);
+            memset(mppMaterials, 0, sizeof(MaterialInstance*) * size);
             memset(mpObjectData, 0, sizeof(ObjectData) * size);
             memset(mppBones, 0, sizeof(PerArmature*) * size);
         }

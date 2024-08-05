@@ -20,7 +20,7 @@ namespace nv::graphics::components
     struct Renderable : public ecs::IComponent
     {
         Handle<Mesh>        mMesh       = Null<Mesh>();
-        Handle<Material>    mMaterial   = Null<Material>();
+        Handle<MaterialInstance>    mMaterial   = Null<MaterialInstance>();
         RenderableFlags     mFlags      = RENDERABLE_FLAG_NONE;
 
         constexpr bool HasFlag(RenderableFlags flag) const

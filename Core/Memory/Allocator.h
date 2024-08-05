@@ -12,7 +12,7 @@ namespace nv
     {
     public:
         virtual void*   Allocate(size_t size) = 0;
-        virtual void*   Realloc(size_t size, void* ptr) {}
+        virtual void*   Realloc(size_t size, void* ptr) { return nullptr; }
         virtual void    Free(void* ptr) = 0;
         virtual void    Reset() {};
     };
@@ -34,7 +34,7 @@ namespace nv
     public:
         static constexpr size_t kArenaDefaultSize = 1024;
 
-        ArenaAllocator(IAllocator* allocator, size_t capacity = kArenaDefaultSize):
+        ArenaAllocator(size_t capacity = kArenaDefaultSize, IAllocator* allocator = SystemAllocator::gPtr):
             mBuffer(nullptr),
             mCurrent(nullptr),
             mCapacity(capacity),
@@ -46,14 +46,27 @@ namespace nv
             mCurrent = mBuffer;
         }
 
+        // Provide buffer directly, decoupling buffer management
+        // from this allocator.
+        ArenaAllocator(void* pBuffer, size_t capacity):
+            mBuffer((Byte*)pBuffer),
+            mCurrent((Byte*)pBuffer),
+            mCapacity(capacity),
+            mAllocator(nullptr) 
+        {}
+
         void*   Allocate(size_t size) override;
-        virtual void    Free(void* ptr) override { } // Do nothing
+        void    Free(void* ptr) override { } // Do nothing
+        void    Reset() override;
+
+        constexpr size_t  GetAllocatedSize() const { return mCurrent - mBuffer; }
 
         ~ArenaAllocator() 
         {
             if (mBuffer)
             {
-                mAllocator->Free(mBuffer);
+                if(mAllocator)
+                    mAllocator->Free(mBuffer);
                 mBuffer = nullptr;
                 mCurrent = nullptr;
                 mCapacity = 0;

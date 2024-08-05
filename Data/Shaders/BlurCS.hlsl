@@ -31,7 +31,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
     Texture2D<float3> Input = ResourceDescriptorHeap[Params.InputTexIdx];
     
 #if ENABLE_BLUR
-    const int32_t BlurRadius = Params.BlurRadius;
+    const int32_t BlurRadius = 1;//Params.BlurRadius;
 #else
     const int32_t BlurRadius = 0;
 #endif

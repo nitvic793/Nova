@@ -56,7 +56,7 @@ namespace nv::graphics
         return handle;
     }
 
-    Handle<Material> ResourceManager::CreateMaterial(const PBRMaterial& matDesc, ResID id)
+    Handle<MaterialInstance> ResourceManager::CreateMaterial(const PBRMaterial& matDesc, ResID id)
     {
         if (gResourceTracker.ExistsMaterial(id))
             return gResourceTracker.GetMaterialHandle(id);
@@ -69,7 +69,7 @@ namespace nv::graphics
             return CreateTexture(asset);
         };
 
-        Material mat;
+        MaterialInstance mat;
         mat.mType = MATERIAL_PBR;
 
         mat.mTextures[0] = getOrCreateTexture(matDesc.mAlbedoTexture);
@@ -83,14 +83,14 @@ namespace nv::graphics
         return handle;
     }
 
-    Handle<Material> ResourceManager::GetMaterialHandle(ResID id)
+    Handle<MaterialInstance> ResourceManager::GetMaterialHandle(ResID id)
     {
         if (gResourceTracker.ExistsMaterial(id))
         {
             return gResourceTracker.GetMaterialHandle(id);
         }
 
-        return Null<Material>();
+        return Null<MaterialInstance>();
     }
 
     Handle<Mesh> ResourceManager::GetMeshHandle(ResID id)
@@ -123,16 +123,16 @@ namespace nv::graphics
         return Null<GPUResource>();
     }
 
-    Material* ResourceManager::GetMaterial(Handle<Material> handle)
+    MaterialInstance* ResourceManager::GetMaterial(Handle<MaterialInstance> handle)
     {
         return mMaterialPool.Get(handle);
     }
 
-    Material* ResourceManager::GetMaterial(ResID id)
+    MaterialInstance* ResourceManager::GetMaterial(ResID id)
     {
         if (gResourceTracker.ExistsMaterial(id))
         {
-            Handle<Material> handle = gResourceTracker.GetMaterialHandle(id);
+            Handle<MaterialInstance> handle = gResourceTracker.GetMaterialHandle(id);
             return mMaterialPool.Get(handle);
         }
 

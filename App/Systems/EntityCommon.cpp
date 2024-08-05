@@ -18,7 +18,7 @@ namespace nv
 
     Handle<Entity> CreateEntity(graphics::ResID mesh, graphics::ResID mat, const char* pDebugName /*= nullptr*/, const Transform& transform /*= Transform()*/)
     {
-        Handle<Material> matHandle = gResourceManager->GetMaterialHandle(mat);
+        Handle<MaterialInstance> matHandle = gResourceManager->GetMaterialHandle(mat);
         Handle<Mesh> meshHandle = gResourceManager->GetMeshHandle(mesh);
         if (meshHandle.IsNull() && mesh != RES_ID_NULL)
         {

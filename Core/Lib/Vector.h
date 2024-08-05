@@ -101,6 +101,9 @@ namespace nv
 
 		constexpr void Grow(uint64_t newCapacity, bool bUpdateSize = false)
 		{
+			if (newCapacity == 0 && mCapacity == 0)
+				newCapacity = 1;
+
 			if (newCapacity <= mCapacity) return;
 
 			const auto oldCapacity = mCapacity;

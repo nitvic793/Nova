@@ -14,7 +14,7 @@ namespace nv::graphics
     class Texture;
     class Mesh;
     class Context;
-    struct Material;
+    struct MaterialInstance;
 
     class ResourceTracker
     {
@@ -24,7 +24,7 @@ namespace nv::graphics
         void Track(ResID id, Handle<PipelineState>  handle);
         void Track(ResID id, Handle<Texture>        handle);
         void Track(ResID id, Handle<Mesh>           handle);
-        void Track(ResID id, Handle<Material>       handle);
+        void Track(ResID id, Handle<MaterialInstance>       handle);
 
         void Remove(ResID id, Handle<Shader>         handle);
         void Remove(ResID id, Handle<GPUResource>    handle);
@@ -46,7 +46,7 @@ namespace nv::graphics
         Handle<PipelineState>  GetPipelineStateHandle(ResID id) const;
         Handle<Texture>        GetTextureHandle(ResID id) const;
         Handle<Mesh>           GetMeshHandle(ResID id) const;
-        Handle<Material>       GetMaterialHandle(ResID id) const;
+        Handle<MaterialInstance>       GetMaterialHandle(ResID id) const;
 
     private:
         HashMap<ResID, Handle<Shader>       > mShaderResMap;
@@ -54,6 +54,6 @@ namespace nv::graphics
         HashMap<ResID, Handle<PipelineState>> mPsoResMap;
         HashMap<ResID, Handle<Texture>      > mTextureResMap;
         HashMap<ResID, Handle<Mesh>         > mMeshResMap;
-        HashMap<ResID, Handle<Material>     > mMaterialResMap;
+        HashMap<ResID, Handle<MaterialInstance>     > mMaterialResMap;
     };
 }

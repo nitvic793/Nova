@@ -28,7 +28,7 @@ namespace nv::graphics
         mMeshResMap[id] = handle;
     }
 
-    void ResourceTracker::Track(ResID id, Handle<Material> handle)
+    void ResourceTracker::Track(ResID id, Handle<MaterialInstance> handle)
     {
         mMaterialResMap[id] = handle;
     }
@@ -132,7 +132,7 @@ namespace nv::graphics
         return mMeshResMap.at(id);
     }
 
-    Handle<Material> ResourceTracker::GetMaterialHandle(ResID id) const
+    Handle<MaterialInstance> ResourceTracker::GetMaterialHandle(ResID id) const
     {
         return mMaterialResMap.at(id);
     }

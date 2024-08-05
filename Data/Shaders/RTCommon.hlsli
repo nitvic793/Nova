@@ -14,7 +14,7 @@ StructuredBuffer<MeshInstanceData> MeshInstances : register(t0);
 #define INV2PI		0.15915494309189533576888f
 #define PI			3.14159265358979323846264f
 #define MAX_DIST    10000.f
-#define MIN_DIST    0.1f
+#define MIN_DIST    0.01f
 
 typedef RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> DefaultRayQueryT;
 

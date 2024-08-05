@@ -41,6 +41,9 @@ namespace nv::graphics
         uint32_t bonesCbIdx = 0;
         auto ctx = gRenderer->GetContext();
         NV_GPU_EVENT("ForwardPass", ((ContextDX12*)ctx)->GetCommandList());
+
+        // TODO:
+        // Forward pass pipeline should be material type agnostic, DefaultPS.hlsl should check for type of material and then draw
         const auto bindAndDrawObject = [&](ConstantBufferView objCb, ConstantBufferView matCb, Mesh* mesh, ConstantBufferView* bonesCb)
         {
             ctx->BindConstantBuffer(0, (uint32_t)objCb.mHeapIndex);

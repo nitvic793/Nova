@@ -14,7 +14,7 @@ namespace nv::graphics::animation
 	void ReadNodeHeirarchy(const AnimationComponent& animComponent, const Animation& animation, const MeshAnimNodeData& nodeData, AnimationInstanceData& instanceData, const MeshBoneDesc& boneDesc, float animationTime);
 	void BoneTransform(const AnimationComponent& animComponent, AnimationInstanceData& instanceData, const Animation& animation, const MeshAnimNodeData& nodeData, const MeshBoneDesc& boneDesc);
 
-	using AnimInstanceVector = nv::Vector<AnimationInstanceData, true, 1>;
+	using AnimInstanceVector = nv::Vector<AnimationInstanceData, true, 0>;
 	using AnimInstancePoolType = Pool<AnimInstanceVector>;
 	std::unique_ptr<AnimInstancePoolType> gAnimationInstancePool = nullptr;
 

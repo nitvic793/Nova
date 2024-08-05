@@ -363,10 +363,10 @@ namespace nv::graphics
             if (mat)
             {
                 MaterialData matData;
-                matData.AlbedoOffset = gResourceManager->GetTexture(mat->mTextures[Material::ALBEDO])->GetHeapIndex();
-                matData.NormalOffset = gResourceManager->GetTexture(mat->mTextures[Material::NORMAL])->GetHeapIndex();
-                matData.RoughnessOffset = gResourceManager->GetTexture(mat->mTextures[Material::ROUGHNESS])->GetHeapIndex();
-                matData.MetalnessOffset = gResourceManager->GetTexture(mat->mTextures[Material::METALNESS])->GetHeapIndex();
+                matData.AlbedoOffset = gResourceManager->GetTexture(mat->mTextures[MaterialInstance::ALBEDO])->GetHeapIndex();
+                matData.NormalOffset = gResourceManager->GetTexture(mat->mTextures[MaterialInstance::NORMAL])->GetHeapIndex();
+                matData.RoughnessOffset = gResourceManager->GetTexture(mat->mTextures[MaterialInstance::ROUGHNESS])->GetHeapIndex();
+                matData.MetalnessOffset = gResourceManager->GetTexture(mat->mTextures[MaterialInstance::METALNESS])->GetHeapIndex();
                 gRenderer->UploadToConstantBuffer(matCb, (uint8_t*)&matData, sizeof(MaterialData));
             }
         }

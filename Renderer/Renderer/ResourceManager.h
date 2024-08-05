@@ -16,7 +16,7 @@ namespace nv::graphics
     struct MeshDesc;
     struct ContextDesc;
     struct PBRMaterial;
-    struct Material;
+    struct MaterialInstance;
 
     class Shader;
     class GPUResource;
@@ -62,13 +62,13 @@ namespace nv::graphics
         virtual GPUResource*            Emplace(Handle<GPUResource>& handle) = 0;
 
         Handle<GPUResource>             CreateResource(const GPUResourceDesc& desc, ResID id);
-        Handle<Material>                CreateMaterial(const PBRMaterial& matDesc, ResID id);
-        Handle<Material>                GetMaterialHandle(ResID id);
+        Handle<MaterialInstance>                CreateMaterial(const PBRMaterial& matDesc, ResID id);
+        Handle<MaterialInstance>                GetMaterialHandle(ResID id);
         Handle<Mesh>                    GetMeshHandle(ResID id);
         Handle<Texture>                 GetTextureHandle(ResID id);
         Handle<GPUResource>             GetGPUResourceHandle(ResID id);
-        Material*                       GetMaterial(Handle<Material> handle);
-        Material*                       GetMaterial(ResID id);
+        MaterialInstance*                       GetMaterial(Handle<MaterialInstance> handle);
+        MaterialInstance*                       GetMaterial(ResID id);
         void                            DestroyTexture(ResID id);
         void                            QueueDestroy(Handle<GPUResource> handle, uint32_t frameDelay = 0);
 
@@ -100,7 +100,7 @@ namespace nv::graphics
         std::mutex                      mMutex;
 
     private:
-        Pool<Material> mMaterialPool;
+        Pool<MaterialInstance> mMaterialPool;
     };
 
     extern ResourceManager* gResourceManager;

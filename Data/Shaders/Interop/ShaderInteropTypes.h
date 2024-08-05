@@ -42,7 +42,7 @@ namespace nv::graphics
         float4x4 World;
         float4x4 PrevWorld;
         uint32_t MaterialIndex;
-        float    _Padding;
+        uint32_t MaterialType; // TODO: Define structs for material with simple colors (diffuse float3, roughness float, metalness float etc.)
     };
 
     struct MaterialData

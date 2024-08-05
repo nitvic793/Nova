@@ -48,10 +48,19 @@ namespace nv
 
     void* ArenaAllocator::Allocate(size_t size)
     {
+        // This allocator cannot grow
         assert((mCurrent - mBuffer) + size <= mCapacity);
+        if ((mCurrent - mBuffer) + size > mCapacity)
+            return nullptr;
+
         auto buffer = mCurrent;
         mCurrent += size;
         return buffer;
+    }
+
+    void ArenaAllocator::Reset()
+    {
+        mCurrent = mBuffer;
     }
 
     void* Alloc(size_t size, IAllocator* alloc)

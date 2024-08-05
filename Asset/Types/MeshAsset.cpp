@@ -17,6 +17,7 @@
 #include <IO/File.h>
 #include <DirectXMesh.h>
 #include <queue>
+#include <Engine/Log.h>
 
 using namespace nv::graphics;
 
@@ -124,6 +125,12 @@ namespace nv::asset
 			aiProcess_Triangulate |
 			aiProcess_ConvertToLeftHanded | aiProcess_ValidateDataStructure | aiProcess_JoinIdenticalVertices , "");
 
+		if (!pScene)
+		{
+			log::Error("[Asset] Unable to export mesh");
+			return;
+		}
+
 		ExportScene(pScene, ostream);
 	}
 
@@ -133,6 +140,12 @@ namespace nv::asset
 		const aiScene* pScene = importer.ReadFile(pFilename,
 			aiProcess_Triangulate |
 			aiProcess_ConvertToLeftHanded | aiProcess_ValidateDataStructure | aiProcess_JoinIdenticalVertices);
+
+		if (!pScene)
+		{
+			log::Error("[Asset] Unable to export '{}'", pFilename);
+			return;
+		}
 
 		ExportScene(pScene, ostream);
 	}
