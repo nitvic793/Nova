@@ -113,7 +113,7 @@ namespace nv::graphics
             log::Info("[Renderer] Loading mesh: {}", meshName);
 #endif
             auto m = mesh->DeserializeTo<asset::MeshAsset>();
-            auto handle = gResourceManager->CreateMesh(m.GetData(), mesh->GetAssetID().mHash);
+            auto handle = !m.GetData().mMeshEntries.empty() ? gResourceManager->CreateMesh(m.GetData(), mesh->GetAssetID().mHash) : Null<Mesh>();
             m.Register(handle);
             asset::gpAssetManager->UnloadAsset(mesh->GetAssetID());
         }
