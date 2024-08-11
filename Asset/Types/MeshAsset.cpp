@@ -165,14 +165,15 @@ namespace nv::asset
 		mData.mMeshEntries.resize(numMeshes);
 		for (uint32_t i = 0; i < numMeshes; i++)
 		{
+			const auto pMesh = pScene->mMeshes[i];
 			constexpr uint32_t kNumPerFace = 3;
-			mData.mMeshEntries[i].mNumIndices = pScene->mMeshes[i]->mNumFaces * 3;
+			mData.mMeshEntries[i].mNumIndices = pMesh->mNumFaces * 3;
 			mData.mMeshEntries[i].mBaseVertex = numVertices;
 			mData.mMeshEntries[i].mBaseIndex = numIndices;
 
-			numVertices += pScene->mMeshes[i]->mNumVertices;
-			numIndices += pScene->mMeshes[i]->mNumFaces * kNumPerFace;
-			bHasBones = bHasBones || pScene->mMeshes[i]->HasBones();
+			numVertices += pMesh->mNumVertices;
+			numIndices += pMesh->mNumFaces * kNumPerFace;
+			bHasBones = bHasBones || pMesh->HasBones();
 		}
 
 		mData.mIndices.reserve(numIndices);

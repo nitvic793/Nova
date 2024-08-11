@@ -3,6 +3,7 @@
 
 #include <Lib/Util.h>
 #include <AssetManager.h>
+#include <Engine/Log.h>
 
 #include <cereal/cereal.hpp>
 #include <cereal/archives/binary.hpp>
@@ -113,6 +114,7 @@ namespace nv::asset
     public:
         CComPtr<IDxcBlob> Compile(const AssetData& data, const ShaderConfigData& config, const char* name)
         {
+            log::Info("[ShaderCompiler] Compiling shader: {}", name);
             static CComPtr<IDxcUtils> pUtils;
             static CComPtr<IDxcIncludeHandler> pDefaultIncludeHandler;
             static CComPtr<IDxcLibrary> library;

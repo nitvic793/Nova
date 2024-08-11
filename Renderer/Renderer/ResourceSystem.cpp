@@ -3,6 +3,7 @@
 #include "ResourceSystem.h"
 #include <Renderer/ResourceManager.h>
 #include <Engine/JobSystem.h>
+#include <Debug/Profiler.h>
 
 namespace nv::graphics
 {
@@ -23,6 +24,7 @@ namespace nv::graphics
         {
             mAsyncLoadJob = nv::jobs::Execute([](void* pContext)
             {
+                NV_EVENT("ResourceSystem/AsyncLoadJob");
                 gResourceManager->ProcessAsyncLoadQueue();
             });
         }

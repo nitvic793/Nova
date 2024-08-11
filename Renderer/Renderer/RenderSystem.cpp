@@ -102,9 +102,27 @@ namespace nv::graphics
             m.Register(handle);
         };
 
+        std::vector<asset::Asset*> meshAssets;
+        asset::gpAssetManager->GetAssetsOfType(asset::ASSET_MESH, meshAssets);
+        for (auto mesh : meshAssets)
+        {
+            // TODO: Load embedded materials and textures within MeshAsset
+            // TODO: Load all meshes in parallel
+#if _DEBUG
+            auto meshName = GetString(mesh->GetAssetID().mHash);
+            log::Info("[Renderer] Loading mesh: {}", meshName);
+#endif
+            auto m = mesh->DeserializeTo<asset::MeshAsset>();
+            auto handle = gResourceManager->CreateMesh(m.GetData(), mesh->GetAssetID().mHash);
+            m.Register(handle);
+            asset::gpAssetManager->UnloadAsset(mesh->GetAssetID());
+        }
+
         nv::Vector<PBRMaterial> materials;
         const auto loadMaterials = [&]()
         {
+            // TODO: Load all materials in parallel
+            // TODO: Update material pipeline 
             for (const auto& mat : asset::gMaterialDatabase.mMaterials)
             {
                 gResourceManager->CreateMaterial(mat.second, ID(mat.first.c_str()));
@@ -120,14 +138,7 @@ namespace nv::graphics
             asset::gpAssetManager->UnloadAsset(material.mMetalnessTexture);
         };
 
-        //loadMesh(ID("Mesh/cube.obj"));
-        loadMesh(ID("Mesh/torus.obj"));
-        loadMesh(ID("Mesh/cone.obj"));
-        loadMesh(ID("Mesh/plane.obj"));
-        loadMesh(ID("Mesh/male.fbx"));
-        loadMesh(ID("Mesh/anim_running.fbx"));
-        loadMesh(ID("Mesh/anim_idle.fbx"));
-        loadMesh(ID("Mesh/knight.fbx"));
+
         loadMaterials();
 
         gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/SunnyCubeMap.dds") });
