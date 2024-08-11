@@ -171,6 +171,16 @@ namespace nv::asset
             return mAssets.Get(asset);
         }
 
+        virtual void GetAssetsOfType(const AssetType& type, std::vector<Asset*>& assets) override
+        {
+            for (auto& item : mAssetMap)
+            {
+                Asset* asset = mAssets.Get(item.second);
+                if (asset && asset->GetType() == type)
+                    assets.push_back(asset);
+            }
+        }
+
         void LoadPackageFile(const char* path)
         {
             std::ifstream file(path, std::ios::binary);
@@ -596,7 +606,6 @@ namespace nv::asset
                 MeshAsset mesh(path);
                 std::ostringstream sstream;
                 mesh.Export(asset->GetAssetData(), sstream);
-               // mesh.Export(filePath.c_str(), ostream); // Unfortunately, Assimp's load from memory doesn't seem to work as expected
                 writeHeader((size_t)sstream.tellp());
                 ostream.write(sstream.str().c_str(), sstream.str().size());
                 break;

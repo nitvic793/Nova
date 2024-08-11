@@ -4,6 +4,7 @@
 #include <Animation/Animation.h>
 #include <Asset.h>
 #include <ostream>
+#include <Components/Material.h>
 
 struct aiScene;
 
@@ -11,9 +12,39 @@ namespace nv::asset
 {
     class MeshAsset 
     {
+    private:
         using MeshDesc = graphics::MeshDesc;
         using AnimationStore = graphics::animation::AnimationStore;
         using MeshAnimNodeData = graphics::animation::MeshAnimNodeData;
+        using Material = graphics::Material;
+
+        struct TextureData
+        {
+            AssetID mTextureId;
+            std::vector<uint8_t> mTextureData;
+
+            template<typename Archive>
+            void serialize(Archive& archive)
+            {
+                archive(mTextureId);
+                archive(mTextureData);
+            }
+        };
+
+        struct MatPair
+        {
+            std::string mName;
+            Material    mMat = {};
+            std::vector<TextureData> mTextures = {};
+
+            template<typename Archive>
+            void serialize(Archive& archive)
+            {
+                archive(mName);
+                archive(mMat);
+                archive(mTextures);
+            }
+        };
 
     public:
         MeshAsset(const std::string& filePath) :
@@ -35,6 +66,7 @@ namespace nv::asset
         MeshDesc                mData = {};
         AnimationStore          mAnimStore = {};
         MeshAnimNodeData        mAnimNodeData = {};
+        std::vector<MatPair>    mMaterials = {};
         const std::string       mFilePath;
     };
 }

@@ -31,6 +31,8 @@ namespace nv::asset
         };
 
         constexpr operator uint64_t() const { return mId; }
+
+        NV_SERIALIZE(mId);
     };
 
     struct IDesc

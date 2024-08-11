@@ -2,6 +2,7 @@
 
 #include <Types/Serializers.h>
 #include "MeshAsset.h"
+#include <Types/TextureAsset.h>
 #include <Animation/Animation.h>
 #include <Renderer/ResourceManager.h>
 #include <Components/Material.h>
@@ -114,6 +115,7 @@ namespace nv::asset
 		cereal::BinaryInputArchive archive(istream);
 
 		archive(mData);
+		archive(mMaterials);
 		archive(mAnimNodeData);
 		archive(mAnimStore);
 	}
@@ -201,46 +203,103 @@ namespace nv::asset
 			animStore.AnimationIndexMap[animStore.Animations[0].AnimationName] = 0;
 		}
 
-		std::vector<Material> materials;
 		if (pScene->HasMaterials())
 		{
 			for (uint32_t i = 0; i < numMaterials; ++i)
 			{
 				aiMaterial* material = pScene->mMaterials[i];
-				aiString materialName;
+				aiString materialName = material->GetName();
 				aiReturn ret;
-				
-				Material& mat = materials.emplace_back(Material{});
 
-				aiColor3D diffuse;
+                std::string internalMatName = "Material/" + mFilePath + "/" + materialName.C_Str();
+				
+				MatPair& matPair = mMaterials.emplace_back(MatPair{ internalMatName, Material{} });
+				Material& mat = matPair.mMat;
+
+				aiColor3D diffuse = {};
+				aiColor3D emissive = {};
 				ret = material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse);
+				material->Get(AI_MATKEY_COLOR_EMISSIVE, emissive);
 
 				if (ret == aiReturn_SUCCESS)
 				{
-					mat.mSimple = {};
+					mat.mData.mSimple = {};
 					mat.mType = MATERIAL_SIMPLE;
-					mat.mSimple.mDiffuseColor = math::float3(diffuse.r, diffuse.g, diffuse.b);
+					mat.mData.mSimple.mDiffuseColor = math::float3(diffuse.r, diffuse.g, diffuse.b);
+					mat.mData.mSimple.mEmissive = math::float3(emissive.r, emissive.g, emissive.b);
 				}
 
-				aiString textureName;
-				ret = material->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), textureName);
-				if (ret == aiReturn_SUCCESS)
+				aiString diffuseTexName;
+				aiString normalsTexName;
+				aiString roughnessTexName;
+				aiString metalnessTexName;
+
+				material->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), diffuseTexName);
+				ret = ret && diffuseTexName.length == 0 ? material->Get(AI_MATKEY_TEXTURE(aiTextureType_BASE_COLOR,0), diffuseTexName) : aiReturn_SUCCESS;
+
+				material->Get(AI_MATKEY_TEXTURE(aiTextureType_NORMALS, 0), normalsTexName); 
+				ret = ret && normalsTexName.length == 0 ? material->Get(AI_MATKEY_TEXTURE(aiTextureType_NORMAL_CAMERA, 0), normalsTexName) : aiReturn_SUCCESS;
+
+				material->Get(AI_MATKEY_TEXTURE(aiTextureType_SPECULAR, 0), roughnessTexName); 
+				ret = ret && roughnessTexName.length == 0 ? material->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE_ROUGHNESS, 0), roughnessTexName) : aiReturn_SUCCESS;
+
+                material->Get(AI_MATKEY_TEXTURE(aiTextureType_SHININESS, 0), metalnessTexName);
+				ret = ret && metalnessTexName.length == 0 ? material->Get(AI_MATKEY_TEXTURE(aiTextureType_METALNESS, 0), metalnessTexName) : aiReturn_SUCCESS;
+
+				const aiTexture* diffuseTex = pScene->GetEmbeddedTexture(diffuseTexName.C_Str());
+				const aiTexture* normalsTex = pScene->GetEmbeddedTexture(normalsTexName.C_Str());
+				const aiTexture* roughnessTex = pScene->GetEmbeddedTexture(roughnessTexName.C_Str());
+				const aiTexture* metalnessTex = pScene->GetEmbeddedTexture(metalnessTexName.C_Str());
+
+                const auto exportTextureToMemory = [](const aiTexture* tex, std::vector<uint8_t>& buffer)
+                {
+                    if (!tex)
+						return;
+                    
+					TextureAsset texAsset;
+                    std::stringstream stream;
+					texAsset.Export({ tex->mWidth, (uint8_t*)tex->pcData }, stream);
+					buffer.resize(stream.str().size());
+                    stream.read((char*)buffer.data(), buffer.size());
+                };
+
+				const auto addTexture = [&](const aiTexture* tex)
+				{
+					if(!tex)
+                        return INVALID_TEXTURE;
+
+					std::string textureName = tex->mFilename.C_Str();
+					std::string fileName = mFilePath + "_" + textureName.substr(textureName.find_last_of("/\\") + 1);
+					const StringID hash = nv::ID(fileName.c_str());
+					StringDB::Get().AddString(fileName, hash);
+					AssetID texId = { ASSET_TEXTURE, hash };
+					auto& texPair = matPair.mTextures.emplace_back(TextureData{ .mTextureId = texId, .mTextureData = std::vector<uint8_t>() });
+					exportTextureToMemory(diffuseTex, texPair.mTextureData);
+
+					return texId;
+				};
+				
+				if (diffuseTex)
 				{
 					mat.mType = MATERIAL_PBR;
+					mat.mData.mPBR = {};
 
-					auto texture = pScene->GetEmbeddedTexture(textureName.C_Str());
-					if (texture)
-					{
-						textureName = texture->mFilename;
-					}
+					mat.mData.mPBR.mAlbedoTexture		= addTexture(diffuseTex);
+                    mat.mData.mPBR.mNormalTexture		= addTexture(normalsTex);
+                    mat.mData.mPBR.mRoughnessTexture	= addTexture(roughnessTex);
+                    mat.mData.mPBR.mMetalnessTexture	= addTexture(metalnessTex);
 				}
 			}
 		}
 
-		cereal::BinaryOutputArchive archive(ostream);
-		archive(mData);
-		archive(animNodeData);
-		archive(animStore);
+		// Export mesh data
+		{
+			cereal::BinaryOutputArchive archive(ostream);
+			archive(mData);
+			archive(mMaterials);
+			archive(animNodeData);
+			archive(animStore);
+		}
 	}
 
 	void MeshAsset::Register(Handle<graphics::Mesh> handle)
@@ -367,6 +426,16 @@ namespace nv::asset
 			memcpy(&channel.ScalingKeys[0], animNode->mScalingKeys, sizeof(aiVectorKey) * animNode->mNumScalingKeys);
 		}
 
+		void CleanUp(std::string& name)
+		{
+			constexpr const char cleanUpStr[] = ":";
+			auto cleanUp = name.find(cleanUpStr);
+			if (cleanUp != std::string::npos)
+			{
+				name = name.erase(0, cleanUp + 1);
+			}
+		};
+
 		void LoadAnimations(const aiScene* scene, MeshAnimNodeData& animData, AnimationStore& store)
 		{
 			//Get global inverse
@@ -384,6 +453,8 @@ namespace nv::asset
 			{
 				auto node = nodeQueue.front();
 				auto name = std::string(node->mName.data);
+                CleanUp(name);
+
 				auto transformation = MathHelper::aiMatrixToXMFloat4x4(&node->mTransformation);
 				XMMATRIX NodeTransformation = XMMatrixTranspose(XMLoadFloat4x4(&transformation)); // TODO: Do we need to transpose?
 				if (animData.NodeHeirarchy.find(name) == animData.NodeHeirarchy.end()) //If node not in heirarchy
@@ -394,8 +465,12 @@ namespace nv::asset
 					{
 						auto child = node->mChildren[i];
 						auto childName = std::string(child->mName.data);
+                        CleanUp(childName);
+
 						children[i] = childName;
 						nodeQueue.push(child);
+
+
 					}
 
 					XMStoreFloat4x4(&transform, NodeTransformation);
@@ -431,6 +506,7 @@ namespace nv::asset
 				auto index = 0u;
 				for (auto& channel : anim.Channels)
 				{
+                    CleanUp(channel.NodeName);
 					anim.NodeChannelMap.insert(std::pair<std::string, uint32_t>(channel.NodeName, index));
 					index++;
 				}
