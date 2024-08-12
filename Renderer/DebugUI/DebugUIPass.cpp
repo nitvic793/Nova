@@ -15,6 +15,7 @@
 #include <Engine/Camera.h>
 #include <Math/Collision.h>
 #include <Configs/MaterialDatabase.h>
+#include <AssetManager.h>
 
 #include "Imgui/imgui.h"
 

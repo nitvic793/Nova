@@ -32,13 +32,14 @@ namespace nv::graphics
 
     Handle<Texture> ResourceManager::CreateTexture(asset::AssetID asset)
     {
+        if (gResourceTracker.ExistsTexture(asset.mHash))
+        {
+            return gResourceTracker.GetTextureHandle(asset.mHash);
+        }
+
         auto ctx = gRenderer->GetContext();
-        ctx->Begin();
         auto texAsset = asset::gpAssetManager->GetAsset(asset);
-        asset::TextureAsset tex = texAsset->DeserializeTo<asset::TextureAsset>(ctx);
-        ctx->End();
-        gRenderer->Submit(ctx);
-        return gResourceManager->CreateTexture(tex.GetDesc(), asset.mHash);
+        return texAsset ? CreateTexture(*texAsset) : Null<Texture>();
     }
 
     Handle<Mesh> ResourceManager::CreateMesh(const MeshDesc& desc, ResID id)
@@ -56,30 +57,56 @@ namespace nv::graphics
         return handle;
     }
 
+    static Handle<Texture> GetOrCreateTexture(asset::AssetID asset)
+    {
+        if (gResourceTracker.ExistsTexture(asset.mHash))
+            return gResourceTracker.GetTextureHandle(asset.mHash);
+
+        return gResourceManager->CreateTexture(asset);
+    }
+
     Handle<MaterialInstance> ResourceManager::CreateMaterial(const PBRMaterial& matDesc, ResID id)
     {
         if (gResourceTracker.ExistsMaterial(id))
             return gResourceTracker.GetMaterialHandle(id);
 
-        const auto getOrCreateTexture = [&](asset::AssetID asset)
-        {
-            if (gResourceTracker.ExistsTexture(asset.mHash))
-                return gResourceTracker.GetTextureHandle(matDesc.mAlbedoTexture.mHash);
-
-            return CreateTexture(asset);
-        };
-
         MaterialInstance mat = {};
         mat.mType = MATERIAL_PBR;
 
-        mat.mTextures[0] = getOrCreateTexture(matDesc.mAlbedoTexture);
-        mat.mTextures[1] = getOrCreateTexture(matDesc.mNormalTexture);
-        mat.mTextures[2] = getOrCreateTexture(matDesc.mRoughnessTexture);
-        mat.mTextures[3] = getOrCreateTexture(matDesc.mMetalnessTexture);
+        mat.mTextures[0] = GetOrCreateTexture(matDesc.mAlbedoTexture);
+        mat.mTextures[1] = GetOrCreateTexture(matDesc.mNormalTexture);
+        mat.mTextures[2] = GetOrCreateTexture(matDesc.mRoughnessTexture);
+        mat.mTextures[3] = GetOrCreateTexture(matDesc.mMetalnessTexture);
 
         auto handle = mMaterialPool.Create(mat);
         gResourceTracker.Track(id, handle);
 
+        return handle;
+    }
+
+    Handle<MaterialInstance> ResourceManager::CreateMaterial(const Material& matDesc, ResID id)
+    {
+        if (gResourceTracker.ExistsMaterial(id))
+            return gResourceTracker.GetMaterialHandle(id);
+
+        MaterialInstance mat = {};
+        mat.mType = matDesc.mType;
+
+        switch (matDesc.mType)
+        {
+        case MATERIAL_PBR:
+            mat.mTextures[0] = GetOrCreateTexture(matDesc.mData.mPBR.mAlbedoTexture);
+            mat.mTextures[1] = GetOrCreateTexture(matDesc.mData.mPBR.mNormalTexture);
+            mat.mTextures[2] = GetOrCreateTexture(matDesc.mData.mPBR.mRoughnessTexture);
+            mat.mTextures[3] = GetOrCreateTexture(matDesc.mData.mPBR.mMetalnessTexture);
+            break;
+        case MATERIAL_SIMPLE:
+            mat.mSimple = matDesc.mData.mSimple;
+            break;
+        }
+
+        auto handle = mMaterialPool.Create(mat);
+        gResourceTracker.Track(id, handle);
         return handle;
     }
 
@@ -191,6 +218,22 @@ namespace nv::graphics
         gRenderer->QueueDestroy(handle, frameDelay);
     }
 
+    Handle<Texture> ResourceManager::CreateTexture(asset::Asset& data)
+    {
+        if (gResourceTracker.ExistsTexture(data.GetHash()))
+        {
+            return gResourceTracker.GetTextureHandle(data.GetHash());
+        }
+
+        auto ctx = gRenderer->GetContext();
+        ctx->Begin();
+        asset::TextureAsset tex = data.DeserializeTo<asset::TextureAsset>(ctx);
+        ctx->End();
+        gRenderer->Submit(ctx);
+
+        return gResourceManager->CreateTexture(tex.GetDesc(), data.GetHash());
+    }
+
     Handle<Mesh> ResourceManager::CreateMeshAsync(ResID id)
     {
         std::unique_lock<std::mutex> lock(mMutex);
@@ -205,6 +248,7 @@ namespace nv::graphics
         std::unique_lock<std::mutex> lock(mMutex);
         auto handle = EmplaceTexture();
         mTextureQueue.push_back({ handle, id });
+        gResourceTracker.Track(id, handle);
         return handle;
     }
 

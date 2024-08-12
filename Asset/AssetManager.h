@@ -24,12 +24,13 @@ namespace nv::asset
         virtual void Init(const char* assetPath) = 0;
         virtual Asset* GetAsset(AssetID id) const = 0;
         virtual Asset* GetAsset(Handle<Asset> asset) const = 0;
+        virtual Asset* CreateAsset(AssetID id) = 0;
         virtual Handle<Asset> LoadAsset(AssetID id, AssetLoadCallback callback = nullptr, bool wait = false) = 0;
         virtual void UnloadAsset(Handle<Asset> asset) = 0;
         virtual void UnloadAsset(AssetID asset) = 0;
         virtual Handle<jobs::Job> ExportAssets(const char* exportPath, bool& result, bool bForce = false) = 0;
 
-        virtual void GetAssetsOfType(const AssetType& type, std::vector<Asset*>& assets) = 0;
+        virtual void GetAssetsOfType(const AssetType& type, std::vector<Handle<Asset>>& assets) = 0;
 
         virtual void Reload(const char* file) = 0;
 

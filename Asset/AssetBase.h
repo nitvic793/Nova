@@ -31,6 +31,7 @@ namespace nv::asset
         };
 
         constexpr operator uint64_t() const { return mId; }
+        constexpr AssetID& operator=(uint64_t id) { mId = id; return *this; }
 
         NV_SERIALIZE(mId);
     };

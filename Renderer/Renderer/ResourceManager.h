@@ -4,8 +4,11 @@
 #include <Lib/Pool.h>
 #include <Renderer/CommonDefines.h>
 #include <AssetBase.h>
+
 #include <Renderer/ResourceTracker.h>
 #include <mutex>
+#include <Components/Material.h>
+#include <Asset.h>
 
 namespace nv::graphics
 {
@@ -53,6 +56,8 @@ namespace nv::graphics
         virtual void                    CreateMesh(Handle<Mesh> handle, const MeshDesc& desc) = 0;
         virtual void                    CreateTexture(Handle<Texture> handle, const TextureDesc& desc) = 0;
 
+        Handle<Texture>                 CreateTexture(asset::Asset& data);
+
         // Async Functions
         Handle<Mesh>                    CreateMeshAsync(ResID id);
         Handle<Texture>                 CreateTextureAsync(ResID id);
@@ -62,13 +67,15 @@ namespace nv::graphics
         virtual GPUResource*            Emplace(Handle<GPUResource>& handle) = 0;
 
         Handle<GPUResource>             CreateResource(const GPUResourceDesc& desc, ResID id);
-        Handle<MaterialInstance>                CreateMaterial(const PBRMaterial& matDesc, ResID id);
-        Handle<MaterialInstance>                GetMaterialHandle(ResID id);
+        Handle<MaterialInstance>        CreateMaterial(const PBRMaterial& matDesc, ResID id);
+        Handle<MaterialInstance>        CreateMaterial(const Material& matDesc, ResID id);
+
+        Handle<MaterialInstance>        GetMaterialHandle(ResID id);
         Handle<Mesh>                    GetMeshHandle(ResID id);
         Handle<Texture>                 GetTextureHandle(ResID id);
         Handle<GPUResource>             GetGPUResourceHandle(ResID id);
-        MaterialInstance*                       GetMaterial(Handle<MaterialInstance> handle);
-        MaterialInstance*                       GetMaterial(ResID id);
+        MaterialInstance*               GetMaterial(Handle<MaterialInstance> handle);
+        MaterialInstance*               GetMaterial(ResID id);
         void                            DestroyTexture(ResID id);
         void                            QueueDestroy(Handle<GPUResource> handle, uint32_t frameDelay = 0);
 

@@ -88,6 +88,22 @@ namespace nv::asset
             auto it = mAssetMap.find(id.mId);
             if (it != mAssetMap.end())
             {
+                Asset* asset = mAssets.Get(it->second);
+                // Update the asset
+                if (asset)
+                {
+                    Free(asset->GetData());
+                    asset->SetBuffer(nullptr, 0);
+
+                    std::ostringstream sstream;
+                    cereal::BinaryOutputArchive archive(sstream);
+                    archive(StringDB::Get());
+                    auto data = sstream.str();
+                    auto pBuffer = (Byte*)Alloc(data.size());
+                    memcpy(pBuffer, data.c_str(), data.size());
+                    asset->SetData({ data.size(), pBuffer });
+                    asset->SetState(STATE_LOADED);
+                }
                 return; // Already loaded
             }
         
@@ -152,9 +168,7 @@ namespace nv::asset
 #endif
             }
 
-#if 1
             StoreStringDB();
-#endif
         }
 
         virtual Asset* GetAsset(AssetID id) const override
@@ -171,13 +185,30 @@ namespace nv::asset
             return mAssets.Get(asset);
         }
 
-        virtual void GetAssetsOfType(const AssetType& type, std::vector<Asset*>& assets) override
+        Asset* CreateAsset(AssetID id) override
+        {
+            if (mAssetMap.find(id) != mAssetMap.end())
+            {
+                log::Warn("[Asset] Asset '{}' already exists", GetString(id.mHash).data());
+                return GetAsset(id);
+            }
+
+            auto handle = mAssets.Create();
+            Asset* asset = mAssets.Get(handle);
+            asset->Set(id, {});
+            asset->SetState(STATE_UNLOADED);
+            mAssetMap[id.mId] = handle;
+            return asset;
+        }
+
+        virtual void GetAssetsOfType(const AssetType& type, std::vector<Handle<Asset>>& assets) override
         {
             for (auto& item : mAssetMap)
             {
+                AssetID id = { .mId = item.first };
                 Asset* asset = mAssets.Get(item.second);
-                if (asset && asset->GetType() == type)
-                    assets.push_back(asset);
+                if (id.mType == type)
+                    assets.push_back(item.second);
             }
         }
 
@@ -485,10 +516,28 @@ namespace nv::asset
                 for (auto item : mAssetMap)
                 {
                     Asset* asset = mAssets.Get(item.second);
-                    if (asset->GetType() == ASSET_CONFIG)
+                    if (asset && (asset->GetType() == ASSET_CONFIG || asset->GetType() == ASSET_DB))
                         continue;
 
                     if (asset)
+                    {
+                        const auto& filePath = mAssetPathMap[asset->GetID()];
+                        addCacheEntry(filePath, cacheEntries);
+                        result = LoadAssetFromFile(asset);
+                        ExportAsset(asset, file); // TODO: Export to file. 
+                        UnloadAsset(item.second);
+                    }
+
+                    if (!result)
+                        return;
+                }
+#if 1
+                StoreStringDB();
+#endif
+                for (auto item : mAssetMap)
+                {
+                    Asset* asset = mAssets.Get(item.second);
+                    if (asset && asset->GetType() == ASSET_DB)
                     {
                         const auto& filePath = mAssetPathMap[asset->GetID()];
                         addCacheEntry(filePath, cacheEntries);

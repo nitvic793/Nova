@@ -102,20 +102,41 @@ namespace nv::graphics
             m.Register(handle);
         };
 
-        std::vector<asset::Asset*> meshAssets;
+        std::vector<Handle<asset::Asset>> meshAssets;
         asset::gpAssetManager->GetAssetsOfType(asset::ASSET_MESH, meshAssets);
-        for (auto mesh : meshAssets)
+        for (auto& meshHandle : meshAssets)
         {
             // TODO: Load embedded materials and textures within MeshAsset
             // TODO: Load all meshes in parallel
+            asset::Asset* mesh = asset::gpAssetManager->GetAsset(meshHandle);
 #if _DEBUG
-            auto meshName = GetString(mesh->GetAssetID().mHash);
+            auto meshName = GetString(mesh->GetHash());
             log::Info("[Renderer] Loading mesh: {}", meshName);
 #endif
             auto m = mesh->DeserializeTo<asset::MeshAsset>();
             auto handle = !m.GetData().mMeshEntries.empty() ? gResourceManager->CreateMesh(m.GetData(), mesh->GetAssetID().mHash) : Null<Mesh>();
             m.Register(handle);
-            asset::gpAssetManager->UnloadAsset(mesh->GetAssetID());
+
+            const auto& materials = m.GetMaterials();
+            for (const auto& mat : materials)
+            {
+                for (const auto& tex : mat.mTextures)
+                {
+                    if (tex.mTextureId.mHash != RES_ID_NULL)
+                    {
+                        asset::Asset asset = {};
+                        asset.Set(tex.mTextureId, { tex.mTextureData.size() , (uint8_t*)tex.mTextureData.data()});
+                        asset.SetState(asset::STATE_LOADED);
+                        gResourceManager->CreateTexture(asset);
+                    }
+                }
+
+                log::Info("[Renderer] Loading material: {}", mat.mName);
+                gResourceManager->CreateMaterial(mat.mMat, ID(mat.mName.c_str()));
+            }
+
+            if (mesh->GetState() != asset::STATE_UNLOADED)
+                asset::gpAssetManager->UnloadAsset(meshHandle);
         }
 
         nv::Vector<PBRMaterial> materials;
@@ -138,15 +159,25 @@ namespace nv::graphics
             asset::gpAssetManager->UnloadAsset(material.mMetalnessTexture);
         };
 
-
         loadMaterials();
 
-        gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/SunnyCubeMap.dds") });
-        gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/Sky.hdr") });
-        gResourceManager->CreateTexture({ asset::ASSET_TEXTURE, ID("Textures/bluenoise256.png") });
+        constexpr asset::AssetID kTextures[] =
+        {
+            { asset::ASSET_TEXTURE, ID("Textures/SunnyCubeMap.dds") },
+            { asset::ASSET_TEXTURE, ID("Textures/Sky.hdr") },
+            { asset::ASSET_TEXTURE, ID("Textures/bluenoise256.png") }
+        };
+
+        for (const auto& tex : kTextures)
+        {
+            gResourceManager->CreateTexture(tex);
+        }
 
         for (const auto& mat : materials)
             unloadMaterialAssets(mat);
+
+        for(const auto& tex : kTextures)
+            asset::gpAssetManager->UnloadAsset(tex);
     }
 
     void RenderSystem::InitOnRenderThread()

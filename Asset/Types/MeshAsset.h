@@ -5,6 +5,7 @@
 #include <Asset.h>
 #include <ostream>
 #include <Components/Material.h>
+#include <span>
 
 struct aiScene;
 
@@ -60,6 +61,7 @@ namespace nv::asset
         void Register(Handle<graphics::Mesh> handle);
 
         const MeshDesc& GetData() const { return mData; }
+        const std::vector<MatPair>& GetMaterials() const { return mMaterials; }
         ~MeshAsset();
 
     private:
@@ -67,6 +69,6 @@ namespace nv::asset
         AnimationStore          mAnimStore = {};
         MeshAnimNodeData        mAnimNodeData = {};
         std::vector<MatPair>    mMaterials = {};
-        const std::string       mFilePath;
+        std::string             mFilePath;
     };
 }

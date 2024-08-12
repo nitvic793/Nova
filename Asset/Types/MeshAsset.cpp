@@ -114,6 +114,7 @@ namespace nv::asset
 		nv::io::MemoryStream istream((char*)data.mData, data.mSize);
 		cereal::BinaryInputArchive archive(istream);
 
+		archive(mFilePath);
 		archive(mData);
 		archive(mMaterials);
 		archive(mAnimNodeData);
@@ -216,6 +217,7 @@ namespace nv::asset
 				
 				MatPair& matPair = mMaterials.emplace_back(MatPair{ internalMatName, Material{} });
 				Material& mat = matPair.mMat;
+                StringDB::Get().AddString(internalMatName, nv::ID(internalMatName.c_str()));
 
 				aiColor3D diffuse = {};
 				aiColor3D emissive = {};
@@ -270,7 +272,7 @@ namespace nv::asset
                         return INVALID_TEXTURE;
 
 					std::string textureName = tex->mFilename.C_Str();
-					std::string fileName = mFilePath + "_" + textureName.substr(textureName.find_last_of("/\\") + 1);
+					std::string fileName = "Textures/" + mFilePath + "_" + textureName.substr(textureName.find_last_of("/\\") + 1);
 					const StringID hash = nv::ID(fileName.c_str());
 					StringDB::Get().AddString(fileName, hash);
 					AssetID texId = { ASSET_TEXTURE, hash };
@@ -296,6 +298,7 @@ namespace nv::asset
 		// Export mesh data
 		{
 			cereal::BinaryOutputArchive archive(ostream);
+			archive(mFilePath);
 			archive(mData);
 			archive(mMaterials);
 			archive(animNodeData);
