@@ -14,6 +14,7 @@ namespace nv::graphics
     ConstantBufferPool* gpConstantBufferPool = nullptr;
     constexpr size_t MAX_OBJECT_COUNT = 1024;
     constexpr size_t MAX_OBJECT_DESCRIPTOR_COUNT = MAX_OBJECT_COUNT;
+    constexpr size_t MAX_MATERIAL_DESCRIPTOR_COUNT = MAX_OBJECT_COUNT * 4;
     constexpr size_t MAX_ANIM_BONES_DESCRIPTOR_COUNT = 32;
 
     RenderDataArray::RenderDataArray()
@@ -93,9 +94,23 @@ namespace nv::graphics
         for (uint32_t i = 0; i < rd.mSize; ++i)
         {
             auto objectCb = gpConstantBufferPool->GetConstantBuffer<ObjectData, MAX_OBJECT_DESCRIPTOR_COUNT>();
-            auto matCb = gpConstantBufferPool->GetConstantBuffer<MaterialData, MAX_OBJECT_DESCRIPTOR_COUNT>();
             mRenderDescriptors.mObjectCBs.Push(objectCb);
-            mRenderDescriptors.mMaterialCBs.Push(matCb);
+
+            auto mesh = rd.mppMeshes[i];
+
+            if (mesh && mesh->GetMaterials().size() > 0)
+            {
+                for (auto& mat : mesh->GetMaterials())
+                {
+                    auto matCb = gpConstantBufferPool->GetConstantBuffer<MaterialData, MAX_MATERIAL_DESCRIPTOR_COUNT>();
+                    mRenderDescriptors.mMaterialCBs.Push(matCb);
+                }
+            }
+            else
+            {
+                auto matCb = gpConstantBufferPool->GetConstantBuffer<MaterialData, MAX_MATERIAL_DESCRIPTOR_COUNT>();
+                mRenderDescriptors.mMaterialCBs.Push(matCb);
+            }
 
             if (rd.mppBones[i] != nullptr)
             {

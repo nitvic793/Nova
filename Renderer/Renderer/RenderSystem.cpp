@@ -108,18 +108,22 @@ namespace nv::graphics
         {
             // TODO: Load embedded materials and textures within MeshAsset
             // TODO: Load all meshes in parallel
-            asset::Asset* mesh = asset::gpAssetManager->GetAsset(meshHandle);
+            asset::Asset* meshAsset = asset::gpAssetManager->GetAsset(meshHandle);
 #if _DEBUG
-            auto meshName = GetString(mesh->GetHash());
+            auto meshName = GetString(meshAsset->GetHash());
             log::Info("[Renderer] Loading mesh: {}", meshName);
 #endif
-            auto m = mesh->DeserializeTo<asset::MeshAsset>();
-            auto handle = !m.GetData().mMeshEntries.empty() ? gResourceManager->CreateMesh(m.GetData(), mesh->GetAssetID().mHash) : Null<Mesh>();
+            auto m = meshAsset->DeserializeTo<asset::MeshAsset>();
+            auto handle = !m.GetData().mMeshEntries.empty() ? gResourceManager->CreateMesh(m.GetData(), meshAsset->GetAssetID().mHash) : Null<Mesh>();
             m.Register(handle);
 
             const auto& materials = m.GetMaterials();
+            std::vector<Handle<MaterialInstance>> materialHandles;
             for (const auto& mat : materials)
             {
+                if(mat.mTextures.empty())
+                    continue;
+
                 for (const auto& tex : mat.mTextures)
                 {
                     if (tex.mTextureId.mHash != RES_ID_NULL)
@@ -132,10 +136,15 @@ namespace nv::graphics
                 }
 
                 log::Info("[Renderer] Loading material: {}", mat.mName);
-                gResourceManager->CreateMaterial(mat.mMat, ID(mat.mName.c_str()));
+                const auto handle = gResourceManager->CreateMaterial(mat.mMat, ID(mat.mName.c_str()));
+                materialHandles.push_back(handle);
             }
 
-            if (mesh->GetState() != asset::STATE_UNLOADED)
+            auto mesh = gResourceManager->GetMesh(handle);
+            if(mesh)
+                mesh->SetMaterials(materialHandles);
+
+            if (meshAsset->GetState() != asset::STATE_UNLOADED)
                 asset::gpAssetManager->UnloadAsset(meshHandle);
         }
 

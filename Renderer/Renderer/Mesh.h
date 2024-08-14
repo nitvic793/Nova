@@ -6,6 +6,7 @@
 #include <BVH/BVH.h>
 #include <Math/Collision.h>
 #include <Renderer/Resource.h>
+#include <Components/Material.h>
 
 namespace nv::graphics
 {
@@ -81,6 +82,8 @@ namespace nv::graphics
         constexpr bool   HasBones() const { return !mDesc.mBoneDesc.mBoneInfoList.empty(); }
         constexpr const MeshBoneDesc& GetBoneData() const { return mDesc.mBoneDesc; }
         inline bvh::BVHData& GetBVH() { return mBVH; }
+        constexpr const std::vector<Handle<MaterialInstance>>& GetMaterials() const { return mMaterials; }
+        constexpr void SetMaterials(const std::vector<Handle<MaterialInstance>>& materials) { mMaterials = materials; }
 
         ResourceLoadStateEnum GetLoadState() const { return mLoadState.load(); }
         void SetLoadState(ResourceLoadStateEnum state) { mLoadState.store(state); }
@@ -97,6 +100,7 @@ namespace nv::graphics
         MeshDesc            mDesc;
         bvh::BVHData        mBVH;
         math::BoundingBox   mBoundingBox;
+        std::vector<Handle<MaterialInstance>> mMaterials;
         ResourceLoadState   mLoadState;
     };
 }

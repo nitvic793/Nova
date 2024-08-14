@@ -81,6 +81,7 @@ namespace nv::graphics
 
 		D3D12_CPU_DESCRIPTOR_HANDLE PushCPU(uint32_t* outIndex = nullptr)
 		{
+			assert(mSize < mHeapDesc.NumDescriptors);
 			uint32_t index;
 			D3D12_CPU_DESCRIPTOR_HANDLE result;
 
